@@ -79,4 +79,14 @@ define("CON_HEADER_IMG", "");
 define("CON_HEADER_IMG_ALT", "");
 // to improve the con branding, you can specify the alt-text of the header image. For example:
 // define("CON_HEADER_IMG_ALT", "Really Big Con Logo);
+define("HTML_BIO", TRUE); // Allow editing BIO as HTML and saving it both as plain text and HTML
+define("HTML_SESSION", TRUE); // Allow editing Session Description as HTML and saving it both as plain text and HTML
+define("MEETING_LINK", TRUE); // Add support for Meetinglink in sessions
+// Items for Photo Upload/Approval
+define("PARTICIPANT_PHOTOS", TRUE); // enable the participant photo feature
+define("PHOTO_UPLOAD_DIRECTORY", "../upload_photos");  // outside of web server path, only served by PHP
+define("PHOTO_PUBLIC_DIRECTORY", "/participant_photos"); // inside of web server path, can be served outside of PHP
+define("PHOTO_FILE_TYPES", "jpg,png"); // comma separated list of allowed file types/suffixes (will be verified by PHP)
+define("PHOTO_DIMENSIONS", "200,200,800,800,1048576"); // comma separated list min width/height, max width/height, file size
+define("PHOTO_DEFAULT_IMAGE", "default.png"); // placeholder image for participants without photo
 ?>

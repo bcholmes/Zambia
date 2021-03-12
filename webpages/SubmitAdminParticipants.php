@@ -19,16 +19,18 @@ function fetch_participant() {
     }
     $query = <<<EOD
 SELECT
-        P.badgeid, P.pubsname, P.interested, P.bio,
-        P.staff_notes, CD.firstname, CD.lastname, CD.badgename, CD.phone, CD.email, CD.postaddress1,
-        CD.postaddress2, CD.postcity, CD.poststate, CD.postzip, CD.postcountry
-    FROM
-			 Participants P
-		JOIN CongoDump CD ON P.badgeid = CD.badgeid
-    WHERE
-        P.badgeid = ?
-    ORDER BY
-        CD.lastname, CD.firstname
+    P.badgeid, P.pubsname, P.interested, P.bio,
+    P.staff_notes, CD.firstname, CD.lastname, CD.badgename, CD.phone, CD.email, CD.postaddress1,
+    CD.postaddress2, CD.postcity, CD.poststate, CD.postzip, CD.postcountry,
+    P.uploadedphotofilename, P.approvedphotofilename, P.photodenialreasonothertext,
+	CASE WHEN ISNULL(P.photouploadstatus) THEN 0 ELSE P.photouploadstatus END AS photouploadstatus,
+	R.statustext, D.reasontext
+FROM Participants P
+JOIN CongoDump CD ON P.badgeid = CD.badgeid
+LEFT OUTER JOIN PhotoDenialReasons D USING (photodenialreasonid)
+LEFT OUTER JOIN PhotoUploadStatus R USING (photouploadstatus)
+WHERE P.badgeid = ?
+ORDER BY CD.lastname, CD.firstname
 EOD;
     $param_arr = array($fbadgeid);
     $result = mysqli_query_with_prepare_and_exit_on_error($query, "s", $param_arr);
@@ -269,46 +271,128 @@ function perform_search() {
     $searchString = getString("searchString");
     if ($searchString == "")
         exit();
+    $json_return = array ();
     if (is_numeric($searchString)) {
-        $searchString =  mysqli_real_escape_string($linki, $searchString);
-        $query["searchParticipants"] = <<<EOD
-			SELECT
-			        P.badgeid, P.pubsname, P.interested, P.bio,
-                    P.staff_notes, CD.firstname, CD.lastname, CD.badgename,
-                    CD.phone, CD.email, CD.postaddress1, CD.postaddress2, CD.postcity, CD.poststate, CD.postzip,
-                    CD.postcountry, CD.regtype
-			    FROM
-						 Participants P
-					JOIN CongoDump CD ON P.badgeid = CD.badgeid
-			    WHERE
-			        P.badgeid = "$searchString"
-			    ORDER BY
-			        CD.lastname, CD.firstname
+        if (DBVER >= "8") {
+            $query["searchParticipants"] = <<<EOD
+WITH AnsweredSurvey(participantid, answercount) AS (
+    SELECT participantid, COUNT(*) AS answercount
+    FROM ParticipantSurveyAnswers
+    WHERE participantid = "$searchString"
+)
+SELECT
+	P.badgeid, P.pubsname, P.interested, P.bio, 
+    P.staff_notes, CD.firstname, CD.lastname, CD.badgename,
+    CD.phone, CD.email, CD.postaddress1, CD.postaddress2, CD.postcity, CD.poststate, CD.postzip,
+    CD.postcountry, CD.regtype, IFNULL(A.answercount, 0) AS answercount,
+    P.uploadedphotofilename, P.approvedphotofilename, P.photodenialreasonothertext,
+	CASE WHEN ISNULL(P.photouploadstatus) THEN 0 ELSE P.photouploadstatus END AS photouploadstatus,
+	R.statustext, D.reasontext
+FROM
+    Participants P
+	JOIN CongoDump CD ON P.badgeid = CD.badgeid
+    LEFT OUTER JOIN AnsweredSurvey A ON (P.badgeid = A.participantid)
+    LEFT OUTER JOIN PhotoDenialReasons D USING (photodenialreasonid)
+    LEFT OUTER JOIN PhotoUploadStatus R USING (photouploadstatus)
+WHERE
+	P.badgeid = ?
+ORDER BY
+	CD.lastname, CD.firstname
 EOD;
-        $xml = mysql_query_XML($query);
+        } else {
+            $query["searchParticipants"] = <<<EOD
+SELECT
+	P.badgeid, P.pubsname, P.interested, P.bio, 
+    P.staff_notes, CD.firstname, CD.lastname, CD.badgename,
+    CD.phone, CD.email, CD.postaddress1, CD.postaddress2, CD.postcity, CD.poststate, CD.postzip,
+    CD.postcountry, CD.regtype, IFNULL(A.answercount, 0) AS answercount,
+    P.uploadedphotofilename, P.approvedphotofilename, P.photodenialreasonothertext,
+	CASE WHEN ISNULL(P.photouploadstatus) THEN 0 ELSE P.photouploadstatus END AS photouploadstatus,
+	R.statustext, D.reasontext
+FROM
+    Participants P
+	JOIN CongoDump CD ON P.badgeid = CD.badgeid
+        LEFT OUTER JOIN (
+            SELECT participantid, COUNT(*) AS answercount
+                FROM ParticipantSurveyAnswers
+                WHERE participantid = "$searchString"
+    ) A ON (P.badgeid = A.participantid)
+LEFT OUTER JOIN PhotoDenialReasons D USING (photodenialreasonid)
+LEFT OUTER JOIN PhotoUploadStatus R USING (photouploadstatus)
+WHERE
+	P.badgeid = ?
+ORDER BY
+	CD.lastname, CD.firstname
+EOD;
+        $param_arr = array($searchString);
+        $result = mysqli_query_with_prepare_and_exit_on_error($query, "s", $param_arr);
     } else {
         $searchString = '%' . $searchString . '%';
-        $query = <<<EOD
-			SELECT
-			        P.badgeid, P.pubsname, P.interested, P.bio,
-                    P.staff_notes, CD.firstname, CD.lastname, CD.badgename,
-                    CD.phone, CD.email, CD.postaddress1, CD.postaddress2, CD.postcity, CD.poststate, CD.postzip,
-                    CD.postcountry, CD.regtype
-			    FROM
-						 Participants P
-					JOIN CongoDump CD ON P.badgeid = CD.badgeid
-			    WHERE
-			           P.pubsname LIKE ?
-					OR CD.lastname LIKE ?
-					OR CD.firstname LIKE ?
-					OR CD.badgename LIKE ?
-			    ORDER BY
-			        CD.lastname, CD.firstname
+        if (DBVER >= "8") {
+            $query = <<<EOD
+WITH AnsweredSurvey(participantid, answercount) AS (
+    SELECT participantid, COUNT(*) AS answercount
+    FROM ParticipantSurveyAnswers
+)
+SELECT
+	P.badgeid, P.pubsname, P.interested, P.bio, 
+    P.staff_notes, CD.firstname, CD.lastname, CD.badgename,
+    CD.phone, CD.email, CD.postaddress1, CD.postaddress2, CD.postcity, CD.poststate, CD.postzip,
+    CD.postcountry, CD.regtype, IFNULL(A.answercount, 0) AS answercount
+FROM
+	Participants P
+	JOIN CongoDump CD ON P.badgeid = CD.badgeid
+    LEFT OUTER JOIN AnsweredSurvey A ON (P.badgeid = A.participantid)
+WHERE
+		P.pubsname LIKE ?
+	OR CD.lastname LIKE ?
+	OR CD.firstname LIKE ?
+	OR CD.badgename LIKE ?
+ORDER BY
+	CD.lastname, CD.firstname
 EOD;
-        $param_arr = array($searchString,$searchString,$searchString,$searchString);
-        $result = mysqli_query_with_prepare_and_exit_on_error($query, "ssss", $param_arr);
-        $xml = mysql_result_to_XML("searchParticipants", $result);
+        } else {
+             $query = <<<EOD
+SELECT
+	P.badgeid, P.pubsname, P.interested, P.bio, 
+    P.staff_notes, CD.firstname, CD.lastname, CD.badgename,
+    CD.phone, CD.email, CD.postaddress1, CD.postaddress2, CD.postcity, CD.poststate, CD.postzip,
+    CD.postcountry, CD.regtype, IFNULL(A.answercount, 0) AS answercount,
+    P.uploadedphotofilename, P.approvedphotofilename, P.photodenialreasonothertext,
+	CASE WHEN ISNULL(P.photouploadstatus) THEN 0 ELSE P.photouploadstatus END AS photouploadstatus,
+	R.statustext, D.reasontext
+FROM
+	Participants P
+	JOIN CongoDump CD ON P.badgeid = CD.badgeid
+    LEFT OUTER JOIN (
+         SELECT participantid, COUNT(*) AS answercount
+            FROM ParticipantSurveyAnswers
+) A ON (P.badgeid = A.participantid)
+LEFT OUTER JOIN PhotoDenialReasons D USING (photodenialreasonid)
+LEFT OUTER JOIN PhotoUploadStatus R USING (photouploadstatus)
+WHERE
+		P.pubsname LIKE ?
+	OR CD.lastname LIKE ?
+	OR CD.firstname LIKE ?
+	OR CD.badgename LIKE ?
+ORDER BY
+	CD.lastname, CD.firstname
+EOD;
+        $param_arr = array($searchString,$searchString,$searchString,$searchString,$searchString);
+        $result = mysqli_query_with_prepare_and_exit_on_error($query, "sssss", $param_arr);
     }
+    $xml = mysql_result_to_XML("searchParticipants", $result);
+    $rows = mysqli_num_rows($result);
+    if ($rows > 1) {
+        mysqli_data_seek($result, 0);
+        $bidarray = array ();
+        while ($row = mysqli_fetch_assoc($result)) {
+            $bidarray[] = $row["badgeid"];
+        }
+        $json_return["badgeids"] = $bidarray;
+    }
+
+    mysqli_free_result($result);
     if (!$xml) {
         echo $message_error;
         exit();
@@ -323,7 +407,9 @@ EOD;
     header("Content-Type: text/html");
     $paramArray = array("userIdPrompt" => USER_ID_PROMPT);
     //echo(mb_ereg_replace("<(row|query)([^>]*/[ ]*)>", "<\\1\\2></\\1>", $xml->saveXML(), "i")); //for debugging only
-    RenderXSLT('AdminParticipants.xsl', $paramArray, $xml);
+    $json_return["HTML"] = RenderXSLT('AdminParticipants.xsl', $paramArray, $xml, true);
+    $json_return["rowcount"] = $rows;
+    echo json_encode($json_return);
 	exit();
 }
 

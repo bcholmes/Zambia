@@ -480,7 +480,6 @@
             </div>
         </form>
     </xsl:template>
-
     <xsl:template name="regRowContents">
         <xsl:param name="label" />
         <xsl:param name="value" />
@@ -517,5 +516,4 @@
             </div>
         </div>
     </xsl:template>
-
 </xsl:stylesheet>

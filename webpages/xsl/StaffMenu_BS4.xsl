@@ -4,9 +4,11 @@
     Copyright (c) 2020-2021 Peter Olszowka. All rights reserved. See copyright document for more details.
 -->
 <xsl:stylesheet version="1.1" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<<<<<<< HEAD
     <xsl:param name="title" select="''"/>
     <!-- Page title -->
     <xsl:param name="reportMenuList" select="''"/>
+    <xsl:param name="PARTICIPANT_PHOTOS" select="'0'"/>
     <!-- Set of <a> elements; contents of ReportMenuBS4Include.php -->
     <xsl:variable name="ConfigureReports"
         select="/doc/query[@queryname='permission_set']/row[@permatomtag='ConfigureReports']"/>
