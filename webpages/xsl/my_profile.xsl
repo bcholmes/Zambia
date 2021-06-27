@@ -428,77 +428,81 @@
                             <xsl:with-param name="maxlength" select="50" />
                             <xsl:with-param name="fieldsize" select="50" />
 
-                        </xsl:call-template>
-                        <xsl:call-template name="regRowContents">
-                            <xsl:with-param name="label">Phone Info</xsl:with-param>
-                            <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@phone" />
-                            <xsl:with-param name="id">phone</xsl:with-param>
-                            <xsl:with-param name="maxlength" select="80" />
-                            <xsl:with-param name="fieldsize" select="80" />
-                        </xsl:call-template>
-                        <xsl:call-template name="regRowContents">
-                            <xsl:with-param name="label">Email Address</xsl:with-param>
-                            <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@email" />
-                            <xsl:with-param name="id">email</xsl:with-param>
-                            <xsl:with-param name="maxlength" select="100" />
-                            <xsl:with-param name="fieldsize" select="80" />
-                        </xsl:call-template>
-                        <xsl:call-template name="regRowContents">
-                            <xsl:with-param name="label">Postal Address</xsl:with-param>
-                            <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@postaddress1" />
-                            <xsl:with-param name="id">postaddress1</xsl:with-param>
-                            <xsl:with-param name="maxlength" select="100" />
-                            <xsl:with-param name="fieldsize" select="80" />
-                        </xsl:call-template>
-                        <xsl:call-template name="regRowContents">
-                            <xsl:with-param name="label">(line 2)</xsl:with-param>
-                            <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@postaddress2" />
-                            <xsl:with-param name="id">postaddress2</xsl:with-param>
-                            <xsl:with-param name="maxlength" select="100" />
-                            <xsl:with-param name="fieldsize" select="80" />
-                        </xsl:call-template>
-                        <xsl:call-template name="regRowContents">
-                            <xsl:with-param name="label">Postal City</xsl:with-param>
-                            <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@postcity" />
-                            <xsl:with-param name="id">postcity</xsl:with-param>
-                            <xsl:with-param name="maxlength" select="50" />
-                            <xsl:with-param name="fieldsize" select="50" />
-                        </xsl:call-template>
-                        <xsl:call-template name="regRowContents">
-                            <xsl:with-param name="label">Postal State</xsl:with-param>
-                            <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@poststate" />
-                            <xsl:with-param name="id">poststate</xsl:with-param>
-                            <xsl:with-param name="maxlength" select="25" />
-                            <xsl:with-param name="fieldsize" select="25" />
-                        </xsl:call-template>
-                        <xsl:call-template name="regRowContents">
-                            <xsl:with-param name="label">Zip Code</xsl:with-param>
-                            <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@postzip" />
-                            <xsl:with-param name="id">postzip</xsl:with-param>
-                            <xsl:with-param name="maxlength" select="10" />
-                            <xsl:with-param name="fieldsize" select="10" />
-                        </xsl:call-template>
-                        <xsl:call-template name="regRowContents">
-                            <xsl:with-param name="label">Country</xsl:with-param>
-                            <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@postcountry" />
-                            <xsl:with-param name="id">postcountry</xsl:with-param>
-                            <xsl:with-param name="maxlength" select="25" />
-                            <xsl:with-param name="fieldsize" select="25" />
-                        </xsl:call-template>
-                    </fieldset>
-                    <xsl:if test="$useRegSystem != 1"><!-- show button here if not using reg system -->
-                        <div class="row mt-3">
-                            <div class="col-auto">
-                                <button class="btn btn-primary" type="button" name="submitBTN" id="submitBTN"
-                                data-loading-text="Updating..." onclick="myProfile.updateBUTN();">
-                                Update
-                                </button>
-                            </div>
-                        </div>
-                    </xsl:if>
-                </div>
-            </div>
-        </form>
+                    </xsl:call-template>
+                    <xsl:call-template name="regRowContents">
+                        <xsl:with-param name="label">Phone Info</xsl:with-param>
+                        <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@phone" />
+                        <xsl:with-param name="id">phone</xsl:with-param>
+                        <xsl:with-param name="maxlength" select="80" />
+                        <xsl:with-param name="fieldsize" select="80" />
+                    </xsl:call-template>
+                    <xsl:call-template name="regRowContents">
+                        <xsl:with-param name="label">Email Address</xsl:with-param>
+                        <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@email" />
+                        <xsl:with-param name="id">email</xsl:with-param>
+                        <xsl:with-param name="maxlength" select="100" />
+                        <xsl:with-param name="fieldsize" select="80" />
+                    </xsl:call-template>
+                    <xsl:call-template name="regRowContents">
+                        <xsl:with-param name="label">Postal Address</xsl:with-param>
+                        <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@postaddress1" />
+                        <xsl:with-param name="id">postaddress1</xsl:with-param>
+                        <xsl:with-param name="maxlength" select="100" />
+                        <xsl:with-param name="fieldsize" select="80" />
+                    </xsl:call-template>
+                    <xsl:call-template name="regRowContents">
+                        <xsl:with-param name="label">(line 2)</xsl:with-param>
+                        <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@postaddress2" />
+                        <xsl:with-param name="id">postaddress2</xsl:with-param>
+                        <xsl:with-param name="maxlength" select="100" />
+                        <xsl:with-param name="fieldsize" select="80" />
+                    </xsl:call-template>
+                    <xsl:call-template name="regRowContents">
+                        <xsl:with-param name="label">Postal City</xsl:with-param>
+                        <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@postcity" />
+                        <xsl:with-param name="id">postcity</xsl:with-param>
+                        <xsl:with-param name="maxlength" select="50" />
+                        <xsl:with-param name="fieldsize" select="50" />
+                    </xsl:call-template>
+                    <xsl:call-template name="regRowContents">
+                        <xsl:with-param name="label">Postal State</xsl:with-param>
+                        <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@poststate" />
+                        <xsl:with-param name="id">poststate</xsl:with-param>
+                        <xsl:with-param name="maxlength" select="25" />
+                        <xsl:with-param name="fieldsize" select="25" />
+                    </xsl:call-template>
+                    <xsl:call-template name="regRowContents">
+                        <xsl:with-param name="label">Zip Code</xsl:with-param>
+                        <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@postzip" />
+                        <xsl:with-param name="id">postzip</xsl:with-param>
+                        <xsl:with-param name="maxlength" select="10" />
+                        <xsl:with-param name="fieldsize" select="10" />
+                    </xsl:call-template>
+                    <xsl:call-template name="regRowContents">
+                        <xsl:with-param name="label">Country</xsl:with-param>
+                        <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@postcountry" />
+                        <xsl:with-param name="id">postcountry</xsl:with-param>
+                        <xsl:with-param name="maxlength" select="25" />
+                        <xsl:with-param name="fieldsize" select="25" />
+                    </xsl:call-template>
+                    <xsl:call-template name="regRowContents">
+                      <xsl:with-param name="label">Registration Type</xsl:with-param>
+                      <xsl:with-param name="value" select="/doc/query[@queryName='participant_info']/row/@regtype" />
+                      <xsl:with-param name="id">regtype</xsl:with-param>
+                      <xsl:with-param name="maxlength" select="25" />
+                      <xsl:with-param name="fieldsize" select="25" />
+                    </xsl:call-template>
+                </fieldset>
+                <xsl:if test="$useRegSystem != 1"><!-- show button here if not using reg system -->
+                    <div class="row mt-3">
+                        <button class="btn btn-primary" type="button" name="submitBTN" id="submitBTN"
+                            data-loading-text="Updating..." onclick="myProfile.updateBUTN();">
+                            Update
+                        </button>
+                    </div>
+                </xsl:if>
+            </form>
+        </div>
     </xsl:template>
     <xsl:template name="regRowContents">
         <xsl:param name="label" />
