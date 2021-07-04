@@ -2,35 +2,12 @@
 // Copyright (c) 2021 BC Holmes. All rights reserved. See copyright document for more details.
 // This function provides support for mobile apps such as WisSched and FogGuide
 
-require_once('../vendor/autoload.php');
-
-use Emarref\Jwt\Claim;
-
+require_once("jwt_functions.php");
 
 if (!include ('../../db_name.php')) {
 	include ('../../db_name.php');
 }
 
-function create_jwt_token($badgeid, $name) {
-    $token = new Emarref\Jwt\Token();
-
-    // Standard claims are supported
-    $token->addClaim(new Claim\Expiration(new DateTime('1 year')));
-    $token->addClaim(new Claim\IssuedAt(new DateTime('now')));
-    $token->addClaim(new Claim\Issuer(CON_NAME));
-    $token->addClaim(new Claim\NotBefore(new DateTime('now')));
-    $token->addClaim(new Claim\Subject($badgeid));
-    $token->addClaim(new Claim\PublicClaim('name', $name));
-
-    $jwt = new Emarref\Jwt\Jwt();
-
-    $algorithm = new Emarref\Jwt\Algorithm\Hs512(JWT_TOKEN_SIGNING_KEY);
-    $encryption = Emarref\Jwt\Encryption\Factory::create($algorithm);
-    $serializedToken = $jwt->serialize($token, $encryption);
-
-
-    return $serializedToken;
-}
 
 function get_name($dbobject) {
     if (isset($dbobject->badgename) && $dbobject->badgename !== '') {
