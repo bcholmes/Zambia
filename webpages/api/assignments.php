@@ -2,20 +2,11 @@
 // Copyright (c) 2021 BC Holmes. All rights reserved. See copyright document for more details.
 // This function provides support for mobile apps such as WisSched and FogGuide
 
-require_once("jwt_functions.php");
-
-function extract_badgeid($token) {
-
-	$jwt = new Emarref\Jwt\Jwt();
-
-	$deserialized = $jwt->deserialize($token);
-	$subject = $deserialized->getPayload()->findClaimByName("sub");
-	return $subject->getValue();
-}
-
 if (!include ('../../db_name.php')) {
 	include ('../../db_name.php');
 }
+
+require_once("jwt_functions.php");
 
 function get_assignments($badgeid) {
 	$db = mysqli_connect(DBHOSTNAME, DBUSERID, DBPASSWORD, DBDB);
@@ -53,16 +44,14 @@ EOD;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-	$auth = $_SERVER['HTTP_AUTHORIZATION'];
-	if (strpos($auth, 'Bearer ') === 0) {
-		$auth = substr($auth, 7);
-	}
+	$auth = jwt_from_header();
 
-	if (validate_jwt_token($auth)) {
+	if (jwt_validate_token($auth, true)) {
 
-		$assignments = get_assignments(extract_badgeid($auth));
+		$assignments = get_assignments(jwt_extract_badgeid($auth));
 		$result = array( "assignments" => $assignments);
 
+		header('Content-type: application/json');
 		echo json_encode($result);
 	} else {
 		http_response_code(401);

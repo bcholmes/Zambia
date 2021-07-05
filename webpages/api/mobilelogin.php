@@ -2,12 +2,11 @@
 // Copyright (c) 2021 BC Holmes. All rights reserved. See copyright document for more details.
 // This function provides support for mobile apps such as WisSched and FogGuide
 
-require_once("jwt_functions.php");
-
 if (!include ('../../db_name.php')) {
 	include ('../../db_name.php');
 }
 
+require_once("jwt_functions.php");
 
 function get_name($dbobject) {
     if (isset($dbobject->badgename) && $dbobject->badgename !== '') {
@@ -46,7 +45,7 @@ function resolve_login($userid, $password) {
                 mysqli_stmt_close($stmt);
                 mysqli_close($db);
                 if (password_verify($password, $dbobject->password)) {
-                    return create_jwt_token($dbobject->badgeid, get_name($dbobject));
+                    return jwt_create_token($dbobject->badgeid, get_name($dbobject));
                 } else {
                     return false;
                 }
@@ -76,6 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $app_id = $_POST['app-id'];
     }
 
+    // we want to avoid letting this API be an easy way for
+    // hackers to test userid/password combinations, so we
+    // will reject all requests that don't have an app id.
     if ($app_id !== MOBILE_APP_ID) {
         http_response_code(401);
     } else {

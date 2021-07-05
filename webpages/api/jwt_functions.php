@@ -6,7 +6,21 @@ require_once('../vendor/autoload.php');
 
 use Emarref\Jwt\Claim;
 
-function validate_jwt_token($token) {
+function jwt_from_header() {
+    $auth = $_SERVER['HTTP_AUTHORIZATION'];
+	if (strpos($auth, 'Bearer ') === 0) {
+		$auth = substr($auth, 7);
+	}
+    return $auth;
+}
+
+// We expect to use two types of JWT tokens. The "basic" tokens are
+// signed and valid for a long period of time, but have no scopes
+// and basically represent a valid mobile app sending requests (as
+// opposed to a hacker in Russia). An authenticated user (i.e. someone
+// who has logged in) has a token that includes a participant scope and
+// the token's subject ("sub") references the user's badgeid.
+function jwt_validate_token($token, $as_participant_scope = false) {
     
     $jwt = new Emarref\Jwt\Jwt();
 
@@ -28,6 +42,14 @@ function validate_jwt_token($token) {
 		foreach ($verifiers as $verifier) {
             $verifier->verify($deserialized);
         }
+
+        if ($as_participant_scope) {
+            $scope = $deserialized->getPayload()->findClaimByName("scope");
+            if ($scope === null || !in_array("participant", $scope->getValue())) {
+                return false;
+            }
+        }   
+
 		return true;
 	} catch (InvalidArgumentException $e) {
 		return false;
@@ -36,7 +58,16 @@ function validate_jwt_token($token) {
 	}
 }
 
-function create_jwt_token($badgeid, $name) {
+function jwt_extract_badgeid($token) {
+
+	$jwt = new Emarref\Jwt\Jwt();
+
+	$deserialized = $jwt->deserialize($token);
+	$subject = $deserialized->getPayload()->findClaimByName("sub");
+	return $subject != null ? $subject->getValue() : null;
+}
+
+function jwt_create_token($badgeid, $name) {
     $token = new Emarref\Jwt\Token();
 
     // Standard claims are supported
@@ -46,6 +77,7 @@ function create_jwt_token($badgeid, $name) {
     $token->addClaim(new Claim\NotBefore(new DateTime('now')));
     $token->addClaim(new Claim\Subject($badgeid));
     $token->addClaim(new Claim\PublicClaim('name', $name));
+    $token->addClaim(new Claim\PublicClaim('scope', array( "participant" )));
 
     $jwt = new Emarref\Jwt\Jwt();
 
