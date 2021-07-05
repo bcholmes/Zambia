@@ -91,12 +91,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } catch (InvalidArgumentException $e) {
             http_response_code(400);
-            echo '-----------\n';
-            echo $json->deviceId."\n";
-            echo $e;
         } catch (Exception $e) {
             http_response_code(500);
-            echo $e;
         }
 	} else {
 		http_response_code(401);
