@@ -64,21 +64,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $userid = '';
     $password = '';
-    $app_id = '';
     if (isset($_POST['userid'])) {
         $userid = $_POST['userid'];
     }
     if (isset($_POST['password'])) {
         $password = $_POST['password'];
     }
-    if (isset($_POST['app-id'])) {
-        $app_id = $_POST['app-id'];
-    }
 
     // we want to avoid letting this API be an easy way for
     // hackers to test userid/password combinations, so we
-    // will reject all requests that don't have an app id.
-    if ($app_id !== MOBILE_APP_ID) {
+    // will reject all requests that don't include a basic JWT.
+    $jwt = jwt_from_header();
+	if (jwt_validate_token($jwt)) {
         http_response_code(401);
     } else {
 
