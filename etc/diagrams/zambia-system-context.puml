@@ -1,0 +1,40 @@
+@startuml
+!include https://raw.githubusercontent.com/Intelliware/iwd-plantuml-styles/master/iwd_basic_styles.puml
+
+title ==Zambia System Context Diagram
+
+IwdRectangle("Users", "userGroup", "", "", "", "", "light") {
+
+    IwdUser("Participant", "participant", "The participant updates their session interests, availability, and badge and publication information.")
+
+    IwdUser("ConCom Staff", "concom", "The concom staff manages sessions, room assignments, participants on session and other session data. They can also run various reports.")
+
+}
+
+IwdRectangle("Registration System", "registration", "", "", "", "", "light") {
+
+    IwdRectangle("Wellington", "wellington", "", "", "The Wellington system provides a way for con attendees to register and pay for memberships", "System", "external") 
+
+    IwdRectangle("Convention Master", "cm", "", "", "Convention Master is a commercial convention management system which handles not only con registration, but also has other features available in Zambia", "System", "external") 
+
+    IwdRectangle("Balticon Online Reg", "balticon", "", "", "Balticon's Online Registration system is a very BaltiCon-specific registration system (which includes at-con registration and an admin system)", "System", "external") 
+}
+
+
+
+IwdRectangle("Zambia", "zambia", "", "", "Zambia manages sessions and provides both participant and staff access to the system.", "System") 
+
+IwdRectangle("External Systems", "externalSystems", "", "", "", "", "light") {
+
+    IwdRectangle("Email Server", "email", "", "", "The email server provides standard SMTP access for password resets and notification about session assignments.", "System", "external") 
+}
+
+IwdArrow(participant, zambia, "uses", "", "right")
+IwdArrow(concom, zambia, "uses", "", "right")
+IwdArrow(zambia, email, "invokes", "", "down")
+IwdArrow(participant, concom, "", "", "[hidden]down")
+IwdArrow(wellington, cm, "", "", "[hidden]down")
+IwdArrow(cm, balticon, "", "", "[hidden]down")
+IwdArrow(registration, zambia, "feeds member data", "", "down")
+
+@enduml
