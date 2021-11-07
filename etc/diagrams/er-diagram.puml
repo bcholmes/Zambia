@@ -1,0 +1,349 @@
+@startuml
+title Zambia Entity Relationship Diagram
+'hide the spot
+hide circle
+
+'avoid problems with angled crows feet
+skinparam linetype ortho
+
+entity BioEditStatuses {
+* bioeditstatusid : INT(11) <<auto increment>>
+  bioeditstatusname : varchar(60)
+* display_order : INT(11)
+}
+
+entity "CongoDump" {
+* badgeid : varchar(15)
+--
+  firstname : varchar(30)
+  lastname : varchar(40)
+  badgename : varchar(51)
+  phone : varchar(100)
+  email : varchar(100)
+  postaddress1 : varchar(100)
+  postaddress2 : varchar(100)
+  postcity : varchar(50)
+  poststate : varchar(25)
+  postzip : varchar(10)
+  postcountry : varchar(25)
+  regtype : varchar(40)
+}
+
+entity "CongoDumpHistory" {
+* badgeid : varchar(15)
+* createdts : timestamp
+--
+  firstname : varchar(30)
+  lastname : varchar(40)
+  badgename : varchar(51)
+  phone : varchar(100)
+  email : varchar(100)
+  postaddress1 : varchar(100)
+  postaddress2 : varchar(100)
+  postcity : varchar(50)
+  poststate : varchar(25)
+  postzip : varchar(10)
+  postcountry : varchar(25)
+  regtype : varchar(40)
+* createdbybadgeid : varchar(15)
+  inactivatedts : timestamp
+  inactivatedbybadgeid : varchar(15)
+}
+
+entity Credentials {
+* credentialid : int(11) <<auto increment>>
+--
+  credentialname : varchar(100)
+  display_order : int(11)
+}
+
+note bottom: These are not security credentials,\nbut instead things like\nProfessional Artist, etc.
+
+entity Divisions {
+* divisionid int(11) <<auto increment>>
+--
+  divisionname : varchar(30)
+* display_order : int(11)
+}
+
+entity EmailCC {
+* emailccid : int(11) <<auto increment>>
+  description : varchar(50)
+* display_order : int(11)
+  emailaddress : varchar(255)
+}
+
+entity EmailFrom {
+* emailfromid : int(11) <<auto increment>
+  emailfromdescription : varchar(30)
+* display_order : int(11)
+  emailfromaddress : varchar(255)
+}
+
+entity EmailQueue {
+* emailqueueid : int(11) <<auto increment>>
+  emailto : varchar(255)
+  emailfrom : varchar(255)
+  emailcc : varchar(255)
+  emailsubject : varchar(255)
+  body : text
+  status : int(11)
+* emailtimestamp : timestamp
+}
+entity EmailTo {
+* emailtoid : int(11) <<auto increment>>
+  emailtodescription : varchar(75)
+* display_order : int(11)
+  emailtoquery : text
+}
+
+entity Features {
+* featureid : int(11) <<auto increment>>
+--
+  featurename : varchar(50)
+  display_order : int(11)
+}
+
+entity KidsCategories {
+* kidscatid : int(11) <<auto increment>>
+--
+  kidscatname : varchar(50)
+  display_order : int(11)
+}
+
+entity "Participants" {
+* badgeid : varchar(15)
+--
+  password : varchar(255)
+  bestway : varchar(12)
+  interested : tinyint(1)
+  bio : text
+  pubsname : varchar(50)
+  share_email : tinyint(1)
+  staff_notes : text
+  use_photo : tinyint(1)
+  data_retention : tinyint(1)
+}
+
+entity ParticipantHasCredential {
+  badgeid : varchar(15)
+  credentialid : int(11)
+--
+}
+
+entity ParticipantHasRole {
+* badgeid : varchar(15)
+* roleid : int(11)
+--
+}
+
+entity ParticipantInterests {
+* badgeid : varchar(15)
+--
+  yespanels : text
+  nopanels : text
+  yespeople : text
+  nopeople : text
+  otherroles : text
+}
+
+entity ParticipantOnSession {
+* participantonsessionid : int(11) <<auto increment>>
+--
+* badgeid : varchar(15)
+* sessionid : int(11)
+* moderator : tinyint(4)
+}
+
+entity ParticipantOnSessionHistory {
+* participantonsessionhistoryid : int(11) <<auto increment>>
+--
+* badgeid : varchar(15)
+* sessionid : int(11)
+* moderator : tinyint(4)
+* participantonsessionid : int(11)
+* createdts : timestamp
+* createdbybadgeid : varchar(15)
+* inactivatedts : timestamp
+* inactivatedbybadgeid : varchar(15)
+}  
+
+entity ParticipantPasswordResetRequests {
+* badgeidentered : varchar(15)
+* creationdatetime : datetime
+--
+  email : varchar(255)
+* ipaddress : varchar(225)
+* expirationdatetime : datetime
+* selector : char(16)
+* token : char(64)
+* cancelled: tinyint(1)
+}
+
+entity ParticipantSessionInterest {
+* badgeid : varchar(15)
+* sessionid : int(11)
+--
+  rank : int(11)
+  willmoderate : tinyint(1)
+  comments : text
+}
+
+entity ParticipantSuggestions {
+*  badgeid : varchar(15)
+--
+  paneltopics : text
+  otherideas  text
+  suggestedguests : text
+}
+
+entity PermissionRoles (
+* permroleid: int <<auto increment>>
+  permrolename: varchar(100)
+  notes: text
+  display_order: int
+}
+
+entity RegTypes {
+* regtypeid : int <<auto incremenet>>
+--
+  regtype : varchar(40)
+  message : varchar(100)
+  display_order : int
+}
+
+entity Roles {
+* roleid : int(11) <<auto increment>>
+  rolename : varchar(50)
+  display_order : int(11)
+}
+
+entity Rooms {
+*  roomid : int(11)
+--
+   roomname : varchar(50) 
+   display_order : int(11) 
+   height : varchar(100) 
+   dimensions : varchar(100) 
+   area : varchar(100) 
+   function : varchar(100) 
+   floor : varchar(50) 
+   notes : text,
+   opentime1 : time 
+   closetime1 : time 
+   opentime2 : time 
+   closetime2 : time 
+   opentime3 : time 
+   closetime3 : time 
+   is_scheduled : tinyint(4)
+}
+
+entity Schedule {
+* scheduleid : int(11) <<auto increment>>
+--
+* sessionid : int(11)
+* roomid : int(11)
+* starttime : time
+}
+
+entity SessionHasTag {
+* sessionid : int(11)
+* tagid : int(11)
+--
+}
+entity SessionStatuses {
+*  statusid : int(11)
+--
+   statusname : varchar(50) 
+*  validate : tinyint(4)
+*  may_be_scheduled : tinyint(4)
+   display_order : int(11) 
+}
+
+entity Sessions {
+*  sessionid : int(11)
+--
+*  trackid : int(11)
+*  typeid : int(11)
+*  divisionid : int(11)
+*  pubstatusid : int(11)
+*  languagestatusid : int(11)
+   pubsno : varchar(50) 
+   title : varchar(100) 
+   secondtitle : varchar(100) 
+   pocketprogtext : text,
+   progguiddesc : text,
+   persppartinfo : text,
+   duration : time 
+   estatten : int(11) 
+*  kidscatid : int(11)
+   signupreq : tinyint(1) 
+*  roomsetid : int(11)
+   notesforpart : text,
+   servicenotes : text,
+*  statusid : int(11)
+   notesforprog : text,
+   warnings : tinyint(1) 
+*  invitedguest : tinyint(1)
+   ts : timestamp
+}
+
+entity Tags {
+* tagid : int(11) <<auto increment>>
+--
+  tagname : varchar(30)
+* display_order : int(11)
+}
+
+entity Tracks {
+*  trackid : int(11) <<auto increment>>
+--
+   trackname : varchar(50)
+   display_order : int(11)
+   selfselect : tinyint(1)
+}
+
+entity Types {
+*  typeid : int(11) <<auto increment>>
+--
+  typename : varchar(50)
+  display_order : int(11)
+  selfselect : tinyint(4
+}
+note bottom: e.g. Panel, Party,\nWorkshop, etc.
+
+entity UserHasPermissionRole {
+* badgeid: varchar(15)
+* permroleid: int
+}
+
+CongoDump ||--|| Participants : badgeid
+CongoDump }|--o| RegTypes : regtypeid
+CongoDumpHistory }|--|| Participants : badgeid
+CongoDumpHistory }|--|| Participants : createdby
+CongoDumpHistory }|--|| Participants : inactivatedby
+Schedule |o--|| Sessions
+Schedule }o--|| Rooms
+Sessions }|--|| SessionStatuses : statusid
+Sessions }|--|| Divisions : divisionid
+Sessions }|--|| KidsCategories : kidscatid
+Sessions }|--|| Tracks : trackid
+Sessions }|--|| Types : typeid
+Sessions ||--|{ SessionHasTag : sessionid
+SessionHasTag }|--|| Tags : tagid
+ParticipantHasCredential }o--|| Participants
+ParticipantHasCredential }o--|| Credentials
+ParticipantOnSession }o--|| Participants
+ParticipantOnSession }o--|| Sessions
+ParticipantOnSessionHistory }o--|| Participants
+ParticipantOnSessionHistory }o--|| Sessions
+ParticipantSessionInterest }o--|| Participants
+ParticipantSessionInterest }o--|| Sessions
+Participants ||--o| ParticipantInterests : badgeid
+Participants ||--o| ParticipantSuggestions : badgeid
+Participants ||--o{ ParticipantHasRole : badgeid
+Participants ||--o| UserHasPermissionRole : badgeid
+Roles ||--o{ ParticipantHasRole : roleid
+PermissionRole ||--o{ UserHasPermissionRole : permroleid
+
+@enduml
