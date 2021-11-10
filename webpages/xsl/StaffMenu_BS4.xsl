@@ -4,7 +4,6 @@
     Copyright (c) 2020-2021 Peter Olszowka. All rights reserved. See copyright document for more details.
 -->
 <xsl:stylesheet version="1.1" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-<<<<<<< HEAD
     <xsl:param name="title" select="''"/>
     <!-- Page title -->
     <xsl:param name="reportMenuList" select="''"/>
@@ -15,7 +14,7 @@
     <xsl:variable name="AdminPhases" select="/doc/query[@queryname='permission_set']/row[@permatomtag='AdminPhases']"/>
     <xsl:variable name="Administrator"
         select="/doc/query[@queryname='permission_set']/row[@permatomtag='Administrator']"/>
-    <xsl:variable name="EditAnyTable" select="/doc/query[@queryname='permission_set']/row[@permatomtag='ce_All' or
+   <xsl:variable name="EditAnyTable" select="/doc/query[@queryname='permission_set']/row[@permatomtag='ce_All' or
         @permatomtag='ce_BioEditStatuses' or @permatomtag='ce_Credentials' or @permatomtag='ce_Divisions' or
         @permatomtag='ce_EmailCC' or @permatomtag='ce_EmailFrom' or @permatomtag='ce_EmailTo' or @permatomtag='ce_Features' or
         @permatomtag='ce_KidsCategories' or @permatomtag='ce_LanguageStatuses' or @permatomtag='ce_PubStatuses' or
@@ -59,6 +58,9 @@
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarParticipantsDropdown">
                             <a class="dropdown-item" href="AdminParticipants.php">Administer</a>
+                            <xsl:if test="$PARTICIPANT_PHOTOS = '1'">
+                              <a class="dropdown-item" href="AdminPhotos.php">Photos</a>
+                            </xsl:if>
                             <a class="dropdown-item" href="InviteParticipants.php">Invite to a Session</a>
                             <a class="dropdown-item" href="StaffAssignParticipants.php">Assign to a Session</a>
                             <xsl:if test="/doc/query[@queryname='permission_set']/row[@permatomtag='SendEmail']">
