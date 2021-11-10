@@ -552,4 +552,20 @@ function ObjecttoXML($queryname, $object, $xml = null) {
     // echo(mb_ereg_replace("<(query|row)([^>]*/[ ]*)>", "<\\1\\2></\\1>", $permissionSetXML->saveXML(), "i"));
     return $xml;
 }
+
+// Function html_to_text()
+//  $html = html text to convert
+//  returns plain text with <p>'s converted to two newlines and <br>'s converted to one newline.
+//  remove html codes preserving line break
+function html_to_text($html) {
+    $text = preg_replace('=^<p>=i', '', $html);
+    $text = preg_replace('=</p>$=i', '', $text);
+    $text = str_replace("\r", '', $text);
+    $text = str_replace("\n", '', $text);
+    $text = preg_replace('=<br */*>=i', "\r\n", $text);
+    $text = preg_replace('=</p>=i', "\r\n\r\n", $text);
+    $text = preg_replace('=<p[^>]*>=i', '', $text);
+    $text = html_entity_decode(strip_tags($text), ENT_QUOTES);
+    return $text;
+}
 ?>
