@@ -219,3 +219,6 @@ input[type='text'].disabled {
 .session-status-definitions dd {
   margin-left: 4rem;
 }
+footer {
+  padding-top: 1rem;
+}

@@ -178,9 +178,9 @@ function validate_session() {
         $flag = false;
     }
     $i = mb_strlen($session["progguiddesc"]);
-    if ($i < 10 || $i > 500) {
+    if ($i < 10 || $i > 1000) {
         $messages .= "Description is $i characters long.  Please edit it to between";
-        $messages .= " <b>10</b> and <b>500</b> characters long.<br>\n";
+        $messages .= " <b>10</b> and <b>1000</b> characters long.<br>\n";
         $flag = false;
     }
     if (!($sstatus[$session["status"]]['may_be_scheduled'])) {
