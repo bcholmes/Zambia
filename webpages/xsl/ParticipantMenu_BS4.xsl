@@ -42,9 +42,11 @@
           <li class="nav-item py-0">
             <a class="nav-link py-1" href="my_interests.php">General Interests</a>
           </li>
+          <!-- 
           <li class="nav-item py-0">
             <a class="nav-link py-1" href="my_suggestions.php">My Suggestions</a>
           </li>
+          -->
           <xsl:if test="/doc/query[@queryname='permission_set']/row[@permatomtag='search_panels']">
             <li class="nav-item py-0">
               <a class="nav-link py-1" href="PartSearchSessions.php">Search Sessions</a>

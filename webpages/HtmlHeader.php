@@ -10,7 +10,15 @@ function html_header($title, $bootstrap4 = false, $isDataTables = false, $report
     <meta charset="utf-8">
     <title>Zambia &ndash; <?php echo $title ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<?php
+    if (defined('CON_THEME_FAVICON') && CON_THEME_FAVICON !== "") {
+?>
+    <link rel="shortcut icon" href="<?php echo CON_THEME_FAVICON ?>" type="image/x-icon" />
+    <link rel="shortcut icon" href="<?php echo CON_THEME_FAVICON ?>">
+<?php } else { ?>
     <link href="images/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    <link rel="shortcut icon" href="images/favicon.ico">
+<?php } ?>
 <?php if ($bootstrap4) { ?>
     <link rel="stylesheet" href="external/bootstrap4.5.0/bootstrap.min.css" type="text/css" >
 <?php } else { ?>
@@ -51,7 +59,6 @@ if (PARTICIPANT_PHOTOS === TRUE) {
     echo "    <link rel=\"stylesheet\" href=\"external/croppie.2.6.5/croppie.css\" type=\"text/css\" />\n";
 }
 ?>
-    <link rel="shortcut icon" href="images/favicon.ico">
     <script type="text/javascript">
         var thisPage="<?php echo $title; ?>";
         var conStartDateTime = new Date("<?php echo CON_START_DATIM; ?>".replace(/-/g,"/"));

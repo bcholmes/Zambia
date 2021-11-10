@@ -4,7 +4,7 @@
 global $returnAjaxErrors, $return500errors;
 $returnAjaxErrors = true;
 $return500errors = true;
-require_once('StaffCommonCode.php'); // will check if logged in and for staff privileges
+require_once('StaffCommonCode.php'); // will check for staff privileges
 require('EditPermRoles_FNC.php');
 // skip to below all functions
 
@@ -19,7 +19,7 @@ function fetch_participant() {
     }
     $query = <<<EOD
 SELECT
-    P.badgeid, P.pubsname, P.interested, P.bio,
+    P.badgeid, P.pubsname, P.interested, P.bio, 
     P.staff_notes, CD.firstname, CD.lastname, CD.badgename, CD.phone, CD.email, CD.postaddress1,
     CD.postaddress2, CD.postcity, CD.poststate, CD.postzip, CD.postcountry,
     P.uploadedphotofilename, P.approvedphotofilename, P.photodenialreasonothertext,
@@ -51,6 +51,8 @@ function update_participant() {
     $participantBadgeId = getString("badgeid");
     $password = getString("password");
     $bio = getString("bio");
+    if (HTML_BIO === TRUE)
+        $htmlbio = getString("htmlbio");
     $pubsname = getString("pubsname");
     $staffnotes = getString("staffnotes");
     $interested = getInt("interested", NULL);
@@ -63,6 +65,8 @@ function update_participant() {
         if (!is_null($password)) {
             push_query_arrays(password_hash($password, PASSWORD_DEFAULT), 'password', 's', 254, $query_portion_arr, $query_param_arr, $query_param_type_str);
         }
+        if (HTML_BIO === true)
+            push_query_arrays($htmlbio, 'htmlbio', 's', 65535, $query_portion_arr, $query_param_arr, $query_param_type_str);
         push_query_arrays($bio, 'bio', 's', 65535, $query_portion_arr, $query_param_arr, $query_param_type_str);
         push_query_arrays($pubsname, 'pubsname', 's', 50, $query_portion_arr, $query_param_arr, $query_param_type_str);
         push_query_arrays($staffnotes, 'staff_notes', 's', 65535, $query_portion_arr, $query_param_arr, $query_param_type_str);
@@ -91,7 +95,7 @@ function update_participant() {
     $poststate = getString("poststate");
     $postzip = getString("postzip");
     $postcountry = getString("postcountry");
-    
+
     if (!is_null($lastname) || !is_null($firstname) || !is_null($badgename) || !is_null($phone) || !is_null($email) || !is_null($postaddress1)
         || !is_null($postaddress2) || !is_null($postcity) || !is_null($poststate) || !is_null($postzip) || !is_null($postcountry)) {
         if (USE_REG_SYSTEM) {
@@ -103,7 +107,7 @@ function update_participant() {
         $query = <<<EOD
 UPDATE CongoDumpHistory
     SET inactivatedts = CURRENT_TIMESTAMP, inactivatedbybadgeid = ?
-    WHERE 
+    WHERE
             badgeid = ?
         AND inactivatedts IS NULL;
 EOD;
@@ -274,24 +278,18 @@ function perform_search() {
     $json_return = array ();
     if (is_numeric($searchString)) {
         if (DBVER >= "8") {
-            $query["searchParticipants"] = <<<EOD
-WITH AnsweredSurvey(participantid, answercount) AS (
-    SELECT participantid, COUNT(*) AS answercount
-    FROM ParticipantSurveyAnswers
-    WHERE participantid = "$searchString"
-)
+            $query = <<<EOD
 SELECT
 	P.badgeid, P.pubsname, P.interested, P.bio, 
     P.staff_notes, CD.firstname, CD.lastname, CD.badgename,
     CD.phone, CD.email, CD.postaddress1, CD.postaddress2, CD.postcity, CD.poststate, CD.postzip,
-    CD.postcountry, CD.regtype, IFNULL(A.answercount, 0) AS answercount,
+    CD.postcountry, CD.regtype, 
     P.uploadedphotofilename, P.approvedphotofilename, P.photodenialreasonothertext,
 	CASE WHEN ISNULL(P.photouploadstatus) THEN 0 ELSE P.photouploadstatus END AS photouploadstatus,
 	R.statustext, D.reasontext
 FROM
     Participants P
 	JOIN CongoDump CD ON P.badgeid = CD.badgeid
-    LEFT OUTER JOIN AnsweredSurvey A ON (P.badgeid = A.participantid)
     LEFT OUTER JOIN PhotoDenialReasons D USING (photodenialreasonid)
     LEFT OUTER JOIN PhotoUploadStatus R USING (photouploadstatus)
 WHERE
@@ -300,49 +298,45 @@ ORDER BY
 	CD.lastname, CD.firstname
 EOD;
         } else {
-            $query["searchParticipants"] = <<<EOD
+            $query = <<<EOD
 SELECT
 	P.badgeid, P.pubsname, P.interested, P.bio, 
     P.staff_notes, CD.firstname, CD.lastname, CD.badgename,
     CD.phone, CD.email, CD.postaddress1, CD.postaddress2, CD.postcity, CD.poststate, CD.postzip,
-    CD.postcountry, CD.regtype, IFNULL(A.answercount, 0) AS answercount,
+    CD.postcountry, CD.regtype,
     P.uploadedphotofilename, P.approvedphotofilename, P.photodenialreasonothertext,
 	CASE WHEN ISNULL(P.photouploadstatus) THEN 0 ELSE P.photouploadstatus END AS photouploadstatus,
 	R.statustext, D.reasontext
 FROM
     Participants P
 	JOIN CongoDump CD ON P.badgeid = CD.badgeid
-        LEFT OUTER JOIN (
-            SELECT participantid, COUNT(*) AS answercount
-                FROM ParticipantSurveyAnswers
-                WHERE participantid = "$searchString"
-    ) A ON (P.badgeid = A.participantid)
 LEFT OUTER JOIN PhotoDenialReasons D USING (photodenialreasonid)
 LEFT OUTER JOIN PhotoUploadStatus R USING (photouploadstatus)
 WHERE
 	P.badgeid = ?
 ORDER BY
 	CD.lastname, CD.firstname
-EOD;
-        $param_arr = array($searchString);
-        $result = mysqli_query_with_prepare_and_exit_on_error($query, "s", $param_arr);
+EOD; 
+        }
+        $param_arr = array($searchString, $searchString);
+        $result = mysqli_query_with_prepare_and_exit_on_error($query, "ss", $param_arr);
     } else {
         $searchString = '%' . $searchString . '%';
         if (DBVER >= "8") {
             $query = <<<EOD
-WITH AnsweredSurvey(participantid, answercount) AS (
-    SELECT participantid, COUNT(*) AS answercount
-    FROM ParticipantSurveyAnswers
-)
 SELECT
 	P.badgeid, P.pubsname, P.interested, P.bio, 
     P.staff_notes, CD.firstname, CD.lastname, CD.badgename,
     CD.phone, CD.email, CD.postaddress1, CD.postaddress2, CD.postcity, CD.poststate, CD.postzip,
-    CD.postcountry, CD.regtype, IFNULL(A.answercount, 0) AS answercount
+    CD.postcountry, CD.regtype, 
+    P.uploadedphotofilename, P.approvedphotofilename, P.photodenialreasonothertext,
+	CASE WHEN ISNULL(P.photouploadstatus) THEN 0 ELSE P.photouploadstatus END AS photouploadstatus,
+	R.statustext, D.reasontext
 FROM
 	Participants P
 	JOIN CongoDump CD ON P.badgeid = CD.badgeid
-    LEFT OUTER JOIN AnsweredSurvey A ON (P.badgeid = A.participantid)
+    LEFT OUTER JOIN PhotoDenialReasons D USING (photodenialreasonid)
+    LEFT OUTER JOIN PhotoUploadStatus R USING (photouploadstatus)
 WHERE
 		P.pubsname LIKE ?
 	OR CD.lastname LIKE ?
@@ -352,24 +346,20 @@ ORDER BY
 	CD.lastname, CD.firstname
 EOD;
         } else {
-             $query = <<<EOD
+            $query = <<<EOD
 SELECT
 	P.badgeid, P.pubsname, P.interested, P.bio, 
     P.staff_notes, CD.firstname, CD.lastname, CD.badgename,
     CD.phone, CD.email, CD.postaddress1, CD.postaddress2, CD.postcity, CD.poststate, CD.postzip,
-    CD.postcountry, CD.regtype, IFNULL(A.answercount, 0) AS answercount,
+    CD.postcountry, CD.regtype, 
     P.uploadedphotofilename, P.approvedphotofilename, P.photodenialreasonothertext,
 	CASE WHEN ISNULL(P.photouploadstatus) THEN 0 ELSE P.photouploadstatus END AS photouploadstatus,
 	R.statustext, D.reasontext
 FROM
 	Participants P
 	JOIN CongoDump CD ON P.badgeid = CD.badgeid
-    LEFT OUTER JOIN (
-         SELECT participantid, COUNT(*) AS answercount
-            FROM ParticipantSurveyAnswers
-) A ON (P.badgeid = A.participantid)
-LEFT OUTER JOIN PhotoDenialReasons D USING (photodenialreasonid)
-LEFT OUTER JOIN PhotoUploadStatus R USING (photouploadstatus)
+    LEFT OUTER JOIN PhotoDenialReasons D USING (photodenialreasonid)
+    LEFT OUTER JOIN PhotoUploadStatus R USING (photouploadstatus)
 WHERE
 		P.pubsname LIKE ?
 	OR CD.lastname LIKE ?
@@ -378,8 +368,9 @@ WHERE
 ORDER BY
 	CD.lastname, CD.firstname
 EOD;
-        $param_arr = array($searchString,$searchString,$searchString,$searchString,$searchString);
-        $result = mysqli_query_with_prepare_and_exit_on_error($query, "sssss", $param_arr);
+        }
+        $param_arr = array($searchString,$searchString,$searchString,$searchString);
+        $result = mysqli_query_with_prepare_and_exit_on_error($query, "ssss", $param_arr);
     }
     $xml = mysql_result_to_XML("searchParticipants", $result);
     $rows = mysqli_num_rows($result);
@@ -426,7 +417,7 @@ function fetch_user_perm_roles() {
         ['mayIEditAllRoles' => $mayIEditAllRoles, 'rolesIMayEditArr' => $rolesIMayEditArr] = fetchMyEditableRoles($loggedInUserBadgeId);
         if ($mayIEditAllRoles) {
             $query = <<<EOD
-SELECT 
+SELECT
         PR.permrolename, PR.permroleid, UHPR.badgeid, 1 AS mayedit
     FROM
                   PermissionRoles PR
@@ -442,8 +433,8 @@ EOD;
                     array("permroles" => array($fetchedUserBadgeId)));
         } else { // has permission to edit only specific perm roles
             $query = <<<EOD
-SELECT 
-        PR.permrolename, PR.permroleid, UHPR.badgeid, 
+SELECT
+        PR.permrolename, PR.permroleid, UHPR.badgeid,
         IF(ISNULL(SQ.elementid), 0, 1) AS mayedit
     FROM
                   PermissionRoles PR
@@ -451,7 +442,7 @@ SELECT
                 UHPR.badgeid = ?
             AND UHPR.permroleid = PR.permroleid
         LEFT JOIN (
-            SELECT 
+            SELECT
                     PA.elementid
                 FROM
                          UserHasPermissionRole UHPR
@@ -472,7 +463,7 @@ EOD;
         }
     } else { // has no permission to edit user perm roles
         $query = <<<EOD
-SELECT 
+SELECT
         PR.permrolename, PR.permroleid, UHPR.badgeid, 0 AS mayedit
     FROM
                   PermissionRoles PR
@@ -499,7 +490,7 @@ EOD;
 global $returnAjaxErrors, $return500errors;
 $returnAjaxErrors = true;
 $return500errors = true;
-if (!isLoggedIn()) {
+if (!isLoggedIn() || !may_I('Staff')) {
     $message_error = "You are not logged in or your session has expired.";
     RenderErrorAjax($message_error);
     exit();

@@ -7,6 +7,7 @@
     <xsl:param name="title" select="''"/>
     <!-- Page title -->
     <xsl:param name="reportMenuList" select="''"/>
+    <xsl:param name="badgename" select="'Current User'"/>
     <xsl:param name="PARTICIPANT_PHOTOS" select="'0'"/>
     <!-- Set of <a> elements; contents of ReportMenuBS4Include.php -->
     <xsl:variable name="ConfigureReports"
@@ -140,9 +141,23 @@
                         </div>
                     </div>
                 </xsl:if>
-                <div class="navbar-nav ml-auto">
+                <div class="navbar-nav ml-auto mr-2">
                     <div class="nav-item py-0">
                         <a id="ParticipantView" class="nav-link py-1" href="welcome.php">Participant View</a>
+                    </div>
+                </div>
+                 <div class="navbar-nav dropdown py-0">
+                    <a class="nav-link dropdown-toggle py-1" href="#" role="button"
+                        data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
+                        <xsl:value-of select="$badgename"/>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarSessionsDropdown">
+                        <a class="dropdown-item" href="./my_contact.php">Profile</a>
+                        <a class="dropdown-item" href="MySchedule.php">My Schedule</a>
+                        <a class="dropdown-item" href="my_sched_constr.php">Availability</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="./logout.php">Log out</a>
                     </div>
                 </div>
             </div>
