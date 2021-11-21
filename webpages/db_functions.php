@@ -915,7 +915,8 @@ SELECT
         postcity,
         poststate,
         postzip,
-        postcountry
+        postcountry,
+        regtype
     FROM
         CongoDump
     WHERE
