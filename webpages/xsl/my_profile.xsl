@@ -14,6 +14,8 @@
     <xsl:param name="maxBioLen" select="500"/>
     <xsl:param name="enableBioEdit" select="'0'"/>
     <xsl:param name="userIdPrompt" select="''"/>
+    <xsl:param name="photoPath" select="''"/>
+    <xsl:param name="defaultPhoto" select="''"/>
     <xsl:output encoding="UTF-8" indent="yes" method="xml" />
     <xsl:template match="/">
         <xsl:variable name="use_photo" select="/doc/query[@queryName='participant_info']/row/@use_photo" />
@@ -28,7 +30,25 @@
         <form name="partform" class="container mt-2 mb-4">
             <div class="card">
                 <div class="card-header">
-                    <h2>My Profile</h2>
+                    <h2>
+                        <xsl:choose>
+                            <xsl:when test="$photoPath != '' and /doc/query[@queryName='participant_info']/row/@approvedphotofilename">
+                                <img class="rounded-circle participant-avatar" style="width: 2rem;" alt="Participant Photo/Avatar">
+                                    <xsl:attribute name="src"> 
+                                        <xsl:value-of select="concat($photoPath, '/', /doc/query[@queryName='participant_info']/row/@approvedphotofilename)" />
+                                    </xsl:attribute>
+                                </img>
+                            </xsl:when>
+                            <xsl:when test="$photoPath != '' and $defaultPhoto != ''" alt="Default Photo/Avatar">
+                                <img class="rounded-circle participant-avatar" style="width: 2rem;">
+                                    <xsl:attribute name="src"> 
+                                        <xsl:value-of select="concat($photoPath, '/', $defaultPhoto)" />
+                                    </xsl:attribute>
+                                </img>
+                            </xsl:when>
+                        </xsl:choose>
+                        <span>My Profile</span>
+                    </h2>
                 </div>
                 <div class="card-body">
                     <div class="row mt-3">
