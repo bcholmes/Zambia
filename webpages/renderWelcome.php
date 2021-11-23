@@ -28,11 +28,11 @@ if (may_I('postcon')) { ?>
 	    Please check back often as more options will become available as we get closer to the convention.
     </div>
 </div>
-<div class="alert alert-primary" role="alert"><p>We do not tolerate harassment in any form. <?php echo CON_NAME; ?> is dedicated to providing a welcoming, 
-    enjoyable, harassment-free convention experience for all individuals, regardless of gender, gender identity and 
-    expression, sexual orientation, disability, race, ethnicity, physical appearance, body size, age, origin, or 
-    religion. We do not tolerate racism in any form. Convention participants violating these rules may be sanctioned 
-    or expelled from the convention without a refund at the discretion of the convention organizers.</p>
+<div class="alert alert-primary" role="alert"><p><?php echo CON_NAME; ?> does not tolerate harassment in any form. We are dedicated to providing a 
+    welcoming, enjoyable, harassment-free convention experience for all individuals, regardless of gender identity and expression, 
+    sexual orientation, disability, race, ethnicity, physical appearance, body size, age, origin, or religion. We do not tolerate 
+    racism in any form. Convention participants violating these rules may be sanctioned or expelled from the convention without 
+    a refund at the discretion of the convention organizers.</p>
 
     <p>Our anti-harassment policy can be found at: <a href="https://wiscon.net/policies/anti-harassment/code-of-conduct/">https://wiscon.net/policies/anti-harassment/code-of-conduct/</a>.</p>
 
