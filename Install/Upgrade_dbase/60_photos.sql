@@ -42,8 +42,8 @@ ALTER TABLE PermissionAtoms MODIFY COLUMN permatomtag varchar(32) NOT NULL;
 
 ## NOW Add in the permissionatom and permission for both edit config table and the page
 INSERT INTO PermissionAtoms(permatomid, permatomtag, page, notes)
-VALUES (2021, 'ce_PhotoDenialReasons', 'Edit Configuration Tables', 'enables edit'),
-(2022, 'AdminPhotos', 'Administer Photos', 'approve/deny photos');
+VALUES (2022, 'ce_PhotoDenialReasons', 'Edit Configuration Tables', 'enables edit'),
+(2023, 'AdminPhotos', 'Administer Photos', 'approve/deny photos');
 
 INSERT INTO Permissions(permatomid, phaseid, permroleid)
 SELECT a.permatomid, null, r.permroleid 
