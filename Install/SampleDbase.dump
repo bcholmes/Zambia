@@ -817,7 +817,8 @@ INSERT INTO `PatchLog` (patchname) VALUES
     ('53_data_retention.sql'),
     ('57_create_user_permission.sql'),
     ('58_roomhasset_key.sql'),
-    ('59_config_edit_tables.sql');
+    ('59_config_edit_tables.sql'),
+    ('60_session_hashtag.sql');
 /*!40000 ALTER TABLE `PatchLog` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1163,6 +1164,7 @@ CREATE TABLE `PreviousSessions` (
   `signupreq` tinyint(1) DEFAULT NULL,
   `notesforpart` text,
   `notesforprog` text,
+  `hashtag` varchar(50) DEFAULT NULL,
   `invitedguest` tinyint(1) DEFAULT NULL,
   `importedsessionid` int(11) DEFAULT NULL,
   PRIMARY KEY (`previousconid`,`previoussessionid`),
@@ -1768,6 +1770,7 @@ CREATE TABLE `Sessions` (
   `servicenotes` text,
   `statusid` int(11) NOT NULL DEFAULT '0',
   `notesforprog` text,
+  `hashtag` varchar(50) DEFAULT NULL,
   `warnings` tinyint(1) DEFAULT NULL,
   `invitedguest` tinyint(1) DEFAULT '0',
   `ts` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
