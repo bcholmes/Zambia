@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
+import axios from 'axios';
 
+import Alert from 'react-bootstrap/Alert';
 import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
 import Form from 'react-bootstrap/Form';
@@ -16,11 +18,17 @@ class SubmissionForm extends Component {
     }
 
     render() {
+        let message = this.state.message ? (<Alert variant={this.state.message.severity}>{this.state.message.text}</Alert>) : undefined;
+
         return (
-            <Form>
+            <Form onSubmit={(e) => {e.preventDefault(); this.submitForm(); }}>
+                {message}
+
                 <Card>
                     <Card.Header><h2>Submit a Session</h2></Card.Header>
                     <Card.Body>
+                        <p>Submissions are open for programming for WisCon 2022.</p>
+
                         <Form.Group controlId="title">
                             <Form.Label className="sr-only">Title</Form.Label>
                             <Form.Control className={this.getErrorClass('title')} type="text" placeholder="Title" value={this.getFormValue('title')} onChange={(e) => this.setFormValue('title', e.target.value)}/>
@@ -43,7 +51,7 @@ class SubmissionForm extends Component {
 
                     </Card.Body>
                     <Card.Footer>
-                        <Button variant="primary">Submit</Button>
+                        <Button variant="primary" onClick={() => { this.submitForm() }}>Submit</Button>
                     </Card.Footer>
                 </Card>
             </Form>
@@ -80,9 +88,38 @@ class SubmissionForm extends Component {
         this.setState({
             ...state,
             values: newValue,
-            messages: null,
+            message: null,
             errors: errors
         });
+    }
+
+    isValidForm() {
+        return true;
+    }
+
+    submitForm() {
+        console.log("submit that puppy.");
+
+        if (this.isValidForm()) {
+            axios.post('/api/brainstorm/submit_session.php', this.state.values)
+            .then(res => {
+                this.setState({
+                    ...this.state,
+                    values: {},
+                    errors: {},
+                    message: null
+                });
+            })
+            .catch(error => {
+                this.setState({
+                    ...this.state,
+                    message: {
+                        severity: "danger",
+                        text: "Sorry. We're had a bit of a technical problem. Try again?"
+                    }
+                });
+            });
+        }
     }
 }
 

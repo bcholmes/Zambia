@@ -17,7 +17,6 @@ const BrainstormApp = () => (
                 <SubmissionForm />
             </section>
             <section className="col-md-3">
-                <p><b>Submissions are open for programming for WisCon 2022.</b></p>
                 <p>What are we looking for? WisCon encourages programming that has at least implicit,
                     but preferrably explicit, recognition of and engagement with an expansive definition
                     of feminism. We encourage programming that is attentive to issues of gender, sexuality,
