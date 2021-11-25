@@ -2,16 +2,15 @@ import React, { useState } from 'react';
 
 import Container from 'react-bootstrap/Container';
 
-import Footer from './component/footer'
+import Footer from './component/footer';
+import PageHeader from './component/header';
 import SubmissionForm from './component/submissionForm';
 
 import './scss/brainstorm.scss';
 
 const BrainstormApp = () => (
     <Container>
-        <header className="pb-3 mb-2">
-            <img className="w-100" src="/HeaderImage.php" alt="page header" />
-        </header>
+        <PageHeader />
         <div className="row">
             <section className="col-md-9">
                 <SubmissionForm />
