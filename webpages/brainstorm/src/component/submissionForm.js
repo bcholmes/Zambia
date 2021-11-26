@@ -5,6 +5,7 @@ import Alert from 'react-bootstrap/Alert';
 import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
 import Form from 'react-bootstrap/Form';
+import Spinner from 'react-bootstrap/Spinner';
 
 class SubmissionForm extends Component {
 
@@ -19,9 +20,16 @@ class SubmissionForm extends Component {
 
     render() {
         let message = this.state.message ? (<Alert variant={this.state.message.severity}>{this.state.message.text}</Alert>) : undefined;
+        const spinner = this.state.loading ? (<Spinner
+            as="span"
+            animation="border"
+            size="sm"
+            role="status"
+            aria-hidden="true"
+        />) : undefined;
 
         return (
-            <Form onSubmit={(e) => {e.preventDefault(); this.submitForm(); }}>
+            <Form onSubmit={(e) =>  this.submitForm(e)}>
                 {message}
 
                 <Card>
@@ -31,12 +39,13 @@ class SubmissionForm extends Component {
 
                         <Form.Group controlId="title">
                             <Form.Label className="sr-only">Title</Form.Label>
-                            <Form.Control className={this.getErrorClass('title')} type="text" placeholder="Title" value={this.getFormValue('title')} onChange={(e) => this.setFormValue('title', e.target.value)}/>
+                            <Form.Control className={this.getErrorClass('title')} type="text" placeholder="Title (Required)" value={this.getFormValue('title')} onChange={(e) => this.setFormValue('title', e.target.value)} />
                         </Form.Group>
 
                         <Form.Group controlId="progguiddesc">
                             <Form.Label className="sr-only">Description</Form.Label>
-                            <Form.Control as="textarea" rows={3} className={this.getErrorClass('progguiddesc')} type="text" placeholder="Session description" value={this.getFormValue('progguiddesc')} onChange={(e) => this.setFormValue('progguiddesc', e.target.value)}/>
+                            <Form.Control as="textarea" rows={3} className={this.getErrorClass('progguiddesc')} type="text" placeholder="Session description (Required)" value={this.getFormValue('progguiddesc')} onChange={(e) => this.setFormValue('progguiddesc', e.target.value)} />
+                            <Form.Text className="text-muted">Max 500 characters</Form.Text>
                         </Form.Group>
 
                         <Form.Group controlId="servnotes">
@@ -51,7 +60,7 @@ class SubmissionForm extends Component {
 
                     </Card.Body>
                     <Card.Footer>
-                        <Button variant="primary" onClick={() => { this.submitForm() }}>Submit</Button>
+                        <Button variant="primary" type="submit">{spinner} <span>Submit</span></Button>
                     </Card.Footer>
                 </Card>
             </Form>
@@ -85,6 +94,7 @@ class SubmissionForm extends Component {
         let newValue = { ...value };
         let errors = this.state.errors || {};
         newValue[formName] = formValue;
+        errors[formName] = !this.validateValue(formName, formValue);
         this.setState({
             ...state,
             values: newValue,
@@ -93,26 +103,67 @@ class SubmissionForm extends Component {
         });
     }
 
-    isValidForm() {
-        return true;
+    validateValue(formName, formValue) {
+        if (formName === 'title') {
+            return formValue != null && formValue !== '';
+        } else if (formName === 'progguiddesc') {
+            return formValue != null && formValue != '' && formValue.length <= 50;
+        } else {
+            return true;
+        }
     }
 
-    submitForm() {
-        console.log("submit that puppy.");
+    isValidForm() {
+        let formKeys = [ 'title', 'progguiddesc' ];
+        let errors = this.state.errors || {};
+        let valid = true
+        formKeys.forEach(element => {
+            let v = this.validateValue(element, this.state.values[element]);
+            valid &= v;
+            errors[element] = !v;
+        });
 
-        if (this.isValidForm()) {
+        let message = null;
+        if (!valid) {
+            message = { severity: "danger", text: "Whoopsie-doodle. It looks like some of this information isn't right."}
+        }
+        this.setState({
+            ...this.state,
+            errors: errors,
+            message: message
+        })
+        return valid;
+    }
+
+    submitForm(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const form = event.currentTarget;
+
+        if (this.isValidForm(form)) {
+            this.setState({
+                ...this.state,
+                loading: true
+            })
+            console.log("submit that puppy.");
+    
             axios.post('/api/brainstorm/submit_session.php', this.state.values)
             .then(res => {
                 this.setState({
                     ...this.state,
                     values: {},
                     errors: {},
-                    message: null
+                    loading: false,
+                    message: {
+                        severity: "success",
+                        text: "Thanks for the submission. Suggest another!"
+                    }
                 });
             })
             .catch(error => {
                 this.setState({
                     ...this.state,
+                    loading: false,
                     message: {
                         severity: "danger",
                         text: "Sorry. We're had a bit of a technical problem. Try again?"
