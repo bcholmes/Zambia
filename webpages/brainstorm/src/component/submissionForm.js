@@ -48,9 +48,9 @@ class SubmissionForm extends Component {
                             <Form.Text className="text-muted">Max 500 characters</Form.Text>
                         </Form.Group>
 
-                        <Form.Group controlId="servnotes">
+                        <Form.Group controlId="servicenotes">
                             <Form.Label className="sr-only">Equipment Needed / Alternative Format</Form.Label>
-                            <Form.Control as="textarea" rows={3} className={this.getErrorClass('servnotes')} type="text" placeholder="Equipment Needed / Alternative Format" value={this.getFormValue('servnotes')} onChange={(e) => this.setFormValue('servnotes', e.target.value)}/>
+                            <Form.Control as="textarea" rows={3} className={this.getErrorClass('servicenotes')} type="text" placeholder="Equipment Needed / Alternative Format" value={this.getFormValue('servicenotes')} onChange={(e) => this.setFormValue('servicenotes', e.target.value)}/>
                         </Form.Group>
 
                         <Form.Group controlId="persppartinfo">

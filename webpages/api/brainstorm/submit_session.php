@@ -32,14 +32,16 @@ function write_session_to_database($db, $json) {
 
     $query = <<<EOD
  INSERT INTO Sessions 
-        (title, progguiddesc, divisionid, statusid, kidscatid, trackid, typeid, pubstatusid, roomsetid, duration)
- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        (title, progguiddesc, servicenotes, persppartinfo,
+        divisionid, statusid, kidscatid, trackid, typeid, pubstatusid, roomsetid, duration)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
  EOD;
 
     $stmt = mysqli_prepare($db, $query);
-    mysqli_stmt_bind_param($stmt, "ssiiiiiiis", $json['title'], $json['progguiddesc'], $json['divisionid'],
-        $json['statusid'], $json['kidscatid'], $json['trackid'], $json['typeid'], $json['pubstatusid'], $json['roomsetid'],
-        $json['duration']);
+    mysqli_stmt_bind_param($stmt, "ssssiiiiiiis", $json['title'], $json['progguiddesc'], 
+        $json['servicenotes'], $json['persppartinfo'], $json['divisionid'], $json['statusid'], 
+        $json['kidscatid'], $json['trackid'], $json['typeid'], 
+        $json['pubstatusid'], $json['roomsetid'], $json['duration']);
 
     if ($stmt->execute()) {
         mysqli_stmt_close($stmt);
@@ -69,24 +71,39 @@ function send_confirmation_email($json) {
 
 }
 
+function is_valid($db, $json) {
+    if (!array_key_exists('title', $json) || $json['title'] === '') {
+        return false;
+    } else if (!array_key_exists('progguiddesc', $json) || $json['progguiddesc'] === '' || mb_strlen($json['progguiddesc'], "utf-8") > 500) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $body = file_get_contents('php://input');
     $json = json_decode($body, true);
 
+    // validate input
     $db = connect_to_db();
     try {
-        // validate input
+        error_log("is_valid");
+        if (is_valid($db, $json)) {
+            error_log("post is_valid");
 
+            // write to database
+            write_session_to_database($db, set_brainstorm_default_values($db, $json));
 
-        // write to database
-        write_session_to_database($db, set_brainstorm_default_values($db, $json));
+            // send email
+            send_confirmation_email($json);
 
-        // send email
-        send_confirmation_email($json);
-
-        http_response_code(201);
+            http_response_code(201);
+        } else {
+            http_response_code(400);
+        }
     } finally {
         $db->close();
     }
