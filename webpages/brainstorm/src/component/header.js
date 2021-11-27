@@ -7,17 +7,41 @@ import Modal from 'react-bootstrap/Modal';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 
+import store from '../state/store';
+import { extractAndDispatchJwt } from '../state/authActions';
+
 class PageHeader extends Component {
 
     constructor(props) {
         super(props);
 
         this.state = {
-            login: {}
+            jwt: store.getState().auth.jwt,
+            login: {},
+            showModal: !store.getState().auth.jwt && !store.getState().auth.pending
         };
     }
 
+    componentDidMount() {
+        this.unsubscribe = store.subscribe(() => {
+            let state = this.state;
+            this.setState({
+                ...state,
+                jwt: store.getState().auth.jwt,
+                showModal: !store.getState().auth.jwt && !store.getState().auth.pending
+            });
+        });
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribe) {
+            this.unsubscribe();
+        }
+    }
     render() {
+        let loginMenu = this.isAuthenticated() 
+            ? (<Nav.Link onClick={() => this.showLoginModal()}>{this.getName()}</Nav.Link>)
+            : (<Nav.Link onClick={() => this.showLoginModal()}>Login</Nav.Link>);
         let message = (this.state.login.message) ? (<div className="alert alert-danger">{this.state.login.message}</div>) : undefined;
 
         return [
@@ -29,7 +53,7 @@ class PageHeader extends Component {
                         <Nav.Link href="https://wiscon.net" target="_blank" rel="noreferrer">WisCon</Nav.Link>
                     </Nav>
                     <Nav className="navbar-expand-md navbar-dark bg-dark ml-auto">
-                        <Nav.Link onClick={() => this.showLoginModal()}>Login</Nav.Link>
+                        {loginMenu}
                     </Nav>
                 </Navbar>
             </header>,
@@ -40,6 +64,7 @@ class PageHeader extends Component {
                     </Modal.Header>
                     <Modal.Body>
                         {message}
+                        <p>Please log in to submit session ideas.</p>
                         <Form.Group className="mb-3" controlId="formEmail">
                             <Form.Label className="sr-only">Email</Form.Label>
                             <Form.Control type="email" placeholder="Enter email" value={this.state.userid} onChange={(e) => this.setUserid(e.target.value)}/>
@@ -120,17 +145,13 @@ class PageHeader extends Component {
     }
 
     processLogin() {
-        axios.post('/api/authenticate.php', {
+        axios.post('/api/login.php', {
             userid: this.state.login.userid,
             password: this.state.login.password
         })
         .then(res => {
-            let jwt = this.extractJwt(res);
-            if (jwt) {
-                store.dispatch(addAuthCredential(jwt));
-            }
+            extractAndDispatchJwt(res);
             this.handleClose();
-            this.goToRegistrationList();
         })
         .catch(error => {
             console.log(error);
@@ -149,15 +170,24 @@ class PageHeader extends Component {
         });
     }
 
-    extractJwt(res) {
-        let authHeader = res.headers['authorization'];
-        if (authHeader.indexOf('Bearer ') === 0) {
-            return authHeader.substring('Bearer '.length);
+    getName() {
+        if (this.isAuthenticated()) {
+            let jwt = this.state.jwt;
+            let parts = jwt.split('.');
+            if (parts.length === 3) {
+                let payload = JSON.parse(atob(parts[1]));
+                return payload['name'] || "Admin";
+            } else {
+                return "Admin";
+            }
         } else {
             return undefined;
         }
     }
 
+    isAuthenticated() {
+        return this.state.jwt;
+    }
 }
 
 
