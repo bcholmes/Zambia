@@ -82,6 +82,7 @@ function create_jwt_for_badgeid($db, $badgeid) {
 }
 
 $db = connect_to_db();
+session_start();
 try {
 
 	$options = read_division_and_track_options($db);

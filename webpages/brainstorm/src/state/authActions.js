@@ -20,7 +20,7 @@ export function logout() {
  
 export function extractJwt(res) {
    let authHeader = res.headers['authorization'];
-   if (authHeader.indexOf('Bearer ') === 0) {
+   if (authHeader && authHeader.indexOf('Bearer ') === 0) {
        return authHeader.substring('Bearer '.length);
    } else {
        return undefined;
@@ -31,6 +31,8 @@ export function extractAndDispatchJwt(res) {
    let jwt = extractJwt(res);
    if (jwt) {
       store.dispatch(addAuthCredential(jwt));
+   } else {
+      store.dispatch(logout());
    }
 }
 

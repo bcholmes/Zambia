@@ -16,6 +16,12 @@ const BrainstormApp = () => (
                 <MainBody />
             </section>
             <section className="col-md-3">
+                <div className="card mb-3">
+                    <div className="card-body">
+                        Submissions are open until <b>Jan 7th, 2022</b>.
+                    </div>
+                </div>
+
                 <p>What are we looking for? WisCon encourages programming that has at least implicit,
                     but preferrably explicit, recognition of and engagement with an expansive definition
                     of feminism. We encourage programming that is attentive to issues of gender, sexuality,

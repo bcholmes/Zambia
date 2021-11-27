@@ -57,7 +57,7 @@ class PageHeader extends Component {
                     </Nav>
                 </Navbar>
             </header>,
-            <Modal show={this.state.login.showModal}  onHide={() => this.handleClose()} key="page-header-login-dialog">
+            <Modal show={this.state.showModal}  onHide={() => this.handleClose()} key="page-header-login-dialog">
                 <Form>
                     <Modal.Header closeButton>
                     <Modal.Title>Login</Modal.Title>
@@ -128,9 +128,7 @@ class PageHeader extends Component {
         let state = this.state;
         this.setState({
             ...state, 
-            login: {
-                showModal: false
-            }
+            showModal: false
         });
     }
 
@@ -138,9 +136,7 @@ class PageHeader extends Component {
         let state = this.state;
         this.setState({
             ...state, 
-            login: {
-                showModal: true
-            }
+            showModal: true
         });
     }
 

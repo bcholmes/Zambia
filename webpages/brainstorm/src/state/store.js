@@ -11,10 +11,12 @@ const auth = (state = authInitialState, action) => {
     switch (action.type) {
         case ADD_AUTH_CREDENTIAL: 
             return {
+                pending: false,
                 jwt: action.payload.jwt
             }
         case LOGOUT: 
             return {
+                pending: false,
                 jwt: undefined
             };
         default:

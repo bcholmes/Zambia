@@ -63,7 +63,7 @@ function participant_header($title, $noUserRequired = false, $loginPageStatus = 
                             <?php makeMenuItem("Session Interests", may_I('my_panel_interests'),"PartPanelInterests.php",false); ?>
                             <?php makeMenuItem("My Schedule", may_I('my_schedule'),"MySchedule.php",false); ?>
                             <li class="divider-vertical"></li>
-                            <?php makeMenuItem("Suggest a Session", may_I('BrainstormSubmit'),"BrainstormWelcome.php", false); ?>
+                            <?php makeMenuItem("Suggest a Session", may_I('BrainstormSubmit'),"./brainstorm/", false); ?>
                             <li class="divider-vertical"></li>
                         </ul>
                             <?php if (may_I('Staff')) {
