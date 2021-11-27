@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import Container from 'react-bootstrap/Container';
 
 import Footer from './component/footer';
+import MainBody from './component/mainBody';
 import PageHeader from './component/header';
-import SubmissionForm from './component/submissionForm';
 
 import './scss/brainstorm.scss';
 
@@ -13,7 +13,7 @@ const BrainstormApp = () => (
         <PageHeader />
         <div className="row">
             <section className="col-md-9">
-                <SubmissionForm />
+                <MainBody />
             </section>
             <section className="col-md-3">
                 <p>What are we looking for? WisCon encourages programming that has at least implicit,
