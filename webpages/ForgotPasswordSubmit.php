@@ -121,14 +121,6 @@ if (!$result = mysqli_query_exit_on_error($query)) {
     exit;
 }
 
-$mailer = get_swift_mailer();
-
-//Create the message and set subject
-$message = (new Swift_Message($subjectLine));
-
-//Define from address
-$message->setFrom($fromAddress);
-
 //Define body
 $urlLink = sprintf('<a href="%s">%s</a>', $url, $url);
 if (!empty($badgename)) {
@@ -166,25 +158,8 @@ $emailBody = <<<EOD
     Thanks!
 </p>
 EOD;
-$message->setBody($emailBody,'text/html');
-$ok = true;
-try {
-    $message->addTo($email);
-} catch (Swift_SwiftException $e) {
-    $ok = FALSE;
-    error_log("Email address $email failed.");
-}
-if ($ok) {
-    try {
-        $sendMailResult = $mailer->send($message);
-    } catch (Swift_TransportException $e) {
-        $ok = FALSE;
-        error_log("Swift transport exception: send email failed.");
-    } catch (Swift_SwiftException $e) {
-        $ok = FALSE;
-        error_log("Swift exception: send email failed.");
-    }
-}
+
+send_email($emailBody, $subjectLine, [ $email => $username ]);
 
 // regular response is name as error response above
 RenderXSLT('ForgotPasswordResponse.xsl', $responseParams);
