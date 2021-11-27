@@ -283,12 +283,15 @@ function get_swift_mailer() {
     return new Swift_Mailer($transport);
 }
 
-function send_email($body, $subject, $to, $cc = null) {
+function send_email($body, $subject, $to, $replyTo = null, $cc = null) {
     $mailer = get_swift_mailer();
 
     //Create the message and set subject
     $message = (new Swift_Message($subject));
     $message->setBody($body,'text/html');
+    if ($replyTo) {
+        $message->setReplyTo($replyTo);
+    }
 
     $name = PASSWORD_RESET_FROM_EMAIL;
     if (defined("PASSWORD_RESET_FROM_EMAIL_NAME") && PASSWORD_RESET_FROM_EMAIL_NAME != '') {

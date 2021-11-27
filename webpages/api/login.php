@@ -8,14 +8,7 @@ if (!include ('../../db_name.php')) {
 
 require_once("db_support_functions.php");
 require_once("jwt_functions.php");
-
-function get_name($dbobject) {
-    if (isset($dbobject->badgename) && $dbobject->badgename !== '') {
-        return $dbobject->badgename;
-    } else {
-        return $dbobject->firstname." ".$dbobject->lastname;
-    }
-}
+require_once("participant_functions.php");
 
 // the standard db_functions file makes certain assumptions about the end-client being
 // HTML (to which it renders error pages), and those assumptions aren't good 

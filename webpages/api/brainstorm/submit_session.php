@@ -3,8 +3,11 @@
 if (!include ('../../../db_name.php')) {
 	include ('../../../db_name.php');
 }
+require_once('../../external/swiftmailer-5.4.8/lib/swift_required.php');
 require_once('../db_support_functions.php');
-
+require_once('../jwt_functions.php');
+require_once('../../email_functions.php');
+require_once('../participant_functions.php');
 
 function find_select_dropdown_by_name($db, $table, $idcolumn, $keycolumnname, $key) {
 
@@ -65,10 +68,90 @@ function set_brainstorm_default_values($db, $json) {
     return $json;
 }
 
+function get_email_address_for_badgeid($db, $badgeid) {
+    $query = <<<EOD
+        SELECT 
+            P.badgeid, C.firstname, C.lastname, C.badgename, C.email 
+        FROM 
+            Participants P 
+        JOIN CongoDump C USING (badgeid)
+        WHERE 
+            P.badgeid = ?;
+    EOD;
+    $stmt = mysqli_prepare($db, $query);
+    mysqli_stmt_bind_param($stmt, "s", $badgeid);
+    if (mysqli_stmt_execute($stmt)) {
+        $result = mysqli_stmt_get_result($stmt);
+        if (mysqli_num_rows($result) == 1) {
+            $dbobject = mysqli_fetch_object($result);
+            mysqli_stmt_close($stmt);
+            $name = get_name($dbobject);
+            if (trim($name) === '') {
+                $name = $dbobject->email;
+            }
+            return [$dbobject->email => $name];
+        } else {
+            throw new DatabaseSqlException($query);
+        }
+    } else {
+        throw new DatabaseSqlException($query);
+    }
+}
 
+function get_name_for_badgeid($db, $badgeid) {
+    $query = <<<EOD
+        SELECT 
+            P.badgeid, C.firstname, C.lastname, C.badgename 
+        FROM 
+            Participants P 
+        JOIN CongoDump C USING (badgeid)
+        WHERE 
+            P.badgeid = ?;
+    EOD;
+    $stmt = mysqli_prepare($db, $query);
+    mysqli_stmt_bind_param($stmt, "s", $badgeid);
+    if (mysqli_stmt_execute($stmt)) {
+        $result = mysqli_stmt_get_result($stmt);
+        if (mysqli_num_rows($result) == 1) {
+            $dbobject = mysqli_fetch_object($result);
+            mysqli_stmt_close($stmt);
+            return get_name($dbobject);
+        } else {
+            throw new DatabaseSqlException($query);
+        }
+    } else {
+        throw new DatabaseSqlException($query);
+    }
+}
 
-function send_confirmation_email($json) {
+function send_confirmation_email($db, $json, $jwt) {
+    $badgeid = jwt_extract_badgeid($jwt);
+    $email = get_email_address_for_badgeid($db, $badgeid);
+    $name = get_name_for_badgeid($db, $badgeid);
 
+    $programmingEmail = PROGRAM_EMAIL;
+    $title = strip_tags($json['title']);
+    $description = strip_tags($json['progguiddesc']);
+    $emailBody = <<<EOD
+    <p>Hi $name,</p>
+    <p>We've received your programming item submission:</p>
+    
+    <p><b>Title:</b><br />$title</p>
+
+    <p><b>Description</b>:<br />
+    $description</p>
+
+    <p>If you have any questions, or need some help with some part of this process,
+    please contact <a href="mailto:$programmingEmail">Programming</a>.<p>
+
+    <p>Thank you for submitting your session idea.</p>
+    <p>
+        Thanks!<br />
+        The System That Sends the Emails!
+    </p>
+EOD;
+
+    send_email($emailBody, 'Session submission: ' . $title, $email, [$programmingEmail => 'Programming']);
 }
 
 function is_valid($db, $json) {
@@ -81,8 +164,8 @@ function is_valid($db, $json) {
     }
 }
 
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+$auth = jwt_from_header();
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && jwt_validate_token($auth, true)) {
 
     $body = file_get_contents('php://input');
     $json = json_decode($body, true);
@@ -98,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             write_session_to_database($db, set_brainstorm_default_values($db, $json));
 
             // send email
-            send_confirmation_email($json);
+            send_confirmation_email($db, $json, $auth);
 
             http_response_code(201);
         } else {
@@ -107,6 +190,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } finally {
         $db->close();
     }
+} else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    http_response_code(401);
 } else {
     http_response_code(405);
 }

@@ -2,16 +2,21 @@
 // Copyright (c) 2021 BC Holmes. All rights reserved. See copyright document for more details.
 // These functions provide support for handling JWTs
 
-require_once('../vendor/autoload.php');
+define('__ROOT__', dirname(dirname(__FILE__))); 
+require_once(__ROOT__.'/vendor/autoload.php');
 
 use Emarref\Jwt\Claim;
 
 function jwt_from_header() {
-    $auth = $_SERVER['HTTP_AUTHORIZATION'];
-	if (strpos($auth, 'Bearer ') === 0) {
-		$auth = substr($auth, 7);
-	}
-    return $auth;
+    if (array_key_exists('HTTP_AUTHORIZATION', $_SERVER)) {
+        $auth = $_SERVER['HTTP_AUTHORIZATION'];
+        if (strpos($auth, 'Bearer ') === 0) {
+            $auth = substr($auth, 7);
+        }
+        return $auth;
+    } else {
+        return null;
+    }
 }
 
 // We expect to use two types of JWT tokens. The "basic" tokens are

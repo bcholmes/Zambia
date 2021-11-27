@@ -7,6 +7,8 @@ import Card from 'react-bootstrap/Card';
 import Form from 'react-bootstrap/Form';
 import Spinner from 'react-bootstrap/Spinner';
 
+import store from '../state/store';
+
 class SubmissionForm extends Component {
 
     constructor(props) {
@@ -18,8 +20,24 @@ class SubmissionForm extends Component {
         }
     }
 
+    componentDidMount() {
+        this.unsubscribe = store.subscribe(() => {
+            let state = this.state;
+            this.setState({
+                ...this.state
+            });
+        });
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribe) {
+            this.unsubscribe();
+        }
+    }
+
     render() {
         let message = this.state.message ? (<Alert variant={this.state.message.severity}>{this.state.message.text}</Alert>) : undefined;
+        let message2 = this.isSubmitAllowed() ?  undefined : (<Alert variant="warning">Please log in to submit session ideas.</Alert>);
         const spinner = this.state.loading ? (<Spinner
             as="span"
             animation="border"
@@ -31,6 +49,7 @@ class SubmissionForm extends Component {
         return (
             <Form onSubmit={(e) =>  this.submitForm(e)}>
                 {message}
+                {message2}
 
                 <Card>
                     <Card.Header><h2>Submit a Session</h2></Card.Header>
@@ -60,7 +79,7 @@ class SubmissionForm extends Component {
 
                     </Card.Body>
                     <Card.Footer>
-                        <Button variant="primary" type="submit">{spinner} <span>Submit</span></Button>
+                        <Button variant="primary" type="submit" disabled={!this.isSubmitAllowed()}>{spinner} <span>Submit</span></Button>
                     </Card.Footer>
                 </Card>
             </Form>
@@ -107,12 +126,15 @@ class SubmissionForm extends Component {
         if (formName === 'title') {
             return formValue != null && formValue !== '';
         } else if (formName === 'progguiddesc') {
-            return formValue != null && formValue != '' && formValue.length <= 50;
+            return formValue != null && formValue != '' && formValue.length <= 500;
         } else {
             return true;
         }
     }
 
+    isSubmitAllowed() {
+        return store.getState().auth.jwt;
+    }
     isValidForm() {
         let formKeys = [ 'title', 'progguiddesc' ];
         let errors = this.state.errors || {};
@@ -144,10 +166,13 @@ class SubmissionForm extends Component {
             this.setState({
                 ...this.state,
                 loading: true
-            })
-            console.log("submit that puppy.");
+            });
     
-            axios.post('/api/brainstorm/submit_session.php', this.state.values)
+            axios.post('/api/brainstorm/submit_session.php', this.state.values, {
+                headers: {
+                    "Authorization": "Bearer " + store.getState().auth.jwt
+                }
+            })
             .then(res => {
                 this.setState({
                     ...this.state,
