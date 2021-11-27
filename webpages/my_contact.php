@@ -8,8 +8,8 @@ $queryArray["participant_info"] = <<<EOD
 SELECT
 		CD.badgeid, CD.firstname, CD.lastname, CD.badgename, CD.phone, CD.email,
 			CD.postaddress1, CD.postaddress2, CD.postcity, CD.poststate, CD.postzip,
-			CD.postcountry, P.pubsname, P.password, P.bestway, P.interested, P.bio,
-			P.share_email, P.use_photo, P.pronouns
+			CD.postcountry, CD.regtype, P.pubsname, P.password, P.bestway, P.interested, P.bio,
+			P.share_email, P.use_photo, P.pronouns, P.approvedphotofilename
 	FROM
 			CongoDump CD
 	   JOIN Participants P USING (badgeid)
@@ -43,6 +43,12 @@ $paramArray['maxBioLen'] = MAX_BIO_LEN;
 $paramArray['enablePronouns'] = (defined('USE_PRONOUNS') && USE_PRONOUNS) ? 1 : 0;
 $paramArray['enableBioEdit'] = may_I('EditBio');
 $paramArray['userIdPrompt'] = USER_ID_PROMPT;
+if (defined("PARTICIPANT_PHOTOS") && PARTICIPANT_PHOTOS && defined("PHOTO_PUBLIC_DIRECTORY")) {
+	$paramArray['photoPath'] = PHOTO_PUBLIC_DIRECTORY;
+	if (defined("PHOTO_DEFAULT_IMAGE") && PHOTO_DEFAULT_IMAGE) {
+		$paramArray['defaultPhoto'] = PHOTO_DEFAULT_IMAGE;
+	}
+}
 participant_header($title, false, 'Normal', true);
 $resultXML = appendCustomTextArrayToXML($resultXML);
 RenderXSLT('my_profile.xsl', $paramArray, $resultXML);

@@ -28,17 +28,29 @@ if (may_I('postcon')) { ?>
 	    Please check back often as more options will become available as we get closer to the convention.
     </div>
 </div>
+<div class="alert alert-primary" role="alert"><p><?php echo CON_NAME; ?> does not tolerate harassment in any form. We are dedicated to providing a 
+    welcoming, enjoyable, harassment-free convention experience for all individuals, regardless of gender identity and expression, 
+    sexual orientation, disability, race, ethnicity, physical appearance, body size, age, origin, or religion. We do not tolerate 
+    racism in any form. Convention participants violating these rules may be sanctioned or expelled from the convention without 
+    a refund at the discretion of the convention organizers.</p>
+
+    <p>Our anti-harassment policy can be found at: <a href="https://wiscon.net/policies/anti-harassment/code-of-conduct/">https://wiscon.net/policies/anti-harassment/code-of-conduct/</a>.</p>
+
+    <p>We are guided by our Statement of Principles, which can be found here: <a href="https://wiscon.net/policies/principles/">https://wiscon.net/policies/principles/</a>.</p>
+</div>
+
+
 <div class="row">
     <div class="col-md-6">
         <div class="card">
             <div class="card-body">
                 <p>Dear <?php echo $participant_array["firstname"]; echo " "; echo $participant_array["lastname"]; ?>,</p>
                 <p>Welcome to the <?php echo CON_NAME; ?> Programming website.</p>
-                <p><b>First, please take a moment to indicate your ability and interest in participating in <?php echo CON_NAME; ?> programming. You will be scheduled only if you say YES.</b></p>
+                <p><b>First, tell us about participating in <?php echo CON_NAME; ?> programming.</b></p>
                 <form name="pwform" method=POST action="SubmitWelcome.php">
                     <div id="update_section" class="form-group mb-2 row">
-                        <div class="col-sm-4">
-                            <label for="interested">Are you interested?</label>
+                        <div class="col-sm-5">
+                            <label for="interested">Do you want to be a panelist and/or moderator?</label>
                         </div>
                         <?php $int=$participant_array['interested']; ?>
                         <div class="col-sm-3">
@@ -69,13 +81,25 @@ if (may_I('postcon')) { ?>
                     </div>
                     <?php } ?>
                     <div class="row">
-                        <div class="col-6 text-center">
+                        <div class="col-7 text-center">
                             <button class="btn btn-primary" type="submit" name="submit" >Update</button>
                         </div>
                     </div>
                 </form>
                 <?php if (!$participant_array['chpw'] && DEFAULT_USER_PASSWORD) { ?>
                     <p class="mt-3">Thank you for changing your password. For future changes, use the "Profile" tab.</p>
+                <?php } ?>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-body">
+                <?php if ($participant_array["regtype"] == null || $participant_array["regtype"] == '') { ?>
+                    You are currently <b>not registered</b> for <?php echo CON_NAME; ?>. 
+                    <?php if (defined("REGISTRATION_URL") && REGISTRATION_URL !== "") { ?>
+                        <a href="<?php echo REGISTRATION_URL ?>">Register now</a>.
+                    <?php } ?>
+                <?php } else { ?>
+                    Your current membership type is <b><?php echo $participant_array["regtype"] ?></b>.
                 <?php } ?>
             </div>
         </div>

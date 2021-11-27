@@ -45,7 +45,7 @@ define("SECOND_DESCRIPTION_CAPTION", "Description en fran&ccedil;ais");
 define("SECOND_BIOGRAPHY_CAPTION", "Biographie en fran&ccedil;ais");
 define("SHOW_BRAINSTORM_LOGIN_HINT", FALSE);
 define("USER_ID_PROMPT", "User ID"); // What to label User ID / Badge ID
-define("LOGIN_PAGE_USER_ID_PROMPT", ""); // What to label User ID / Badge ID specifically on the login page (black defaults to the value of USER_ID_PROMPT)
+define("LOGIN_PAGE_USER_ID_PROMPT", ""); // What to label User ID / Badge ID specifically on the login page (blank defaults to the value of USER_ID_PROMPT)
 define("EMAIL_LOGIN_SUPPORTED", FALSE); // Can users use their email address as a userid?
 define("RESET_PASSWORD_SELF", TRUE); // User can reset own password.  Requires email and reCAPTCHA integration.
 define("ROOT_URL", "https://zambia.server.com/"); // URL to reach this zambia server. Required to generate and email password reset link. Include trailing /
@@ -76,6 +76,9 @@ define("REG_PART_PREFIX", "");
 define("CON_THEME", "");
 // if con-specific theming should be applied, you can reference a theme css here.
 // for example: define("CON_THEME", "themes/reallybigcon/main.css");
+define("CON_THEME_FAVICON", "");
+// if you want a con-specific favicon , you can reference an image file here.
+// for example: define("CON_THEME_FAVICON", "themes/reallybigcon/myfavicon.png");
 define("CON_HEADER_IMG", "");
 // to improve the con branding, you can define a con-specific header image that will take the place of the 
 // Zambia illustrated "Z" image, like so: define("CON_HEADER_IMG", "themes/reallybigcon/header.jpg");
@@ -92,4 +95,8 @@ define("PHOTO_PUBLIC_DIRECTORY", "/participant_photos"); // inside of web server
 define("PHOTO_FILE_TYPES", "jpg,png"); // comma separated list of allowed file types/suffixes (will be verified by PHP)
 define("PHOTO_DIMENSIONS", "200,200,800,800,1048576"); // comma separated list min width/height, max width/height, file size
 define("PHOTO_DEFAULT_IMAGE", "default.png"); // placeholder image for participants without photo
-?>
+
+
+
+define("REGISTRATION_URL", "");
+// The URL to the con's registration system.?>

@@ -2,7 +2,9 @@
 // Copyright (c) 2018-2019 Peter Olszowka. All rights reserved. See copyright document for more details.
 $report = [];
 $report['name'] = 'Participant Bio and pubname';
-$report['description'] = 'Show the badgeid, pubsname and bio for each participant who indicated he is attending.';
+$report['multi'] = 'true';
+$report['output_filename'] = 'participant_bios.csv';
+$report['description'] = 'Show the badgeid, pubsname and bio for all participants who have indicated they are attending.';
 $report['categories'] = array(
     'Participant Info Reports' => 700,
 );
@@ -33,7 +35,7 @@ $report['xsl'] =<<<'EOD'
     <xsl:template match="/">
         <xsl:choose>
             <xsl:when test="doc/query[@queryName='participants']/row">
-                <table id="reportTable" class="report">
+                <table id="reportTable" class="report table table-sm">
                     <thead>
                         <tr style="height:2.6rem">
                             <th class="report">Badge Id</th>

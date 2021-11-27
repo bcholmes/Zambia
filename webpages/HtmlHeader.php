@@ -13,11 +13,9 @@ function html_header($title, $bootstrap4 = false, $isDataTables = false, $report
 <?php
     if (defined('CON_THEME_FAVICON') && CON_THEME_FAVICON !== "") {
 ?>
-    <link rel="shortcut icon" href="<?php echo CON_THEME_FAVICON ?>" type="image/x-icon" />
     <link rel="shortcut icon" href="<?php echo CON_THEME_FAVICON ?>">
 <?php } else { ?>
     <link href="images/favicon.ico" rel="shortcut icon" type="image/x-icon" />
-    <link rel="shortcut icon" href="images/favicon.ico">
 <?php } ?>
 <?php if ($bootstrap4) { ?>
     <link rel="stylesheet" href="external/bootstrap4.5.0/bootstrap.min.css" type="text/css" >
@@ -43,7 +41,12 @@ function html_header($title, $bootstrap4 = false, $isDataTables = false, $report
 <?php } ?>
     <link rel="stylesheet" href="css/staffMaintainSchedule.css" type="text/css" media="screen" />
 <?php if ($isDataTables) {
-    echo "    <link rel=\"stylesheet\" href=\"external/dataTables1.10.16/dataTables.css\" type=\"text/css\" />\n";
+    if ($bootstrap4) {
+        echo "    <link rel=\"stylesheet\" href=\"//cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css\" type=\"text/css\" />\n";
+    } else {
+        echo "    <link rel=\"stylesheet\" href=\"external/dataTables1.10.16/dataTables.css\" type=\"text/css\" />\n";
+    }
+    
     if ($reportColumns) {
         echo "<meta id=\"reportColumns\" data-report-columns=\"";
         echo htmlentities(json_encode($reportColumns));
