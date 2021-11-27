@@ -282,4 +282,41 @@ function get_swift_mailer() {
 //Create the Mailer using the created Transport
     return new Swift_Mailer($transport);
 }
+
+function send_email($body, $subject, $to, $replyTo = null, $cc = null) {
+    $mailer = get_swift_mailer();
+
+    //Create the message and set subject
+    $message = (new Swift_Message($subject));
+    $message->setBody($body,'text/html');
+    if ($replyTo) {
+        $message->setReplyTo($replyTo);
+    }
+
+    $name = PASSWORD_RESET_FROM_EMAIL;
+    if (defined("PASSWORD_RESET_FROM_EMAIL_NAME") && PASSWORD_RESET_FROM_EMAIL_NAME != '') {
+        $name = PASSWORD_RESET_FROM_EMAIL_NAME;
+    }
+    //Define from address
+    $message->setFrom([ PASSWORD_RESET_FROM_EMAIL => $name ]);
+
+    $ok = true;
+    try {
+        $message->setTo($to);
+    } catch (Swift_SwiftException $e) {
+        $ok = FALSE;
+    }
+
+    if ($ok) {
+        try {
+            $sendMailResult = $mailer->send($message);
+        } catch (Swift_TransportException $e) {
+            $ok = FALSE;
+            error_log("Swift transport exception: send email failed.");
+        } catch (Swift_SwiftException $e) {
+            $ok = FALSE;
+            error_log("Swift exception: send email failed.");
+        }
+    }
+}
 ?>

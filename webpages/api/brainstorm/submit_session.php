@@ -1,0 +1,197 @@
+<?php
+
+if (!include ('../../../db_name.php')) {
+	include ('../../../db_name.php');
+}
+require_once('../../external/swiftmailer-5.4.8/lib/swift_required.php');
+require_once('../db_support_functions.php');
+require_once('../jwt_functions.php');
+require_once('../../email_functions.php');
+require_once('../participant_functions.php');
+
+function find_select_dropdown_by_name($db, $table, $idcolumn, $keycolumnname, $key) {
+
+    $query = <<<EOD
+ SELECT $idcolumn as id FROM $table WHERE $keycolumnname = ?;
+ EOD;
+
+    $stmt = mysqli_prepare($db, $query);
+    mysqli_stmt_bind_param($stmt, "s", $key);
+    if (mysqli_stmt_execute($stmt)) {
+        $result = mysqli_stmt_get_result($stmt);
+        if (mysqli_num_rows($result) == 1) {
+            $dbobject = mysqli_fetch_object($result);
+            mysqli_stmt_close($stmt);
+            return $dbobject->id;
+        } else {
+            throw new DatabaseSqlException($query);
+        }
+    } else {
+        throw new DatabaseSqlException($query);
+    }
+}
+
+function write_session_to_database($db, $json) {
+
+    $query = <<<EOD
+ INSERT INTO Sessions 
+        (title, progguiddesc, servicenotes, persppartinfo,
+        divisionid, statusid, kidscatid, trackid, typeid, pubstatusid, roomsetid, duration)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+ EOD;
+
+    $stmt = mysqli_prepare($db, $query);
+    mysqli_stmt_bind_param($stmt, "ssssiiiiiiis", $json['title'], $json['progguiddesc'], 
+        $json['servicenotes'], $json['persppartinfo'], $json['division'], $json['statusid'], 
+        $json['kidscatid'], $json['track'], $json['typeid'], 
+        $json['pubstatusid'], $json['roomsetid'], $json['duration']);
+
+    if ($stmt->execute()) {
+        mysqli_stmt_close($stmt);
+        return true;
+    } else {
+        throw new DatabaseSqlException($query);
+    }     
+}
+
+
+function set_brainstorm_default_values($db, $json) {
+
+    $json['statusid'] = find_select_dropdown_by_name($db, 'SessionStatuses', 'statusid', 'statusname', 'Brainstorm');
+    $json['kidscatid'] = find_select_dropdown_by_name($db, 'KidsCategories', 'kidscatid', 'kidscatname', 'Welcome');
+    $json['typeid'] = find_select_dropdown_by_name($db, 'Types', 'typeid', 'typename', 'I do not know');
+    $json['pubstatusid'] = find_select_dropdown_by_name($db, 'PubStatuses', 'pubstatusid', 'pubstatusname', 'Public');
+    $json['roomsetid'] = find_select_dropdown_by_name($db, 'RoomSets', 'roomsetid', 'roomsetname', 'Panel');
+    $json['duration'] = DEFAULT_DURATION;
+    return $json;
+}
+
+function get_email_address_for_badgeid($db, $badgeid) {
+    $query = <<<EOD
+        SELECT 
+            P.badgeid, C.firstname, C.lastname, C.badgename, C.email 
+        FROM 
+            Participants P 
+        JOIN CongoDump C USING (badgeid)
+        WHERE 
+            P.badgeid = ?;
+    EOD;
+    $stmt = mysqli_prepare($db, $query);
+    mysqli_stmt_bind_param($stmt, "s", $badgeid);
+    if (mysqli_stmt_execute($stmt)) {
+        $result = mysqli_stmt_get_result($stmt);
+        if (mysqli_num_rows($result) == 1) {
+            $dbobject = mysqli_fetch_object($result);
+            mysqli_stmt_close($stmt);
+            $name = get_name($dbobject);
+            if (trim($name) === '') {
+                $name = $dbobject->email;
+            }
+            return [$dbobject->email => $name];
+        } else {
+            throw new DatabaseSqlException($query);
+        }
+    } else {
+        throw new DatabaseSqlException($query);
+    }
+}
+
+function get_name_for_badgeid($db, $badgeid) {
+    $query = <<<EOD
+        SELECT 
+            P.badgeid, C.firstname, C.lastname, C.badgename 
+        FROM 
+            Participants P 
+        JOIN CongoDump C USING (badgeid)
+        WHERE 
+            P.badgeid = ?;
+    EOD;
+    $stmt = mysqli_prepare($db, $query);
+    mysqli_stmt_bind_param($stmt, "s", $badgeid);
+    if (mysqli_stmt_execute($stmt)) {
+        $result = mysqli_stmt_get_result($stmt);
+        if (mysqli_num_rows($result) == 1) {
+            $dbobject = mysqli_fetch_object($result);
+            mysqli_stmt_close($stmt);
+            return get_name($dbobject);
+        } else {
+            throw new DatabaseSqlException($query);
+        }
+    } else {
+        throw new DatabaseSqlException($query);
+    }
+}
+
+function send_confirmation_email($db, $json, $jwt) {
+    $badgeid = jwt_extract_badgeid($jwt);
+    $email = get_email_address_for_badgeid($db, $badgeid);
+    $name = get_name_for_badgeid($db, $badgeid);
+
+    $programmingEmail = PROGRAM_EMAIL;
+    $title = strip_tags($json['title']);
+    $description = strip_tags($json['progguiddesc']);
+    $emailBody = <<<EOD
+    <p>Hi $name,</p>
+    <p>We've received your programming item submission:</p>
+    
+    <p><b>Title:</b><br />$title</p>
+
+    <p><b>Description</b>:<br />
+    $description</p>
+
+    <p>If you have any questions, or need some help with some part of this process,
+    please contact <a href="mailto:$programmingEmail">Programming</a>.<p>
+
+    <p>Thank you for submitting your session idea.</p>
+    <p>
+        Thanks!<br />
+        The System That Sends the Emails!
+    </p>
+EOD;
+
+    send_email($emailBody, 'Session submission: ' . $title, $email, [$programmingEmail => 'Programming']);
+}
+
+function is_valid($db, $json) {
+    if (!array_key_exists('title', $json) || $json['title'] === '') {
+        return false;
+    } else if (!array_key_exists('progguiddesc', $json) || $json['progguiddesc'] === '' || mb_strlen($json['progguiddesc'], "utf-8") > 500) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+$auth = jwt_from_header();
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && jwt_validate_token($auth, true)) {
+
+    $body = file_get_contents('php://input');
+    $json = json_decode($body, true);
+
+    // validate input
+    $db = connect_to_db();
+    try {
+        error_log("is_valid");
+        if (is_valid($db, $json)) {
+            error_log("post is_valid");
+
+            // write to database
+            write_session_to_database($db, set_brainstorm_default_values($db, $json));
+
+            // send email
+            send_confirmation_email($db, $json, $auth);
+
+            http_response_code(201);
+        } else {
+            http_response_code(400);
+        }
+    } finally {
+        $db->close();
+    }
+} else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    http_response_code(401);
+} else {
+    http_response_code(405);
+}
+
+?>
