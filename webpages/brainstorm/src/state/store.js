@@ -1,5 +1,6 @@
 import { createStore, combineReducers } from 'redux'
 import { ADD_AUTH_CREDENTIAL, LOGOUT } from './authActions';
+import { SAVE_OPTIONS } from './optionsActions';
 
 const authInitialState = {
     pending: true,
@@ -21,8 +22,19 @@ const auth = (state = authInitialState, action) => {
     }
 };
 
+const options = (state = {}, action) => {
+    switch (action.type) {
+        case SAVE_OPTIONS: 
+            return { ...state,
+                divisions: action.payload.divisions 
+            };
+        default:
+            return state;
+    }
+};
+
 const reducer = combineReducers({
-    auth
+    auth, options
 })
 const store = createStore(reducer);
 

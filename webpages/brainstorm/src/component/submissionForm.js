@@ -14,17 +14,28 @@ class SubmissionForm extends Component {
     constructor(props) {
         super(props);
 
+        let divisions = store.getState().options.divisions;
+        let values = {};
+        if (divisions && divisions.length === 1) {
+            values['division'] = divisions[0].id.toString();
+        }
+
         this.state = {
-            values: {},
+            values: values,
             errors: {}
         }
     }
 
     componentDidMount() {
         this.unsubscribe = store.subscribe(() => {
-            let state = this.state;
+            let divisions = store.getState().options.divisions;
+            let values = this.state.values;
+            if (divisions && divisions.length === 1) {
+                values['division'] = divisions[0].id.toString();
+            }
             this.setState({
-                ...this.state
+                ...this.state,
+                values: values
             });
         });
     }
@@ -46,6 +57,9 @@ class SubmissionForm extends Component {
             aria-hidden="true"
         />) : undefined;
 
+        let options = store.getState().options.divisions ? store.getState().options.divisions.map((d) => { return (<option value={d.id} key={d.id}>{d.name}</option>)}) : undefined;
+        let tracks = this.getTrackOptions().map((t) => {return (<option value={t.trackid} key={t.trackid}>{t.trackname}</option>) });
+
         return (
             <Form onSubmit={(e) =>  this.submitForm(e)}>
                 {message}
@@ -56,6 +70,15 @@ class SubmissionForm extends Component {
                     <Card.Body>
                         <p>Submissions are open for programming for WisCon 2022.</p>
 
+                        <Form.Group controlId="division">
+                            <Form.Label className="sr-only">Division:</Form.Label>
+                            <Form.Control as="select" className={this.getErrorClass('division')} value={this.getFormValue('division')} onChange={(e) => this.setFormValue("divsion", e.target.value)} key="divsion">
+                                <option value="" key="empty">Please select a division (Required)</option>
+                                {options}
+                            </Form.Control>
+                            <Form.Text className="text-muted">What kind of session is this? e.g. Programming, Academic, etc.</Form.Text>
+                        </Form.Group>
+
                         <Form.Group controlId="title">
                             <Form.Label className="sr-only">Title</Form.Label>
                             <Form.Control className={this.getErrorClass('title')} type="text" placeholder="Title (Required)" value={this.getFormValue('title')} onChange={(e) => this.setFormValue('title', e.target.value)} />
@@ -65,6 +88,15 @@ class SubmissionForm extends Component {
                             <Form.Label className="sr-only">Description</Form.Label>
                             <Form.Control as="textarea" rows={3} className={this.getErrorClass('progguiddesc')} type="text" placeholder="Session description (Required)" value={this.getFormValue('progguiddesc')} onChange={(e) => this.setFormValue('progguiddesc', e.target.value)} />
                             <Form.Text className="text-muted">Max 500 characters</Form.Text>
+                        </Form.Group>
+
+                        <Form.Group controlId="track">
+                            <Form.Label className="sr-only">Track:</Form.Label>
+                            <Form.Control as="select" className={this.getErrorClass('track')} value={this.getFormValue('track')} onChange={(e) => this.setFormValue("track", e.target.value)} key="track">
+                                <option value="" key="empty">Please select a track (Required)</option>
+                                {tracks}
+                            </Form.Control>
+                            <Form.Text className="text-muted">Make a best guess about what track this panel should belong to</Form.Text>
                         </Form.Group>
 
                         <Form.Group controlId="servicenotes">
@@ -84,6 +116,17 @@ class SubmissionForm extends Component {
                 </Card>
             </Form>
         )
+    }
+
+    getTrackOptions() {
+        if (this.state.values['division'] && store.getState().options.divisions) {
+            let division = null;
+            let divisionId = this.state.values['division'];
+            store.getState().options.divisions.forEach((element) => { if (element.id.toString() === divisionId) { division = element; } } )
+            return division ? division.tracks : [];
+        } else {
+            return [];
+        }
     }
 
     getErrorClass(name) {
@@ -127,6 +170,10 @@ class SubmissionForm extends Component {
             return formValue != null && formValue !== '';
         } else if (formName === 'progguiddesc') {
             return formValue != null && formValue != '' && formValue.length <= 500;
+        } else if (formName === 'division') {
+            return formValue != null && formValue != '';
+        } else if (formName === 'track') {
+            return formValue != null && formValue != '';
         } else {
             return true;
         }
@@ -136,7 +183,7 @@ class SubmissionForm extends Component {
         return store.getState().auth.jwt;
     }
     isValidForm() {
-        let formKeys = [ 'title', 'progguiddesc' ];
+        let formKeys = [ 'title', 'progguiddesc', 'track', 'division' ];
         let errors = this.state.errors || {};
         let valid = true
         formKeys.forEach(element => {

@@ -42,8 +42,8 @@ function write_session_to_database($db, $json) {
 
     $stmt = mysqli_prepare($db, $query);
     mysqli_stmt_bind_param($stmt, "ssssiiiiiiis", $json['title'], $json['progguiddesc'], 
-        $json['servicenotes'], $json['persppartinfo'], $json['divisionid'], $json['statusid'], 
-        $json['kidscatid'], $json['trackid'], $json['typeid'], 
+        $json['servicenotes'], $json['persppartinfo'], $json['division'], $json['statusid'], 
+        $json['kidscatid'], $json['track'], $json['typeid'], 
         $json['pubstatusid'], $json['roomsetid'], $json['duration']);
 
     if ($stmt->execute()) {
@@ -58,9 +58,7 @@ function write_session_to_database($db, $json) {
 function set_brainstorm_default_values($db, $json) {
 
     $json['statusid'] = find_select_dropdown_by_name($db, 'SessionStatuses', 'statusid', 'statusname', 'Brainstorm');
-    $json['divisionid'] = find_select_dropdown_by_name($db, 'Divisions', 'divisionid', 'divisionname', 'Programming');
     $json['kidscatid'] = find_select_dropdown_by_name($db, 'KidsCategories', 'kidscatid', 'kidscatname', 'Welcome');
-    $json['trackid'] = find_select_dropdown_by_name($db, 'Tracks', 'trackid', 'trackname', 'Unknown');
     $json['typeid'] = find_select_dropdown_by_name($db, 'Types', 'typeid', 'typename', 'I do not know');
     $json['pubstatusid'] = find_select_dropdown_by_name($db, 'PubStatuses', 'pubstatusid', 'pubstatusname', 'Public');
     $json['roomsetid'] = find_select_dropdown_by_name($db, 'RoomSets', 'roomsetid', 'roomsetname', 'Panel');

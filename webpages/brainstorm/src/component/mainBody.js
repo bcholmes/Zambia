@@ -2,12 +2,11 @@ import React, { Component } from 'react';
 import axios from 'axios';
 
 import Alert from 'react-bootstrap/Alert';
-import Button from 'react-bootstrap/Button';
-import Card from 'react-bootstrap/Card';
-import Form from 'react-bootstrap/Form';
 import Spinner from 'react-bootstrap/Spinner';
 
 import SubmissionForm from './submissionForm';
+import store from '../state/store';
+import { saveOptions } from '../state/optionsActions';
 
 class MainBody extends Component {
 
@@ -41,6 +40,7 @@ class MainBody extends Component {
     loadInitialData() {
         axios.post('/api/brainstorm/load_brainstorm.php')
         .then(res => {
+            store.dispatch(saveOptions(res.data))
             this.setState({
                 ...this.state,
                 loading: false,
