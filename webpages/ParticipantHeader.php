@@ -40,6 +40,7 @@ function participant_header($title, $noUserRequired = false, $loginPageStatus = 
         if ($bootstrap4) {
             $paramArray = array();
             $paramArray["title"] = $title;
+            $paramArray["my_suggestions"] = may_I('my_suggestions_write') ? true : false;
             $paramArray["survey"] = $_SESSION['survey_exists'];
             $paramArray["PARTICIPANT_PHOTOS"] = PARTICIPANT_PHOTOS === TRUE ? 1 : 0;
             RenderXSLT('ParticipantMenu_BS4.xsl', $paramArray, GeneratePermissionSetXML());
@@ -61,7 +62,7 @@ function participant_header($title, $noUserRequired = false, $loginPageStatus = 
                             <?php makeMenuItem("Photo", PARTICIPANT_PHOTOS === TRUE, "my_photo.php", false); ?>
                             <?php makeMenuItem("Availability", may_I('my_availability'),"my_sched_constr.php",false); ?>
                             <?php makeMenuItem("General Interests",1,"my_interests.php",false); ?>
-                            <?php /* makeMenuItem("My Suggestions",1,"my_suggestions.php",false); */ ?>
+                            <?php makeMenuItem("My Suggestions",1,"my_suggestions.php",false); ?>
                             <?php makeMenuItem("Search Sessions", may_I('search_panels'),"PartSearchSessions.php", false); ?>
                             <?php makeMenuItem("Session Interests", may_I('my_panel_interests'),"PartPanelInterests.php",false); ?>
                             <?php makeMenuItem("My Schedule", may_I('my_schedule'),"MySchedule.php",false); ?>

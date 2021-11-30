@@ -31,27 +31,57 @@ function find_select_dropdown_by_name($db, $table, $idcolumn, $keycolumnname, $k
     }
 }
 
-function write_session_to_database($db, $json) {
+function write_session_to_database($db, $json, $jwt) {
 
-    $query = <<<EOD
- INSERT INTO Sessions 
-        (title, progguiddesc, servicenotes, persppartinfo,
-        divisionid, statusid, kidscatid, trackid, typeid, pubstatusid, roomsetid, duration)
- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
- EOD;
+    $badgeid = jwt_extract_badgeid($jwt);
+    $email = array_key_first(get_email_address_for_badgeid($db, $badgeid));
+    $name = get_name_for_badgeid($db, $badgeid);
 
-    $stmt = mysqli_prepare($db, $query);
-    mysqli_stmt_bind_param($stmt, "ssssiiiiiiis", $json['title'], $json['progguiddesc'], 
-        $json['servicenotes'], $json['persppartinfo'], $json['division'], $json['statusid'], 
-        $json['kidscatid'], $json['track'], $json['typeid'], 
-        $json['pubstatusid'], $json['roomsetid'], $json['duration']);
+    mysqli_begin_transaction($db);
+    try {
+        $query = <<<EOD
+    INSERT INTO Sessions 
+            (title, progguiddesc, servicenotes, persppartinfo,
+            divisionid, statusid, kidscatid, trackid, typeid, pubstatusid, roomsetid, duration)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+   EOD;
 
-    if ($stmt->execute()) {
-        mysqli_stmt_close($stmt);
-        return true;
-    } else {
-        throw new DatabaseSqlException($query);
-    }     
+        $stmt = mysqli_prepare($db, $query);
+        mysqli_stmt_bind_param($stmt, "ssssiiiiiiis", $json['title'], $json['progguiddesc'], 
+            $json['servicenotes'], $json['persppartinfo'], $json['division'], $json['statusid'], 
+            $json['kidscatid'], $json['track'], $json['typeid'], 
+            $json['pubstatusid'], $json['roomsetid'], $json['duration']);
+
+        if ($stmt->execute()) {
+            mysqli_stmt_close($stmt);
+        } else {
+            throw new DatabaseSqlException($query);
+        }     
+
+        $sessionId = $db->insert_id;
+        $default_description = 'Session suggested.';
+        $editCode = 1;
+        $query = <<<EOD
+    INSERT INTO SessionEditHistory 
+            (sessionid, badgeid, name, email_address,
+            sessioneditcode, statusid, editdescription)
+    VALUES (?, ?, ?, ?, ?, ?, ?);
+   EOD;
+
+        $stmt = mysqli_prepare($db, $query);
+        mysqli_stmt_bind_param($stmt, "isssiis", $sessionId, $badgeid, 
+            $name, $email, $editCode, $json['statusid'], $default_description);
+
+        if ($stmt->execute()) {
+            mysqli_stmt_close($stmt);
+        } else {
+            throw new DatabaseSqlException($query);
+        }
+        mysqli_commit($db);     
+    } catch (Exception $e) {
+        mysqli_rollback($db);
+        throw $e;
+    }
 }
 
 
@@ -176,7 +206,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && jwt_validate_token($auth, true)) {
             error_log("post is_valid");
 
             // write to database
-            write_session_to_database($db, set_brainstorm_default_values($db, $json));
+            write_session_to_database($db, set_brainstorm_default_values($db, $json), $auth);
 
             // send email
             send_confirmation_email($db, $json, $auth);
