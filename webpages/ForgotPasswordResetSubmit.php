@@ -11,7 +11,7 @@ require_once('email_functions.php');
 
 function send_password_was_reset_email($name, $email_address) {
 
-    $programming = PASSWORD_RESET_FROM_EMAIL;
+    $programming = PROGRAM_EMAIL;
     if (!$name) {
         $name = $email_address;
     }
