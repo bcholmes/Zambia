@@ -8,14 +8,14 @@ $selector = getString('selector');
 $validator = getString('validator');
 if (RESET_PASSWORD_SELF !== true) {
     http_response_code(403); // forbidden
-    participant_header($title, true, 'Login');
-    echo "<p class='alert alert-error vert-sep-above'>You have reached this page in error.</p>";
+    participant_header($title, true, 'Login', true);
+    echo "<p class='alert alert-danger vert-sep-above'>You have reached this page in error.</p>";
     participant_footer();
     exit;
 }
-participant_header($title, true, 'Login');
+participant_header($title, true, 'Login', true);
 if (empty($selector) || empty($validator)) {
-    echo "<p class='alert alert-error vert-sep-above'>Reset password link was missing required parameters.</p>";
+    echo "<p class='alert alert-danger vert-sep-above'>Reset password link was missing required parameters.</p>";
     participant_footer();
     exit;
 }

@@ -2,6 +2,13 @@
 // Created by Peter Olszowka on 2020-04-21;
 // Copyright (c) 2021 The Peter Olszowka. All rights reserved. See copyright document for more details.
 
+global $linki, $title;
+$title = "Submit Reset Password";
+require ('PartCommonCode.php');
+require_once('login_functions.php');
+require_once('external/swiftmailer-5.4.8/lib/swift_required.php');
+require_once('email_functions.php');
+
 function send_password_was_reset_email($name, $email_address) {
 
     $programming = PASSWORD_RESET_FROM_EMAIL;
@@ -31,13 +38,9 @@ function get_badge_name($firstname, $lastname, $badgename) {
     }
 }
 
-global $linki, $title;
-$title = "Submit Reset Password";
-require ('PartCommonCode.php');
-require_once('login_functions.php');
 if (!defined('RESET_PASSWORD_SELF') || RESET_PASSWORD_SELF !== true) {
     http_response_code(403); // forbidden
-    participant_header($title, true, 'Login');
+    participant_header($title, true, 'Login', true);
     echo "<p class='alert alert-error vert-sep-above'>You have reached this page in error.</p>";
     participant_footer();
     exit;
@@ -135,7 +138,4 @@ if (!$result = mysqli_query_exit_on_error($query)) {
 
 send_password_was_reset_email(get_badge_name($firstname, $lastname, $badgename), $email);
 
-// Show login page with password reset confirmation
-$title = "Login";
-participant_header($title, false, 'Password_Reset', true);
-participant_footer();
+header('Location: ./');
