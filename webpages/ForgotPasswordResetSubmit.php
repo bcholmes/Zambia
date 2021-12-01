@@ -2,9 +2,15 @@
 // Created by Peter Olszowka on 2020-04-21;
 // Copyright (c) 2020 The Peter Olszowka. All rights reserved. See copyright document for more details.
 
-function send_password_was_reset_mail($name, $email_address) {
+global $linki, $title;
+$title = "Submit Reset Password";
+require ('PartCommonCode.php');
+require_once('external/swiftmailer-5.4.8/lib/swift_required.php');
+require_once('email_functions.php');
 
-    $programming = PASSWORD_RESET_FROM_EMAIL;
+function send_password_was_reset_email($name, $email_address) {
+
+    $programming = PROGRAM_EMAIL;
     if (!$name) {
         $name = $email_address;
     }
@@ -31,9 +37,6 @@ function get_badge_name($firstname, $lastname, $badgename) {
     }
 }
 
-global $linki, $title;
-$title = "Submit Reset Password";
-require ('PartCommonCode.php');
 if (RESET_PASSWORD_SELF !== true) {
     http_response_code(403); // forbidden
     participant_header($title, true, 'Login');
