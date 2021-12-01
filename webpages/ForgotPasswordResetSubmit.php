@@ -1,6 +1,36 @@
 <?php
 // Created by Peter Olszowka on 2020-04-21;
 // Copyright (c) 2021 The Peter Olszowka. All rights reserved. See copyright document for more details.
+
+function send_password_was_reset_email($name, $email_address) {
+
+    $programming = PASSWORD_RESET_FROM_EMAIL;
+    if (!$name) {
+        $name = $email_address;
+    }
+
+    $email_body = <<< EOD
+        <p>Hi $name,</p>
+
+        <p>We just wanted to drop you a note to let you know that your password was reset at your request.</p>
+
+        <p>If you have any questions, please contact <a href="mailto:$programming">Programming</a>.
+
+        <p>Thanks,<br />
+        Your Friendly Automated Email System!
+        </p>
+EOD;
+    send_email($email_body, "Your password has been reset", [$email_address => $name]);
+}
+
+function get_badge_name($firstname, $lastname, $badgename) {
+    if ($badgename) {
+        return $badgename;
+    } else {
+        return $firstname . ' ' . $lastname;
+    }
+}
+
 global $linki, $title;
 $title = "Submit Reset Password";
 require ('PartCommonCode.php');
@@ -26,7 +56,7 @@ if (!$controlParams || empty($controlParams['selector']) || empty($controlParams
 $selectorSQL = mysqli_real_escape_string($linki, $controlParams['selector']);
 $query = <<<EOD
 SELECT
-        PPRR.badgeidentered, PPRR.token, P.pubsname, CD.badgename, CD.firstname, CD.lastname
+        PPRR.badgeidentered, PPRR.token, P.pubsname, CD.badgename, CD.firstname, CD.lastname, CD.email
     FROM
              ParticipantPasswordResetRequests PPRR
         JOIN Participants P ON PPRR.badgeidentered = P.badgeid
@@ -45,7 +75,7 @@ if (mysqli_num_rows($result) !== 1) {
     participant_footer();
     exit;
 }
-list($badgeid, $token, $pubsname, $badgename, $firstname, $lastname) = mysqli_fetch_array($result);
+list($badgeid, $token, $pubsname, $badgename, $firstname, $lastname, $email) = mysqli_fetch_array($result);
 mysqli_free_result($result);
 $calc = hash('sha256', hex2bin($controlParams['validator']));
 if (!hash_equals($token, $calc) || $controlParams['badgeid'] !== $badgeid) {
@@ -102,6 +132,9 @@ EOD;
 if (!$result = mysqli_query_exit_on_error($query)) {
     exit;
 }
+
+send_password_was_reset_email(get_badge_name($firstname, $lastname, $badgename), $email);
+
 // Show login page with password reset confirmation
 $title = "Login";
 participant_header($title, false, 'Password_Reset', true);
