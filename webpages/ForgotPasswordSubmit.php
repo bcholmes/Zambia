@@ -30,16 +30,7 @@ function validate_recaptcha($recaptchaResponse) {
 
 function send_reset_password_email($firstname, $lastname, $badgename, $email, $subjectLine, $url) {
     $conName = CON_NAME;
-    $fromAddress = PASSWORD_RESET_FROM_EMAIL;
 
-    $mailer = get_swift_mailer();
-
-    //Create the message and set subject
-    $message = (new Swift_Message($subjectLine));
-    
-    //Define from address
-    $message->setFrom($fromAddress);
-    
     //Define body
     $urlLink = sprintf('<a href="%s">%s</a>', $url, $url);
     if (!empty($badgename)) {
@@ -77,25 +68,8 @@ function send_reset_password_email($firstname, $lastname, $badgename, $email, $s
         Thanks!
     </p>
     EOD;
-    $message->setBody($emailBody,'text/html');
-    $ok = true;
-    try {
-        $message->addTo($email);
-    } catch (Swift_SwiftException $e) {
-        $ok = FALSE;
-        error_log("Email address $email failed.");
-    }
-    if ($ok) {
-        try {
-            $sendMailResult = $mailer->send($message);
-        } catch (Swift_TransportException $e) {
-            $ok = FALSE;
-            error_log("Swift transport exception: send email failed.");
-        } catch (Swift_SwiftException $e) {
-            $ok = FALSE;
-            error_log("Swift exception: send email failed.");
-        }
-    }
+
+    send_email($emailBody, $subjectLine, [ $email => $username ]);
 }
 
 
