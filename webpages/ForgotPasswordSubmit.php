@@ -51,7 +51,7 @@ function send_reset_password_email($firstname, $lastname, $badgename, $email, $s
         Hello $username,
     </p>
     <p>
-        We received a request to reset your password for the Zambia scheduling system for $conName.
+        We received a request to reset your password for the programming/scheduling system for $conName.
         If you did not make this request, you can ignore this email.
     </p>
     <p>
