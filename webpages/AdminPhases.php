@@ -5,7 +5,7 @@ $title = "Administer Phases";
 require_once('StaffCommonCode.php');
 $message = "";
 $rows = 0;
-staff_header($title);
+staff_header($title, true);
 if (isLoggedIn() && may_I("AdminPhases")) {
 	if (isset($_POST["PostCheck"])) {
 		$priorValues = interpretControlString($_POST["control"], $_POST["controliv"]);
