@@ -2,6 +2,8 @@
 // Copyright (c) 2018 Peter Olszowka. All rights reserved. See copyright document for more details.
 $report = [];
 $report['name'] = 'Pubs - Participant Bio and pubname';
+$report['multi'] = 'true';
+$report['output_filename'] = 'pubs_bios.csv';
 $report['description'] = 'Show the badgeid, pubsname and bio for each participant who is on at least one scheduled, public session.';
 $report['categories'] = array(
     'Publication Reports' => 870,
@@ -39,18 +41,22 @@ if (defined('USE_PRONOUNS') && USE_PRONOUNS) {
         <xsl:template match="/">
             <xsl:choose>
                 <xsl:when test="doc/query[@queryName='participants']/row">
-                    <table class="report">
+                    <table id="reportTable" class="report table table-sm">
                         <col style="width:6em;" />
                         <col style="width:12em;" />
                         <col style="width:8em;" />
                         <col />
-                        <tr>
-                            <th class="report">Badge Id</th>
-                            <th class="report">Name for Publications</th>
-                            <th class="report">Pronouns</th>
-                            <th class="report">Biography</th>
-                        </tr>
-                        <xsl:apply-templates select="doc/query[@queryName='participants']/row" />
+                        <thead>
+                            <tr>
+                                <th>Badge Id</th>
+                                <th>Name for Publications</th>
+                                <th>Pronouns</th>
+                                <th>Biography</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <xsl:apply-templates select="doc/query[@queryName='participants']/row" />
+                        </tbody>
                     </table>
                 </xsl:when>
                 <xsl:otherwise>
@@ -61,10 +67,10 @@ if (defined('USE_PRONOUNS') && USE_PRONOUNS) {
 
         <xsl:template match="doc/query[@queryName='participants']/row">
             <tr>
-                <td class="report"><xsl:call-template name="showBadgeid"><xsl:with-param name="badgeid" select="@badgeid"/></xsl:call-template></td>
-                <td class="report"><xsl:value-of select="@pubsname" /></td>
-                <td class="report"><xsl:value-of select="@pronouns" /></td>
-                <td class="report"><xsl:value-of select="@bio" /></td>
+                <td><xsl:call-template name="showBadgeid"><xsl:with-param name="badgeid" select="@badgeid"/></xsl:call-template></td>
+                <td><xsl:value-of select="@pubsname" /></td>
+                <td><xsl:value-of select="@pronouns" /></td>
+                <td><xsl:value-of select="@bio" /></td>
             </tr>
         </xsl:template>
     </xsl:stylesheet>
@@ -78,16 +84,20 @@ if (defined('USE_PRONOUNS') && USE_PRONOUNS) {
         <xsl:template match="/">
             <xsl:choose>
                 <xsl:when test="doc/query[@queryName='participants']/row">
-                    <table class="report">
+                    <table id="reportTable" class="report table table-sm">
                         <col style="width:6em;" />
                         <col style="width:12em;" />
                         <col />
-                        <tr>
-                            <th class="report">Badge Id</th>
-                            <th class="report">Name for Publications</th>
-                            <th class="report">Biography</th>
-                        </tr>
-                        <xsl:apply-templates select="doc/query[@queryName='participants']/row" />
+                        <thead>
+                            <tr>
+                                <th>Badge Id</th>
+                                <th>Name for Publications</th>
+                                <th>Biography</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <xsl:apply-templates select="doc/query[@queryName='participants']/row" />
+                        </tbody>
                     </table>
                 </xsl:when>
                 <xsl:otherwise>
@@ -98,9 +108,9 @@ if (defined('USE_PRONOUNS') && USE_PRONOUNS) {
 
         <xsl:template match="doc/query[@queryName='participants']/row">
             <tr>
-                <td class="report"><xsl:call-template name="showBadgeid"><xsl:with-param name="badgeid" select="@badgeid"/></xsl:call-template></td>
-                <td class="report"><xsl:value-of select="@pubsname" /></td>
-                <td class="report"><xsl:value-of select="@bio" /></td>
+                <td><xsl:call-template name="showBadgeid"><xsl:with-param name="badgeid" select="@badgeid"/></xsl:call-template></td>
+                <td><xsl:value-of select="@pubsname" /></td>
+                <td><xsl:value-of select="@bio" /></td>
             </tr>
         </xsl:template>
     </xsl:stylesheet>
