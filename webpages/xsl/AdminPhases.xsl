@@ -29,24 +29,24 @@
           <table id="phase_table" class="table table-sm table-striped">
             <thead>
               <tr>
-                <th class="y1">ID</th>
-                <th style="width=100px" class="y2">Current Status</th>
-                <th class="y3">Phase Name</th>
-                <th class="y4">Notes</th>
+                <th>ID</th>
+                <th>Current Status</th>
+                <th>Phase Name</th>
+                <th>Notes</th>
               </tr>
             </thead>
             <tbody>
               <xsl:for-each select="/doc/query[@queryName='phase_info']/row">
                 <tr>
-                  <td>
+                  <td class="text-center align-middle">
                     <xsl:attribute name="id">
                       <xsl:text>phase_id_num_</xsl:text>
                       <xsl:value-of select="@phaseid"/>
                     </xsl:attribute>
                     <xsl:value-of select="@phaseid"/>
                   </td>
-                  <td style="width: 100px">
-                    <select style="width: 100%">
+                  <td class="align-middle">
+                    <select class="form-control">
                       <xsl:attribute name="id">
                         <xsl:text>phase_id_</xsl:text>
                         <xsl:value-of select="@phaseid"/>
@@ -74,14 +74,14 @@
                       </option>
                     </select>
                   </td>
-                  <td>
+                  <td class="align-middle">
                     <xsl:attribute name="id">
                       <xsl:text>phase_name_</xsl:text>
                       <xsl:value-of select="@phaseid"/>
                     </xsl:attribute>
                     <xsl:value-of select="@phasename"/>
                   </td>
-                  <td>
+                  <td class="align-middle">
                     <xsl:value-of select="@notes"/>
                   </td>
                 </tr>
