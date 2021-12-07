@@ -12,6 +12,7 @@ class ScheduledSession {
     public $roomname;
     public $roomid;
     public $trackname;
+    public $hashtag;
     public $participants;
 
     function participantById($badgeid) {
@@ -30,6 +31,7 @@ class ScheduledParticipant {
     public $pubsname;
     public $badgeid;
     public $moderator;
+    public $pronouns;
 
     public $nextSession;
 }
@@ -45,6 +47,7 @@ function render_sessions_as_xml($sessions) {
         $panel->setAttribute("progguiddesc", $s->progguiddesc);
         $panel->setAttribute("roomname", $s->roomname);
         $panel->setAttribute("trackname", $s->trackname);
+        $panel->setAttribute("hashtag", $s->hashtag);
         $panel->setAttribute("starttime", $s->starttime);
         
         foreach ($s->participants as $p) {
@@ -52,6 +55,7 @@ function render_sessions_as_xml($sessions) {
             $particpant->setAttribute("pubsname", $p->pubsname);
             $particpant->setAttribute("badgeid", $p->badgeid);
             $particpant->setAttribute("moderator", $p->moderator);
+            $particpant->setAttribute("pronouns", $p->pronouns);
 
             $panel -> appendChild($particpant);
 
@@ -82,7 +86,7 @@ SELECT
         DATE_FORMAT(ADDTIME('$ConStartDatim$',SCH.starttime),'%a %l:%i %p') AS starttime,
         ADDTIME('$ConStartDatim$',SCH.starttime) as starttimeraw,
         DATE_FORMAT(S.duration,'%i') AS durationmin, DATE_FORMAT(S.duration,'%k') AS durationhrs,
-		T.trackname, KC.kidscatname
+		T.trackname, KC.kidscatname, S.hashtag
     FROM
              Sessions S
         JOIN Schedule SCH USING (sessionid)
@@ -105,6 +109,7 @@ EOD;
         $session->progguiddesc = $row["progguiddesc"];
         $session->roomname = $row["roomname"];
         $session->trackname = $row["trackname"];
+        $session->hashtag = $row["hashtag"];
         $session->starttime = $row["starttime"];
         $session->starttime_unformatted = DateTime::createFromFormat ( "Y-m-d H:i:s", $row["starttimeraw"] );
         $session->participants = array();
@@ -116,7 +121,7 @@ EOD;
 
     $query2 =<<<'EOD'
 SELECT
-        SCH.sessionid, P.pubsname, P.badgeid, POS.moderator
+        SCH.sessionid, P.pubsname, P.badgeid, POS.moderator, P.pronouns
     FROM
 			 Schedule SCH
         JOIN ParticipantOnSession POS USING (sessionid)
@@ -135,6 +140,7 @@ EOD;
         $participant->pubsname = $row["pubsname"];
         $participant->moderator = $row["moderator"];
         $participant->badgeid = $row["badgeid"];
+        $participant->pronouns = $row["pronouns"];
 
         $session->participants[] = $participant;
     }

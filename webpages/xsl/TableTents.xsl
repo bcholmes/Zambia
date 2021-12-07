@@ -20,10 +20,20 @@
                 p { margin-top: 2px; margin-bottom: 2px; }
                 body { width: 9.5in; margin-left:auto; font-family:"Futura Condensed",sans-serif;
                     margin-right:auto; }
-                h1 { display:block; line-height:72pt; font-size: 80pt;
-                    text-align:center; height:2.25in; margin-bottom:2in;
+                .frontside {
+                    height:2.25in; margin-bottom:2in;
                     -webkit-transform: rotate(-180deg); 
                     -moz-transform: rotate(-180deg); 
+                    text-align:center;
+                }
+                h1 { 
+                    display:block; 
+                    line-height:72pt; 
+                    font-size: 80pt;
+                    margin-bottom: 5pt;
+                }
+                .pronouns {
+                    font-size: 36pt;
                 }
                 .page {
                     page-break-after: always; 
@@ -42,9 +52,18 @@
                 <div class="hashfront"><xsl:value-of select="@title" disable-output-escaping="yes"/></div>
                 <div class="hashback"><xsl:value-of select="@title" disable-output-escaping="yes"/></div>
             </div>
+            <xsl:if test="not(@hashtag = '')">
+                <div class="page">
+                    <div class="hashfront"><xsl:value-of select="@hashtag" disable-output-escaping="yes"/></div>
+                    <div class="hashback"><xsl:value-of select="@hashtag" disable-output-escaping="yes"/></div>
+                </div>
+            </xsl:if>
             <xsl:for-each select="participant">
                 <div class="page">
-                    <h1 class="panelist"><xsl:value-of select="@pubsname" /></h1>
+                    <div class="frontside">
+                        <h1 class="panelist"><xsl:value-of select="@pubsname" /></h1>
+                        <p class="pronouns"><xsl:value-of select="@pronouns" /></p>
+                    </div>
                     <div class="backside">
                         <p class="panelname">This is Session: &quot;<span><xsl:value-of select="../@title" disable-output-escaping="yes"/></span>&quot;</p>
                         <p><xsl:value-of select="../@roomname" /> &#8226; <xsl:value-of select="../@starttime" /> &#8226; <xsl:value-of select="../@trackname" /></p>
