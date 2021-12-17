@@ -17,6 +17,7 @@ function send_password_was_reset_email($name, $email_address) {
     }
 
     $email_body = <<< EOD
+        <html><body>
         <p>Hi $name,</p>
 
         <p>We just wanted to drop you a note to let you know that your password was reset at your request.</p>
@@ -25,9 +26,22 @@ function send_password_was_reset_email($name, $email_address) {
 
         <p>Thanks,<br />
         Your Friendly Automated Email System!
-        </p>
+        </p></body></html>
 EOD;
-    send_email($email_body, "Your password has been reset", [$email_address => $name]);
+
+    $text_body = <<< EOD
+Hi $name,
+
+We just wanted to drop you a note to let you know that your password was reset at your request.
+
+If you have any questions, please contact Programming at $programming.
+
+Thanks,
+Your Friendly Automated Email System!
+EOD;
+
+    $con_name = CON_NAME;
+    send_email_with_plain_text($text_body, $email_body, "Your $con_name password has been reset", [$email_address => $name]);
 }
 
 function get_badge_name($firstname, $lastname, $badgename) {

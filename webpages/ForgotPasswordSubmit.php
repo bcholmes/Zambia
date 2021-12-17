@@ -47,6 +47,7 @@ function send_reset_password_email($firstname, $lastname, $badgename, $email, $s
     }
     $link_lifetime = PASSWORD_RESET_LINK_TIMEOUT_DISPLAY;
     $emailBody = <<<EOD
+    <html><body>
     <p>
         Hello $username,
     </p>
@@ -66,10 +67,28 @@ function send_reset_password_email($firstname, $lastname, $badgename, $email, $s
     </p>
     <p>
         Thanks!
-    </p>
+    </p></body></html>
     EOD;
 
-    send_email($emailBody, $subjectLine, [ $email => $username ]);
+    $text_body = <<<EOD
+    Hello $username,
+
+    We received a request to reset your password for the 
+    programming/scheduling system for $conName. If you did 
+    not make this request, you can ignore this email.
+
+    Here is your password reset link:
+
+    $url
+
+    The link is good for $link_lifetime from when you originally 
+    requested it and can be used to change your password only once.  
+    If it has expired just request another link.
+
+    Thanks!
+    EOD;
+
+    send_email_with_plain_text($text_body, $emailBody, $subjectLine, [ $email => $username ]);
 }
 
 

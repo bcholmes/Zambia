@@ -283,12 +283,17 @@ function get_swift_mailer() {
     return new Swift_Mailer($transport);
 }
 
-function send_email($body, $subject, $to, $replyTo = null, $cc = null) {
+function send_email_with_plain_text($text_body, $html_body, $subject, $to, $replyTo = null, $cc = null) {
     $mailer = get_swift_mailer();
 
     //Create the message and set subject
     $message = (new Swift_Message($subject));
-    $message->setBody($body,'text/html');
+    $message->setBody($html_body,'text/html');
+
+    if ($text_body) {
+        $message->addPart($text_body, "text/plain", "utf-8");
+    }
+
     if ($replyTo) {
         $message->setReplyTo($replyTo);
     }
@@ -318,5 +323,8 @@ function send_email($body, $subject, $to, $replyTo = null, $cc = null) {
             error_log("Swift exception: send email failed.");
         }
     }
+}
+function send_email($body, $subject, $to, $replyTo = null, $cc = null) {
+    send_email_with_plain_text(null, $body, $subject, $to, $replyTo);
 }
 ?>

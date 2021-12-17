@@ -1,4 +1,4 @@
-@startuml
+@startuml ER Diagram
 title Zambia Entity Relationship Diagram
 'hide the spot
 hide circle
@@ -197,7 +197,7 @@ entity ParticipantSuggestions {
   suggestedguests : text
 }
 
-entity PermissionRoles (
+entity PermissionRoles {
 * permroleid: int <<auto increment>>
   permrolename: varchar(100)
   notes: text
