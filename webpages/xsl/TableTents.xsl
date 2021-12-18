@@ -35,8 +35,8 @@
             </div>
             <xsl:if test="not(@hashtag = '')">
                 <div class="page">
-                    <div class="hashfront"><xsl:value-of select="@hashtag" disable-output-escaping="yes"/></div>
-                    <div class="hashback"><xsl:value-of select="@hashtag" disable-output-escaping="yes"/></div>
+                    <div class="front"><h1 class="title"><xsl:value-of select="@hashtag" /></h1></div>
+                    <div class="back"><h1 class="title"><xsl:value-of select="@hashtag" /></h1></div>
                 </div>
             </xsl:if>
             <xsl:for-each select="participant">
