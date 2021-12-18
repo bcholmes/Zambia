@@ -41,6 +41,7 @@ function participant_header($title, $noUserRequired = false, $loginPageStatus = 
             $paramArray = array();
             $paramArray["title"] = $title;
             $paramArray["my_suggestions"] = may_I('my_suggestions_write') ? true : false;
+            $paramArray["SessionFeedback"] = may_I('SessionFeedback') ? true : false;
             $paramArray["survey"] = $_SESSION['survey_exists'];
             $paramArray["PARTICIPANT_PHOTOS"] = PARTICIPANT_PHOTOS === TRUE ? 1 : 0;
             RenderXSLT('ParticipantMenu_BS4.xsl', $paramArray, GeneratePermissionSetXML());

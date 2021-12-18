@@ -8,6 +8,7 @@
   <xsl:param name="PARTICIPANT_PHOTOS" select="'0'"/>
   <xsl:param name="survey" select="'false'" />
   <xsl:param name="my_suggestions" select="'true'" />
+  <xsl:param name="SessionFeedback" select="'true'" />
   <xsl:template match="/">
     <nav id="participantNav" class="navbar navbar-expand-lg navbar-dark bg-dark">
       <span class="navbar-brand py-1">
@@ -55,9 +56,14 @@
               <a class="nav-link py-1" href="PartSearchSessions.php">Search Sessions</a>
             </li>
           </xsl:if>
-          <xsl:if test="/doc/query[@queryname='permission_set']/row[@permatomtag='my_panel_interests']">
+          <xsl:if test="/doc/query[@queryname='permission_set']/row[@permatomtag='SessionFeedback']">
             <li class="nav-item py-0">
-              <a class="nav-link py-1" href="PartPanelInterests.php">Session Interests</a>
+              <a class="nav-link py-1" href="SessionFeedback.php">Session Feedback</a>
+            </li>
+          </xsl:if>
+          <xsl:if test="$my_suggestions">
+            <li class="nav-item py-0">
+              <a class="nav-link py-1" href="my_suggestions.php">My Suggestions</a>
             </li>
           </xsl:if>
           <xsl:if test="/doc/query[@queryname='permission_set']/row[@permatomtag='my_schedule']">
