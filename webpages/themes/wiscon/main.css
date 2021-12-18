@@ -1,0 +1,39 @@
+.navbar {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+}
+.navbar.bg-dark {
+    background-color: #000000 !important;
+}
+  
+.dropdown-menu.show {
+    background-color: #24890d;
+}
+.dropdown-item {
+    color: white;
+    font-size: 0.6875rem;
+}
+.dropdown-item:focus, .dropdown-item:hover {
+    background-color: #41a62a;
+    color: white;
+}
+body.bs4:not(.full-page) {
+    background-image: none;
+    background: #d1d1d1;
+}
+footer hr {
+    display: none;
+}
+.header.participant-header {
+    background-color: #032b4f;
+    background-image: none;
+}
+.header-contents h1.d-md-block {
+    display: none !important;
+}
+.header-contents h1 .d-lg-inline {
+    display: none !important;
+}
+.table-tent .pronouns {
+    font-size: 36pt;
+}
