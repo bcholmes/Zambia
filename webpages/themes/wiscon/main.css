@@ -37,3 +37,20 @@ footer hr {
 .table-tent .pronouns {
     font-size: 36pt;
 }
+.table-tent .front {
+    background-image: url(./WisCon_Logo_Stacked.svg);
+    background-size: 0.75in 0.75in;
+    background-position: 0.25in 0.75in;
+    background-repeat: no-repeat;
+}
+.table-tent .back {
+    background-image: url(./WisCon_Logo_Stacked.svg);
+    background-size: 0.75in 0.75in;
+    background-position: 0.25in 0.75in;
+    background-repeat: no-repeat;
+}
+
+@media print
+{
+    * {-webkit-print-color-adjust:exact;}
+}
