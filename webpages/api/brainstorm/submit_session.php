@@ -31,6 +31,28 @@ function find_select_dropdown_by_name($db, $table, $idcolumn, $keycolumnname, $k
     }
 }
 
+function find_division($db, $divisionId) {
+
+    $query = <<<EOD
+ SELECT email_address, divisionname FROM Divisions WHERE divisionid = ?;
+ EOD;
+
+    $stmt = mysqli_prepare($db, $query);
+    mysqli_stmt_bind_param($stmt, "i", $divisionId);
+    if (mysqli_stmt_execute($stmt)) {
+        $result = mysqli_stmt_get_result($stmt);
+        if (mysqli_num_rows($result) == 1) {
+            $dbobject = mysqli_fetch_object($result);
+            mysqli_stmt_close($stmt);
+            return $dbobject;
+        } else {
+            throw new DatabaseSqlException($query);
+        }
+    } else {
+        throw new DatabaseSqlException($query);
+    }
+}
+
 function write_session_to_database($db, $json, $jwt) {
 
     $badgeid = jwt_extract_badgeid($jwt);
@@ -152,12 +174,13 @@ function get_name_for_badgeid($db, $badgeid) {
     }
 }
 
-function send_confirmation_email($db, $json, $jwt) {
+function send_confirmation_email($db, $json, $jwt, $division) {
     $badgeid = jwt_extract_badgeid($jwt);
     $email = get_email_address_for_badgeid($db, $badgeid);
     $name = get_name_for_badgeid($db, $badgeid);
 
-    $programmingEmail = PROGRAM_EMAIL;
+    $programmingEmail = isset($division->email_address) && $division->email_address !== '' ? $division->email_address : PROGRAM_EMAIL;
+    $programmingName = isset($division->divisionname) && $division->divisionname !== '' ? $division->divisionname : 'Programming';
     $title = strip_tags($json['title']);
     $description = strip_tags($json['progguiddesc']);
     $emailBody = <<<EOD
@@ -170,7 +193,7 @@ function send_confirmation_email($db, $json, $jwt) {
     $description</p>
 
     <p>If you have any questions, or need some help with some part of this process,
-    please contact <a href="mailto:$programmingEmail">Programming</a>.<p>
+    please contact <a href="mailto:$programmingEmail">$programmingName</a>.<p>
 
     <p>Thank you for submitting your session idea.</p>
     <p>
@@ -179,7 +202,7 @@ function send_confirmation_email($db, $json, $jwt) {
     </p>
 EOD;
 
-    send_email($emailBody, 'Session submission: ' . $title, $email, [$programmingEmail => 'Programming']);
+    send_email($emailBody, "Session submission: $title", $email, [$programmingEmail => $programmingName]);
 }
 
 function is_valid($db, $json) {
@@ -208,8 +231,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && jwt_validate_token($auth, true)) {
             // write to database
             write_session_to_database($db, set_brainstorm_default_values($db, $json), $auth);
 
+            $division = find_division($db, $json['division']);
+
             // send email
-            send_confirmation_email($db, $json, $auth);
+            send_confirmation_email($db, $json, $auth, $division);
 
             http_response_code(201);
         } else {

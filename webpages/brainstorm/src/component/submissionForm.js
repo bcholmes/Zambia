@@ -14,28 +14,31 @@ class SubmissionForm extends Component {
     constructor(props) {
         super(props);
 
+        this.state = {
+            values: this.createInitialValues(),
+            submitAllowed: (store.getState().auth.jwt != null),
+            errors: {}
+        }
+    }
+
+    createInitialValues() {
         let divisions = store.getState().options.divisions;
         let values = {};
         if (divisions && divisions.length === 1) {
             values['division'] = divisions[0].id.toString();
         }
-
-        this.state = {
-            values: values,
-            errors: {}
-        }
+        return values;
     }
+
 
     componentDidMount() {
         this.unsubscribe = store.subscribe(() => {
-            let divisions = store.getState().options.divisions;
-            let values = this.state.values;
-            if (divisions && divisions.length === 1) {
-                values['division'] = divisions[0].id.toString();
-            }
+            let values = this.createInitialValues();
+            let submitAllowed = (store.getState().auth.jwt != null);
             this.setState({
                 ...this.state,
-                values: values
+                values: values,
+                submitAllowed: submitAllowed
             });
         });
     }
@@ -48,7 +51,7 @@ class SubmissionForm extends Component {
 
     render() {
         let message = this.state.message ? (<Alert variant={this.state.message.severity}>{this.state.message.text}</Alert>) : undefined;
-        let message2 = this.isSubmitAllowed() ?  undefined : (<Alert variant="warning">Please log in to submit session ideas.</Alert>);
+        let message2 = this.state.submitAllowed ?  undefined : (<Alert variant="warning">Please log in to submit session ideas.</Alert>);
         const spinner = this.state.loading ? (<Spinner
             as="span"
             animation="border"
@@ -72,11 +75,11 @@ class SubmissionForm extends Component {
 
                         <Form.Group controlId="division">
                             <Form.Label className="sr-only">Division:</Form.Label>
-                            <Form.Control as="select" className={this.getErrorClass('division')} value={this.getFormValue('division')} onChange={(e) => this.setFormValue("divsion", e.target.value)} key="divsion">
+                            <Form.Control as="select" className={this.getErrorClass('division')} value={this.getFormValue('division')} onChange={(e) => this.setFormValue("division", e.target.value)} key="divsion">
                                 <option value="" key="empty">Please select a division (Required)</option>
                                 {options}
                             </Form.Control>
-                            <Form.Text className="text-muted">What kind of session is this? e.g. Programming, Academic, etc.</Form.Text>
+                            <Form.Text className="text-muted">What kind of session is this? e.g. Panels, Academic, etc.</Form.Text>
                         </Form.Group>
 
                         <Form.Group controlId="title">
@@ -111,7 +114,7 @@ class SubmissionForm extends Component {
 
                     </Card.Body>
                     <Card.Footer>
-                        <Button variant="primary" type="submit" disabled={!this.isSubmitAllowed()}>{spinner} <span>Submit</span></Button>
+                        <Button variant="primary" type="submit" disabled={!this.state.submitAllowed}>{spinner} <span>Submit</span></Button>
                     </Card.Footer>
                 </Card>
             </Form>
@@ -179,9 +182,6 @@ class SubmissionForm extends Component {
         }
     }
 
-    isSubmitAllowed() {
-        return store.getState().auth.jwt;
-    }
     isValidForm() {
         let formKeys = [ 'title', 'progguiddesc', 'track', 'division' ];
         let errors = this.state.errors || {};
@@ -223,7 +223,7 @@ class SubmissionForm extends Component {
             .then(res => {
                 this.setState({
                     ...this.state,
-                    values: {},
+                    values: this.createInitialValues(),
                     errors: {},
                     loading: false,
                     message: {
