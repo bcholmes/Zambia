@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode($result);
     }
 } else {
-    http_response_code(404);
+    http_response_code(405);
 }
 
 ?>

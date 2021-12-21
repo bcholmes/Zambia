@@ -45,6 +45,7 @@ EOD;
 			);
 			array_push($current_division['tracks'], $track);
 		}
+		mysqli_stmt_close($stmt);
 		if ($current_division != null) {
 			$options[] = $current_division;
 		}
