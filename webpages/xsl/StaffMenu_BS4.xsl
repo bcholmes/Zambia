@@ -23,7 +23,7 @@
         @permatomtag='ce_RoomHasSet' or @permatomtag='ce_Services' or @permatomtag='ce_SessionStatuses' or
         @permatomtag='ce_Tags' or @permatomtag='ce_Times' or @permatomtag='ce_Tracks' or @permatomtag='ce_Types']"/>
     <xsl:template match="/">
-        <nav id="staffNav" class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <nav id="staffNav" class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
             <a class="navbar-brand py-1" href="#">
                 <xsl:value-of select="$title"/>
             </a>

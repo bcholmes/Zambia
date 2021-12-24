@@ -10,7 +10,7 @@
   <xsl:param name="my_suggestions" select="'true'" />
   <xsl:param name="SessionFeedback" select="'true'" />
   <xsl:template match="/">
-    <nav id="participantNav" class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav id="participantNav" class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
       <span class="navbar-brand py-1">
         <xsl:value-of select="$title"/>
       </span>
