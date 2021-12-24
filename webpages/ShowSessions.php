@@ -9,6 +9,7 @@ $sessionid = getInt("sessionid", "");
 $divisionid = getInt("divisionid", "");
 $searchTitle = getString("searchtitle");
 $hashtag = getString("hashtag");
+$csv = getString("csv");
 if ($searchTitle === NULL) {
     $searchTitle = "";
 }
@@ -26,5 +27,23 @@ $sessionSearchArray['searchTitle'] = $searchTitle;
 $sessionSearchArray['hashtag'] = $hashtag;
 $sessionSearchArray['tagmatch'] = getString("tagmatch");
 $sessionSearchArray['tagidArray'] = $tags;
-RenderSearchSessionResults($sessionSearchArray);
+if ($csv === "csv") {
+
+    require_once('retrieve.php');
+    require_once('render_functions.php');
+    require_once('csv_report_functions.php');
+    // retrieveSessions() will exit on error
+    if ($result = retrieveSessions($sessionSearchArray)) {
+        $showlinks = false;
+
+        header("Content-disposition: attachment; filename=sessions-".date(DATE_ISO8601).".csv");
+        header('Content-type: text/csv');
+
+        $html = RenderPrecisToString($result, $showlinks, $href, $sessionSearchArray);
+        render_html_table_as_csv($html);
+    }
+
+} else {
+    RenderSearchSessionResults($sessionSearchArray, "./ShowSessions.php");
+}
 ?>

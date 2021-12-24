@@ -109,6 +109,9 @@ function render_html_table_as_csv($htmlString) {
                 if (strpos($value, "&gt;") !== false) {
                     $value = str_replace("&gt;", ">", $value);
                 }
+                if (strpos($value, "&nbsp;") !== false) {
+                    $value = str_replace("&nbsp;", " ", $value);
+                }
 
                 // write out the cell value
                 echo "\"$value\"";
