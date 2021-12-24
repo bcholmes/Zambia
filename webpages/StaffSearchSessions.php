@@ -11,7 +11,6 @@
 <div class="card mt-2">
     <div class="card-header">
         <h5 class="mb-0">Session Search</h5>
-        <small class="text-muted">(shows same data as Precis View for each session)</small>
     </div>
     <div class="card-body">
     <form method=POST action="ShowSessions.php">
