@@ -2,9 +2,12 @@ $(function() {
 
     $.zambia.feedback = {
 
-        fetch: function() {
+        timer: null,
+
+        fetch: function(term) {
+            $('#load-spinner').show();
             $.ajax({ 
-                url: 'api/session_feedback_list.php',
+                url: 'api/session_feedback_list.php' + (term ? '?q=' + encodeURIComponent(term) : ''),
                 method: 'GET',
                 success: function(data) {
                     $('#load-spinner').hide();
@@ -13,8 +16,19 @@ $(function() {
             });
         },
 
+        filter: (term, immediate) => {
+            if ($.zambia.feedback.timer) {
+                clearTimeout($.zambia.feedback.timer);
+            }
+            $.zambia.feedback.timer = setTimeout(function() {
+                console.log('setting timer');
+                $.zambia.feedback.fetch(term);
+            }, immediate ? 10 : 1000);
+        },
+
         render: function(data) {
             let $sessionList = $('#session-list');
+            $sessionList.empty();
             if (data && data.categories) {
                 for (let i = 0; i < data.categories.length; i++) {
                     let name = '<h4 class="mt-4">' + data.categories[i].name + '</h4>';
@@ -40,6 +54,14 @@ $(function() {
 
     $('#load-spinner').show();
 
+    $("#filter").keyup((e) => {
+        $.zambia.feedback.filter(e.target.value);
+    });
+
+    $("#clearFilter").click((e) => {
+        $("#filter").val('');
+        $.zambia.feedback.filter('', true);
+    });
     $.zambia.feedback.fetch()
 
 });

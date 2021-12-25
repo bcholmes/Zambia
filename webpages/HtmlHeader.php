@@ -20,6 +20,7 @@ function html_header($title, $bootstrap4 = false, $isDataTables = false, $report
 <?php if ($bootstrap4) { ?>
     <link rel="stylesheet" href="external/bootstrap4.5.0/bootstrap.min.css" type="text/css" >
     <link rel="stylesheet" href="external/bootstrap-multiselect-1.1.7/bootstrap-multiselect.min.css" type="text/css" >
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
 <?php } else { ?>
     <link rel="stylesheet" href="external/jqueryui1.8.16/jquery-ui-1.8.16.custom.css" type="text/css">
     <link rel="stylesheet" href="external/bootstrap2.3.2/bootstrap.css" type="text/css" >

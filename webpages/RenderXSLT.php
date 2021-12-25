@@ -22,9 +22,12 @@ function RenderXSLT($xslFilename, $paramArray = [], $xmlDoc = false, $noecho = f
             $xslt->setParameter('', $paramName, $paramValue);
         }
     }
-    $html = $xslt->transformToXML($xmlDoc);
-    if ($noecho)
-        return mb_ereg_replace("<(div|span|b|textarea|script)([^>]*/[ ]*)>", "<\\1\\2></\\1>", $html, "i");
+    $dom = $xslt->transformToDoc($xmlDoc);
+    $html = $dom->saveHTML();
 
-    echo(mb_ereg_replace("<(div|span|b|textarea|script)([^>]*/[ ]*)>", "<\\1\\2></\\1>", $html, "i"));
+    if ($noecho)
+        return $html;
+ 
+    echo $html;
 }
+?>

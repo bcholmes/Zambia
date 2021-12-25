@@ -8,7 +8,13 @@ if (!include ('../../db_name.php')) {
 require_once('./db_support_functions.php');
 require_once('../data_functions.php');
 
-function find_session_for_feedback($db) {
+function find_session_for_feedback($db, $term) {
+    $clause = "";
+    if ($term) {
+        $term = $db->real_escape_string(mb_strtolower($term));
+        $clause = " AND (LOWER(s.title) LIKE '%$term%' OR LOWER(s.progguiddesc) LIKE '%$term%') ";
+    }
+
     $query = <<<EOD
 	SELECT t.trackname, s.sessionid, s.title, s.progguiddesc, s.invitedguest
 	  FROM Sessions s
@@ -18,6 +24,7 @@ function find_session_for_feedback($db) {
 	 WHERE ss.may_be_scheduled = 1
 	   AND ps.pubstatusname = 'Public'
        AND s.divisionid in (select divisionid from Divisions where divisionname = 'Panels')
+       $clause
 	 ORDER BY t.display_order, s.sessionid;
 EOD;
    
@@ -63,9 +70,10 @@ $db = connect_to_db();
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_SESSION['badgeid'])) {
         if (may_I('SessionFeedback')) {
+            $term = array_key_exists("q", $_REQUEST) ? $_REQUEST["q"] : null;
 
             header('Content-type: application/json; charset=utf-8');
-            $categories = find_session_for_feedback($db);
+            $categories = find_session_for_feedback($db, $term);
             $json_string = json_encode(array("categories" => $categories));
             echo $json_string;
 

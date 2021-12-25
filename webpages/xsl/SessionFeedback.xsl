@@ -10,12 +10,28 @@
                 <h2>Session Feedback</h2>
             </div>
             <div class="card-body">
+                  <div class="row">
+                    <div class="form-group col-md-6">
+                      <label for="filter" class="sr-only">Filter</label>
+                      <div class="input-group mb-3">
+                        <input id="filter" type="text" class="form-control" placeholder="Filter..." />
+                        <span class="input-group-append">
+                          <button id="clearFilter" class="btn btn-secondary" type="button">
+                            <i class="bi bi-x"> </i>
+                          </button>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
                 <div id="load-spinner" class="text-center" style="display: none">
                   <div class="spinner-border m-5" role="status">
                     <span class="sr-only">Loading...</span>
                   </div>
                 </div>
-                <p>Please specify your interest in the following proposed sessions.</p>
+
+                <p>Please specify your interest in the following sessions.</p>
+
                 <div id="session-list">
                 </div>
             </div>
