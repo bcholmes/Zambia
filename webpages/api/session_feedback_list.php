@@ -8,6 +8,30 @@ if (!include ('../../db_name.php')) {
 require_once('./db_support_functions.php');
 require_once('../data_functions.php');
 
+function find_interest_for_current_user($db, $badgeid) {
+    $query = <<<EOD
+    SELECT
+            P.interested
+        FROM
+            Participants P
+        WHERE
+            P.badgeid = ?;
+    EOD;
+    $stmt = mysqli_prepare($db, $query);
+    mysqli_stmt_bind_param($stmt, "s", $badgeid);
+    $interested = false;
+	if (mysqli_stmt_execute($stmt)) {
+		$result = mysqli_stmt_get_result($stmt);
+        while ($row = mysqli_fetch_object($result)) {
+            $interested = $row->interested ? true : false;
+        }
+    } else {
+        throw new DatabaseSqlException("Query could not be executed: $query");
+    }
+    mysqli_stmt_close($stmt);
+    return $interested;
+}
+
 function find_session_for_feedback($db, $term) {
     $clause = "";
     if ($term) {
@@ -74,7 +98,8 @@ try {
 
             header('Content-type: application/json; charset=utf-8');
             $categories = find_session_for_feedback($db, $term);
-            $json_string = json_encode(array("categories" => $categories));
+            $interest = find_interest_for_current_user($db, $_SESSION['badgeid']);
+            $json_string = json_encode(array("categories" => $categories, "interest" => $interest));
             echo $json_string;
 
         } else {

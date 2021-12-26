@@ -11,7 +11,14 @@ $(function() {
                 method: 'GET',
                 success: function(data) {
                     $('#load-spinner').hide();
-                    $.zambia.feedback.render(data);
+                    $.zambia.feedback.render(data, term);
+                },
+                error: function(err) {
+                    if (err.status == 401) {
+                        $.zambia.redirectToLogin();
+                    } else {
+                        $.zambia.simpleAlert('danger', 'There was a problem contacting the server. Try again later?');
+                    }
                 }
             });
         },
@@ -21,12 +28,11 @@ $(function() {
                 clearTimeout($.zambia.feedback.timer);
             }
             $.zambia.feedback.timer = setTimeout(function() {
-                console.log('setting timer');
                 $.zambia.feedback.fetch(term);
             }, immediate ? 10 : 1000);
         },
 
-        render: function(data) {
+        render: function(data, term) {
             let $sessionList = $('#session-list');
             $sessionList.empty();
             if (data && data.categories) {
@@ -36,14 +42,18 @@ $(function() {
                     if (data.categories[i].sessions) {
                         for (let j = 0; j < data.categories[i].sessions.length; j++) {
                             let session = data.categories[i].sessions[j];
-                            let $wrapper = $('<p class="ml-2" />');
-                            let $b = $('<b />');
-                            $b.html(session.title);
-                            $wrapper.append($b);
-                            $wrapper.append($('<br />'));
-                            let $span = $('<span />');
-                            $span.html(session.description);
-                            $wrapper.append($span);
+                            let $wrapper = $('<p class="ml-2 my-2" />');
+                            if (term) {
+                                term = term.replace(/[.?*+^$[\]\\(){}|-]/g, "\\$&"); // escape any special characters
+                                let title = '<b>' + session.title.replace(new RegExp("(" + term + ")", "gi"), "<mark>$1</mark>") + "</b><br />";
+                                let text = '<span>' + session.description.replace(new RegExp("(" + term + ")", "gi"), "<mark>$1</mark>") + '</span>';
+                                console.log(text);
+                                $wrapper.html(title + text);
+                            } else {
+                                let title = '<b>' + session.title + "</b><br />";
+                                let text = '<span>' + session.description + '</span>';
+                                $wrapper.html(title + text);
+                            }
                             $sessionList.append($wrapper);
                         }
                     }
