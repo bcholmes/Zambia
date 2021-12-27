@@ -64,15 +64,16 @@ function write_session_to_database($db, $json, $jwt) {
         $query = <<<EOD
     INSERT INTO Sessions 
             (title, progguiddesc, servicenotes, persppartinfo,
-            divisionid, statusid, kidscatid, trackid, typeid, pubstatusid, roomsetid, duration)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            divisionid, statusid, kidscatid, trackid, typeid, pubstatusid, roomsetid, duration, pocketprogtext, notesforprog)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
    EOD;
 
         $stmt = mysqli_prepare($db, $query);
-        mysqli_stmt_bind_param($stmt, "ssssiiiiiiis", $json['title'], $json['progguiddesc'], 
+        mysqli_stmt_bind_param($stmt, "ssssiiiiiiisss", $json['title'], $json['progguiddesc'], 
             $json['servicenotes'], $json['persppartinfo'], $json['division'], $json['statusid'], 
             $json['kidscatid'], $json['track'], $json['typeid'], 
-            $json['pubstatusid'], $json['roomsetid'], $json['duration']);
+            $json['pubstatusid'], $json['roomsetid'], $json['duration'], 
+            $json['pocketprogtext'], $json['notesforprog']);
 
         if ($stmt->execute()) {
             mysqli_stmt_close($stmt);
@@ -81,7 +82,7 @@ function write_session_to_database($db, $json, $jwt) {
         }     
 
         $sessionId = $db->insert_id;
-        $default_description = 'Session suggested.';
+        $default_description = 'Session suggested (Brainstorm).';
         $editCode = 1;
         $query = <<<EOD
     INSERT INTO SessionEditHistory 

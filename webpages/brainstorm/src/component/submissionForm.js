@@ -33,7 +33,10 @@ class SubmissionForm extends Component {
 
     componentDidMount() {
         this.unsubscribe = store.subscribe(() => {
-            let values = this.createInitialValues();
+            let values = this.state.values;
+            if (values === {}) {
+                values = this.createInitialValues();
+            }
             let submitAllowed = (store.getState().auth.jwt != null);
             this.setState({
                 ...this.state,
@@ -49,6 +52,111 @@ class SubmissionForm extends Component {
         }
     }
 
+    isAcademic(division) {
+        return division != null && division.name === 'Academic'
+    }
+
+    getFieldList(division) {
+        if (this.isAcademic(division)) {
+            return ["division", "title", "progguiddesc", "pocketprogtext", "track", "notesforprog", "servicenotes"];
+        } else {
+            return ["division", "title", "progguiddesc", "track", "servicenotes", "persppartinfo"];
+        }
+    }
+
+    getSelectedDivision() {
+        if (this.state.values['division'] && store.getState().options.divisions) {
+            let divisionId = this.state.values['division'];
+            let division = null;
+            store.getState().options.divisions.forEach((element) => { if (element.id.toString() === divisionId) { division = element; } } );
+            return division;
+        } else {
+            return null;
+        }
+    }
+
+    createField(fieldName) {
+        if (fieldName === "division") {
+            let options = store.getState().options.divisions ? store.getState().options.divisions.map((d) => { return (<option value={d.id} key={d.id}>{d.name}</option>)}) : undefined;
+            return (
+                <Form.Group controlId="division" key="division-field">
+                    <Form.Label className="sr-only">Division:</Form.Label>
+                    <Form.Control as="select" className={this.getErrorClass('division')} value={this.getFormValue('division')} onChange={(e) => this.setFormValue("division", e.target.value)} key="divsion">
+                        <option value="" key="empty">Please select a division (Required)</option>
+                        {options}
+                    </Form.Control>
+                    <Form.Text className="text-muted">What kind of session is this? e.g. Panels, Academic, etc.</Form.Text>
+                </Form.Group>
+            );
+        } else if (fieldName === "title") {
+            return (
+                <Form.Group controlId="title" key="title-field">
+                    <Form.Label className="sr-only">Title</Form.Label>
+                    <Form.Control className={this.getErrorClass('title')} type="text" placeholder="Title (Required)" value={this.getFormValue('title')} onChange={(e) => this.setFormValue('title', e.target.value)} />
+                </Form.Group>);
+        } else if (fieldName === "progguiddesc" && this.isAcademic(this.getSelectedDivision())) {
+            return (
+                <Form.Group controlId="progguiddesc" key="progguiddesc-field">
+                    <Form.Label className="sr-only">Abstract</Form.Label>
+                    <Form.Control as="textarea" rows={3} className={this.getErrorClass('progguiddesc')} type="text" placeholder="Abstract (Required)" value={this.getFormValue('progguiddesc')} onChange={(e) => this.setFormValue('progguiddesc', e.target.value)} />
+                    <Form.Text className="text-muted">Max 100 words</Form.Text>
+                </Form.Group>
+            );
+            
+        } else if (fieldName === "progguiddesc") {
+            return (
+                <Form.Group controlId="progguiddesc" key="progguiddesc-field">
+                    <Form.Label className="sr-only">Description</Form.Label>
+                    <Form.Control as="textarea" rows={3} className={this.getErrorClass('progguiddesc')} type="text" placeholder="Session description (Required)" value={this.getFormValue('progguiddesc')} onChange={(e) => this.setFormValue('progguiddesc', e.target.value)} />
+                    <Form.Text className="text-muted">Max 500 characters</Form.Text>
+                </Form.Group>
+            );
+        } else if (fieldName === "pocketprogtext") {
+            return (
+                <Form.Group controlId="pocketprogtext" key="progguiddesc-field">
+                    <Form.Label className="sr-only">Detailed Proposal (Required)</Form.Label>
+                    <Form.Control as="textarea" rows={3} className={this.getErrorClass('pocketprogtext')} type="text" placeholder="Detailed Proposal (Required)" value={this.getFormValue('pocketprogtext')} onChange={(e) => this.setFormValue('pocketprogtext', e.target.value)} />
+                    <Form.Text className="text-muted">Max 500 words</Form.Text>
+                </Form.Group>
+            );
+        } else if (fieldName === "track") {
+            let tracks = this.getTrackOptions().map((t) => {return (<option value={t.trackid} key={t.trackid}>{t.trackname}</option>) });
+            return (
+                <Form.Group controlId="track" key="track-field">
+                    <Form.Label className="sr-only">Track:</Form.Label>
+                    <Form.Control as="select" className={this.getErrorClass('track')} value={this.getFormValue('track')} onChange={(e) => this.setFormValue("track", e.target.value)} key="track">
+                        <option value="" key="empty">Please select a track (Required)</option>
+                        {tracks}
+                    </Form.Control>
+                    <Form.Text className="text-muted">Make a best guess about what track this panel should belong to</Form.Text>
+                </Form.Group>
+            );
+        } else if (fieldName === "servicenotes") {
+            return (
+                <Form.Group controlId="servicenotes" key="servicenotes-field">
+                    <Form.Label className="sr-only">Equipment Needed / Alternative Format</Form.Label>
+                    <Form.Control as="textarea" rows={3} className={this.getErrorClass('servicenotes')} type="text" placeholder="Additional Equipment Needed / Alternative Format" value={this.getFormValue('servicenotes')} onChange={(e) => this.setFormValue('servicenotes', e.target.value)}/>
+                </Form.Group>
+            );
+        } else if (fieldName === "persppartinfo") {
+            return (
+                <Form.Group controlId="persppartinfo" key="persppartinfo-field">
+                    <Form.Label className="sr-only">Suggest Some Good Participants</Form.Label>
+                    <Form.Control as="textarea" rows={3} className={this.getErrorClass('persppartinfo')} type="text" placeholder="Can you suggest some good participants? Or a moderator?" value={this.getFormValue('persppartinfo')} onChange={(e) => this.setFormValue('persppartinfo', e.target.value)}/>
+                </Form.Group>
+            );
+        } else if (fieldName === "notesforprog") {
+            return (
+                <Form.Group controlId="notesforprog" key="notesforprog-field">
+                    <Form.Label className="sr-only">In-Person or Online? (Required)</Form.Label>
+                    <Form.Control as="textarea" rows={2} className={this.getErrorClass('notesforprog')} type="text" placeholder="Do you plan to attend in-person, or online? (Required)" value={this.getFormValue('notesforprog')} onChange={(e) => this.setFormValue('notesforprog', e.target.value)}/>
+                </Form.Group>
+            );
+        } else {
+            return undefined;
+        }
+    }
+
     render() {
         let message = this.state.message ? (<Alert variant={this.state.message.severity}>{this.state.message.text}</Alert>) : undefined;
         let message2 = this.state.submitAllowed ?  undefined : (<Alert variant="warning">Please log in to submit session ideas.</Alert>);
@@ -60,8 +168,8 @@ class SubmissionForm extends Component {
             aria-hidden="true"
         />) : undefined;
 
-        let options = store.getState().options.divisions ? store.getState().options.divisions.map((d) => { return (<option value={d.id} key={d.id}>{d.name}</option>)}) : undefined;
-        let tracks = this.getTrackOptions().map((t) => {return (<option value={t.trackid} key={t.trackid}>{t.trackname}</option>) });
+        let fieldNames = this.getFieldList(this.getSelectedDivision());
+        let fields = fieldNames.map((n) => { return this.createField(n); });
 
         return (
             <Form onSubmit={(e) =>  this.submitForm(e)}>
@@ -73,44 +181,7 @@ class SubmissionForm extends Component {
                     <Card.Body>
                         <p>Submissions are open for programming for WisCon 2022.</p>
 
-                        <Form.Group controlId="division">
-                            <Form.Label className="sr-only">Division:</Form.Label>
-                            <Form.Control as="select" className={this.getErrorClass('division')} value={this.getFormValue('division')} onChange={(e) => this.setFormValue("division", e.target.value)} key="divsion">
-                                <option value="" key="empty">Please select a division (Required)</option>
-                                {options}
-                            </Form.Control>
-                            <Form.Text className="text-muted">What kind of session is this? e.g. Panels, Academic, etc.</Form.Text>
-                        </Form.Group>
-
-                        <Form.Group controlId="title">
-                            <Form.Label className="sr-only">Title</Form.Label>
-                            <Form.Control className={this.getErrorClass('title')} type="text" placeholder="Title (Required)" value={this.getFormValue('title')} onChange={(e) => this.setFormValue('title', e.target.value)} />
-                        </Form.Group>
-
-                        <Form.Group controlId="progguiddesc">
-                            <Form.Label className="sr-only">Description</Form.Label>
-                            <Form.Control as="textarea" rows={3} className={this.getErrorClass('progguiddesc')} type="text" placeholder="Session description (Required)" value={this.getFormValue('progguiddesc')} onChange={(e) => this.setFormValue('progguiddesc', e.target.value)} />
-                            <Form.Text className="text-muted">Max 500 characters</Form.Text>
-                        </Form.Group>
-
-                        <Form.Group controlId="track">
-                            <Form.Label className="sr-only">Track:</Form.Label>
-                            <Form.Control as="select" className={this.getErrorClass('track')} value={this.getFormValue('track')} onChange={(e) => this.setFormValue("track", e.target.value)} key="track">
-                                <option value="" key="empty">Please select a track (Required)</option>
-                                {tracks}
-                            </Form.Control>
-                            <Form.Text className="text-muted">Make a best guess about what track this panel should belong to</Form.Text>
-                        </Form.Group>
-
-                        <Form.Group controlId="servicenotes">
-                            <Form.Label className="sr-only">Equipment Needed / Alternative Format</Form.Label>
-                            <Form.Control as="textarea" rows={3} className={this.getErrorClass('servicenotes')} type="text" placeholder="Equipment Needed / Alternative Format" value={this.getFormValue('servicenotes')} onChange={(e) => this.setFormValue('servicenotes', e.target.value)}/>
-                        </Form.Group>
-
-                        <Form.Group controlId="persppartinfo">
-                            <Form.Label className="sr-only">Suggest Some Good Participants</Form.Label>
-                            <Form.Control as="textarea" rows={3} className={this.getErrorClass('persppartinfo')} type="text" placeholder="Can you suggest some good participants? Or a moderator?" value={this.getFormValue('persppartinfo')} onChange={(e) => this.setFormValue('persppartinfo', e.target.value)}/>
-                        </Form.Group>
+                        {fields}
 
                     </Card.Body>
                     <Card.Footer>
@@ -123,13 +194,17 @@ class SubmissionForm extends Component {
 
     getTrackOptions() {
         if (this.state.values['division'] && store.getState().options.divisions) {
-            let division = null;
             let divisionId = this.state.values['division'];
-            store.getState().options.divisions.forEach((element) => { if (element.id.toString() === divisionId) { division = element; } } )
-            return division ? division.tracks : [];
+            return this.getTrackOptionsForDivisionId(divisionId);
         } else {
             return [];
         }
+    }
+
+    getTrackOptionsForDivisionId(divisionId) {
+        let division = null;
+        store.getState().options.divisions.forEach((element) => { if (element.id.toString() === divisionId) { division = element; } } );
+        return division ? division.tracks : [];
     }
 
     getErrorClass(name) {
@@ -160,6 +235,16 @@ class SubmissionForm extends Component {
         let errors = this.state.errors || {};
         newValue[formName] = formValue;
         errors[formName] = !this.validateValue(formName, formValue);
+
+        if (formName === 'division') {
+            let options = this.getTrackOptionsForDivisionId(formValue);
+            if (options.length === 1) {
+                newValue["track"] = "" + options[0].trackid;
+            } else {
+                newValue["track"] = "";
+            }
+        }
+
         this.setState({
             ...state,
             values: newValue,
@@ -171,8 +256,12 @@ class SubmissionForm extends Component {
     validateValue(formName, formValue) {
         if (formName === 'title') {
             return formValue != null && formValue !== '';
+        } else if (formName === 'progguiddesc' && this.isAcademic(this.getSelectedDivision())) {
+            return formValue != null && formValue != '' && this.wordCount(formValue) <= 100;
         } else if (formName === 'progguiddesc') {
             return formValue != null && formValue != '' && formValue.length <= 500;
+        } else if (formName === 'pocketprogtext') {
+            return formValue != null && formValue != '' && this.wordCount(formValue) <= 500;
         } else if (formName === 'division') {
             return formValue != null && formValue != '';
         } else if (formName === 'track') {
@@ -182,8 +271,16 @@ class SubmissionForm extends Component {
         }
     }
 
+    wordCount(text) {
+        if (text) {
+            return text.trim().split(/\s+/).length;
+        } else {
+            return 0;
+        }
+    }
+
     isValidForm() {
-        let formKeys = [ 'title', 'progguiddesc', 'track', 'division' ];
+        let formKeys = this.getFieldList(this.getSelectedDivision());
         let errors = this.state.errors || {};
         let valid = true
         formKeys.forEach(element => {
@@ -215,7 +312,7 @@ class SubmissionForm extends Component {
                 loading: true
             });
     
-            axios.post('/api/brainstorm/submit_session.php', this.state.values, {
+            axios.post('/api/brainstorm/submit_session.php', this.getAllFormValues(), {
                 headers: {
                     "Authorization": "Bearer " + store.getState().auth.jwt
                 }
@@ -243,6 +340,14 @@ class SubmissionForm extends Component {
                 });
             });
         }
+    }
+
+    getAllFormValues() {
+        let values = this.state.values;
+        let names = this.getFieldList(this.getSelectedDivision());
+        let result = {};
+        names.forEach(n => result[n] = values[n]);
+        return result;
     }
 }
 

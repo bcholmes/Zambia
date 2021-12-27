@@ -7,19 +7,27 @@ require_once('../db_support_functions.php');
 require_once('../participant_functions.php');
 require_once('../jwt_functions.php');
 
+function convert_database_date_to_date($db_date) {
+    if ($db_date) {
+        $date = date_create_from_format('Y-m-d H:i:s', $db_date);
+        $date->setTimezone(new DateTimeZone(PHP_DEFAULT_TIMEZONE));
+        return $date;
+    } else {
+        return null;
+    }
+}
+
 function read_division_and_track_options($db) {
 	$query = <<<EOD
-	SELECT 
-		   d.divisionid, d.divisionname, d.display_order, 
-		   t.trackid, t.trackname, t.display_order as track_order
-	  FROM 
-		   Divisions d, Tracks t
-	 WHERE 
-		   t.divisionid = d.divisionid
-	   AND
-		   d.brainstorm_support = 'Y'
-	   ORDER BY
-	   		d.display_order, d.divisionid, track_order;
+	SELECT d.divisionid, d.divisionname, d.display_order, 
+		   t.trackid, t.trackname, t.display_order as track_order,
+		   k.from_time, k.to_time 
+	 FROM Divisions d
+	 LEFT OUTER JOIN con_key_dates k ON (d.external_key = k.external_key AND k.con_id = (select min(id) from current_con) )
+	 JOIN Tracks t ON (d.divisionid = t.divisionid)
+	WHERE t.divisionid = d.divisionid
+	  AND d.brainstorm_support = 'Y'
+	ORDER BY d.display_order, d.divisionid, track_order;
 EOD;
    
 	$stmt = mysqli_prepare($db, $query);
@@ -33,9 +41,13 @@ EOD;
 				if ($current_division != null) {
 					$options[] = $current_division;
 				}
+				$from_time = convert_database_date_to_date($row->from_time);
+				$to_time = convert_database_date_to_date($row->to_time);
 				$current_division = array(
 					"id" => $row->divisionid,
 					"name" => $row->divisionname,
+					"from_time" => $from_time ? date_format($from_time, "c") : null,
+					"to_time" => $to_time ? date_format($to_time, "c") : null,
 					"tracks" => array()
 				);
 			}

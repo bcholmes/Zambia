@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import Container from 'react-bootstrap/Container';
 
+import DateInfo from './component/dateInfo';
 import Footer from './component/footer';
 import MainBody from './component/mainBody';
 import PageHeader from './component/header';
@@ -16,11 +17,7 @@ const BrainstormApp = () => (
                 <MainBody />
             </section>
             <section className="col-md-3">
-                <div className="card mb-3">
-                    <div className="card-body">
-                        Submissions are open until <b>Jan 7th, 2022</b>.
-                    </div>
-                </div>
+                <DateInfo />
 
                 <p>What are we looking for? WisCon encourages programming that has at least implicit,
                     but preferrably explicit, recognition of and engagement with an expansive definition
