@@ -124,9 +124,7 @@ function RenderEditCreateSession ($action, $session, $message1, $message2) {
         <input type="hidden" name="languagestatusid" value="<?php echo htmlspecialchars($session["languagestatusid"],ENT_COMPAT);?>" />
 <?php
     }
-        // The pocketprogtext field is no longer used on the form, but the code expects it.
 ?>
-        <input type="hidden" name="pocketprogtext" value="<?php echo htmlspecialchars($session["pocketprogtext"],ENT_COMPAT);?>" />
         <div class="row">
             <div class="form-group col-md-1 offset-md-1">
                 <label for="atten">Est. Atten.:</label>
@@ -154,35 +152,38 @@ function RenderEditCreateSession ($action, $session, $message1, $message2) {
             </div>
         </div>
         <div class="row">
-            <div class="form-group col-md-6">
+            <div class="form-group col-md-4">
                 <label for="progguiddesc">Description:</label>
                 <textarea class="form-control"
-                    rows="4" cols="70" name="progguiddesc"><?php echo htmlspecialchars($session["progguiddesc"],ENT_NOQUOTES);?></textarea>
+                    rows="5" cols="70" name="progguiddesc"><?php echo htmlspecialchars($session["progguiddesc"],ENT_NOQUOTES);?></textarea>
             </div>
-            <div class="form-group col-md-6">
-                <label for="persppartinfo">Prospective Participant Info:</label>
-                <textarea class="form-control"
-                          rows="4" cols="70" name="persppartinfo"><?php echo htmlspecialchars($session["persppartinfo"],ENT_NOQUOTES);?></textarea>
-            </div>
-        </div>
 <?php
     if (BILINGUAL === TRUE) {
 ?>
-        <div class="row">
-            <div class="form-group col-md-6">
+            <div class="form-group col-md-4">
                 <label for="pocketprogtext"><?php echo SECOND_DESCRIPTION_CAPTION;?>: </label>
                 <textarea class="form-control"
-                    rows="4" cols="70" name="pocketprogtext"><?php echo htmlspecialchars($session["pocketprogtext"],ENT_NOQUOTES);?></textarea>
+                    rows="5" cols="70" name="pocketprogtext"><?php echo htmlspecialchars($session["pocketprogtext"],ENT_NOQUOTES);?></textarea>
             </div>
-        </div>
 <?php
     } else {
                 // The pocketprogtext field is no longer used on the form, but the code expects it.
 ?>
-        <input type="hidden" name="pocketprogtext" value="<?php echo htmlspecialchars($session["pocketprogtext"],ENT_COMPAT);?>" />
+            <div class="form-group col-md-4">
+                <label for="pocketprogtext">Long Description:</label>
+                <textarea class="form-control"
+                    rows="5" cols="70" name="pocketprogtext"><?php echo htmlspecialchars($session["pocketprogtext"],ENT_NOQUOTES);?></textarea>
+            </div>
 <?php
     }
 ?>
+
+            <div class="form-group col-md-4">
+                <label for="persppartinfo">Prospective Participant Info:</label>
+                <textarea class="form-control"
+                          rows="5" cols="70" name="persppartinfo"><?php echo htmlspecialchars($session["persppartinfo"],ENT_NOQUOTES);?></textarea>
+            </div>
+        </div>
         <div class="row">
             <div class="form-group col-lg-4"> <!-- Features Box; -->
                 <div><label>Required Room Features:</label></div>
