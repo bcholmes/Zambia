@@ -28,6 +28,43 @@ function validate_recaptcha($recaptchaResponse) {
     return $recaptchaConf["success"];
 }
 
+function send_multiple_records_with_same_email($email, $subjectLine) {
+    $conName = CON_NAME;
+    $emailBody = <<<EOD
+    <html><body>
+    <p>
+        Hello $email,
+    </p>
+    <p>
+        We received a request to reset your password for the programming/scheduling system for $conName.
+        If you did not make this request, you can ignore this email.
+    </p>
+    <p>
+        Awkwardly, it looks like we have more than one record in our database with the same email address,
+        which makes resetting your password a bit trickier. But hang tight! We've cc'ed our support team to get involved.
+    </p>
+    <p>
+        Thanks!
+    </p></body></html>
+    EOD;
+
+    $textBody = <<<EOD
+        Hello $email,
+
+        We received a request to reset your password for the programming/scheduling system for $conName.
+        If you did not make this request, you can ignore this email.
+
+        Awkwardly, it looks like we have more than one record in our database with the same email address,
+        which makes resetting your password a bit trickier. But hang tight! We've cc'ed our support team to get involved.
+
+        Thanks!
+    EOD;
+
+    $cc = [ CON_SUPPORT_EMAIL => CON_NAME . " Support" ];
+
+    send_email_with_plain_text($textBody, $emailBody, $subjectLine, [ $email => $email ], null, $cc);
+}
+
 function send_reset_password_email($firstname, $lastname, $badgename, $email, $subjectLine, $url) {
     $conName = CON_NAME;
 
@@ -172,7 +209,8 @@ if (!$result = mysqli_query_exit_on_error($query)) {
 $userIP = $_SERVER['REMOTE_ADDR'];
 $ipaddressSQL = mysqli_real_escape_string($linki, $userIP);
 $selector = bin2hex(random_bytes(8));
-if (mysqli_num_rows($result) !== 1) {
+$record_count = mysqli_num_rows($result);
+if ($record_count !== 1) {
     // record a non-valid request to help track issues
     $query = <<<EOD
 INSERT INTO ParticipantPasswordResetRequests
@@ -183,6 +221,10 @@ EOD;
         exit;
     }
     // don't tell user anything went wrong -- just give regular response.
+    if (is_email_login_supported() && $record_count > 1) {
+        send_multiple_records_with_same_email($email, $subjectLine);
+    }
+
     RenderXSLT('ForgotPasswordResponse.xsl', $responseParams);
     participant_footer();
     exit;
