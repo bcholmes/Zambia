@@ -85,7 +85,10 @@ class SubmissionForm extends Component {
                         <option value="" key="empty">Please select a division (Required)</option>
                         {options}
                     </Form.Control>
-                    <Form.Text className="text-muted">What kind of session is this? e.g. Panels, Academic, etc.</Form.Text>
+                    <Form.Text className="text-muted">
+                        What kind of session is this? e.g. Panels, Academic, etc. Some divisions might not be accepting submissions right now; 
+                        see the side bar for information about submission dates.
+                    </Form.Text>
                 </Form.Group>
             );
         } else if (fieldName === "title") {
@@ -159,7 +162,6 @@ class SubmissionForm extends Component {
 
     render() {
         let message = this.state.message ? (<Alert variant={this.state.message.severity}>{this.state.message.text}</Alert>) : undefined;
-        let message2 = this.state.submitAllowed ?  undefined : (<Alert variant="warning">Please log in to submit session ideas.</Alert>);
         const spinner = this.state.loading ? (<Spinner
             as="span"
             animation="border"
@@ -174,7 +176,6 @@ class SubmissionForm extends Component {
         return (
             <Form onSubmit={(e) =>  this.submitForm(e)}>
                 {message}
-                {message2}
 
                 <Card>
                     <Card.Header><h2>Submit a Session</h2></Card.Header>

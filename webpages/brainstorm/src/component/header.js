@@ -1,14 +1,16 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
+import Alert from 'react-bootstrap/Alert';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
+import NavDropdown from 'react-bootstrap/NavDropdown';
 
 import store from '../state/store';
-import { extractAndDispatchJwt } from '../state/authActions';
+import { extractAndDispatchJwt, logout } from '../state/authActions';
 
 class PageHeader extends Component {
 
@@ -24,12 +26,11 @@ class PageHeader extends Component {
 
     componentDidMount() {
         this.unsubscribe = store.subscribe(() => {
-            let state = this.state;
-            this.setState({
+            this.setState((state) => ({
                 ...state,
                 jwt: store.getState().auth.jwt,
                 showModal: !store.getState().auth.jwt && !store.getState().auth.pending
-            });
+            }));
         });
     }
 
@@ -40,12 +41,14 @@ class PageHeader extends Component {
     }
     render() {
         let loginMenu = this.isAuthenticated() 
-            ? (<Nav.Link onClick={() => this.showLoginModal()}>{this.getName()}</Nav.Link>)
+            ? (<NavDropdown title={this.getName()} id="admin-nav-dropdown">
+                <NavDropdown.Item onClick={() => this.logout()}>Logout</NavDropdown.Item>
+            </NavDropdown>) 
             : (<Nav.Link onClick={() => this.showLoginModal()}>Login</Nav.Link>);
         let message = (this.state.login.message) ? (<div className="alert alert-danger">{this.state.login.message}</div>) : undefined;
-
+        let loginMessage = (!this.isAuthenticated()) ? (<Alert variant="warning">Please <a className="alert-link" href="https://program.wiscon.net" onClick={(e) => { e.preventDefault(); this.showLoginModal();} }>log in</a> to submit session ideas.</Alert>) : undefined;
         return [
-            <header className="pb-3 mb-2" key="page-header-main">
+            <header className="mb-3" key="page-header-main">
                 <img className="w-100" src="/HeaderImage.php" alt="page header" />
                 <Navbar bg="dark" expand="lg" className="navbar-dark navbar-expand-md justify-content-between">
                     <Nav className="navbar-expand-md navbar-dark bg-dark ">
@@ -57,6 +60,9 @@ class PageHeader extends Component {
                     </Nav>
                 </Navbar>
             </header>,
+            <div key="login-message">
+                {loginMessage}
+            </div>,
             <Modal show={this.state.showModal}  onHide={() => this.handleClose()} key="page-header-login-dialog">
                 <Form>
                     <Modal.Header closeButton>
@@ -125,19 +131,17 @@ class PageHeader extends Component {
     }
 
     handleClose() {
-        let state = this.state;
-        this.setState({
+        this.setState((state) => ({
             ...state, 
             showModal: false
-        });
+        }));
     }
 
     showLoginModal() {
-        let state = this.state;
-        this.setState({
+        this.setState((state) => ({
             ...state, 
             showModal: true
-        });
+        }));
     }
 
     processLogin() {
@@ -151,18 +155,17 @@ class PageHeader extends Component {
         })
         .catch(error => {
             console.log(error);
-            let state = this.state;
             let message = "There was a technical problem trying to log you in. Try again later."
             if (error.response && error.response.status === 401) {
                 message = "There was a problem with your userid and/or password."
             }
-            this.setState({
+            this.setState((state) => ({
                 ...state,
                 login: {
                     ...state.login,
                     message: message
                 }
-            })
+            }))
         });
     }
 
@@ -172,9 +175,9 @@ class PageHeader extends Component {
             let parts = jwt.split('.');
             if (parts.length === 3) {
                 let payload = JSON.parse(atob(parts[1]));
-                return payload['name'] || "Admin";
+                return payload['name'] || "Your Name Here";
             } else {
-                return "Admin";
+                return "Your Name Here";
             }
         } else {
             return undefined;
@@ -183,6 +186,10 @@ class PageHeader extends Component {
 
     isAuthenticated() {
         return this.state.jwt;
+    }
+
+    logout() {
+        store.dispatch(logout());
     }
 }
 
