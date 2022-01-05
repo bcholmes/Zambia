@@ -25,4 +25,10 @@ function get_user_id_prompt() {
         return USER_ID_PROMPT." or Email address";
     }
 }
+
+function is_logged_in() {
+    session_start();
+    return (isset($_SESSION['badgeid']));
+}
+
 ?>
