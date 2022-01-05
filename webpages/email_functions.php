@@ -298,6 +298,10 @@ function send_email_with_plain_text($text_body, $html_body, $subject, $to, $repl
         $message->setReplyTo($replyTo);
     }
 
+    if ($cc) {
+        $message->setCc($cc);
+    }
+
     $name = PASSWORD_RESET_FROM_EMAIL;
     if (defined("PASSWORD_RESET_FROM_EMAIL_NAME") && PASSWORD_RESET_FROM_EMAIL_NAME != '') {
         $name = PASSWORD_RESET_FROM_EMAIL_NAME;
