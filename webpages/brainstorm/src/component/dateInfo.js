@@ -48,14 +48,25 @@ class DateInfo extends Component {
     }
     formatDivision(division) {
         if (division.to_time) {
-            let to = dayjs(division.to_time).format("MMM Do, YYYY [at] h:mm a z");
-            let tz = dayjs.tz.guess();
-            return (
-                <div className="mt-2" key={'division' + division.id}>
-                    {division.name} <span className="text-muted">open until:</span><br />
-                    <b><time dateTime={division.to_time}>{to}</time>.</b>
-                </div>
-            );
+            let toDate = dayjs(division.to_time);
+            let now = dayjs();
+            if (toDate.diff(now) < 0) {
+                return (
+                    <div className="mt-2" key={'division' + division.id}><br />
+                        {division.name}: <b><span className="text-danger">CLOSED</span></b>
+                    </div>
+                );
+            } else {
+
+                let to = dayjs(division.to_time).format("MMM Do, YYYY [at] h:mm a z");
+                let tz = dayjs.tz.guess();
+                return (
+                    <div className="mt-2" key={'division' + division.id}>
+                        {division.name} <span className="text-muted">open until:</span><br />
+                        <b><time dateTime={division.to_time}>{to}</time>.</b>
+                    </div>
+                );
+            }
         } else {
             return undefined;
         }

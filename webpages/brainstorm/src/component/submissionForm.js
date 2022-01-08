@@ -7,6 +7,14 @@ import Card from 'react-bootstrap/Card';
 import Form from 'react-bootstrap/Form';
 import Spinner from 'react-bootstrap/Spinner';
 
+import dayjs from "dayjs";
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import advancedFormat from "dayjs/plugin/advancedFormat"
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(advancedFormat);
+
 import store from '../state/store';
 
 class SubmissionForm extends Component {
@@ -21,11 +29,19 @@ class SubmissionForm extends Component {
         }
     }
 
+    getDivisions() {
+        return this.selectOpenDivisions(store.getState().options.divisions);
+    }
+
     createInitialValues() {
-        let divisions = store.getState().options.divisions;
+        let divisions = this.getDivisions();
         let values = {};
         if (divisions && divisions.length === 1) {
             values['division'] = divisions[0].id.toString();
+            let track = this.selectDefaultTrackForDivision(divisions[0].id);
+            if (track) {
+                values['track'] = "" + track;
+            }
         }
         return values;
     }
@@ -52,6 +68,14 @@ class SubmissionForm extends Component {
         }
     }
 
+    selectOpenDivisions(divisions) {
+        return divisions.filter((d) => {
+            let toDate = dayjs(d.to_time);
+            let now = dayjs();
+            return toDate.diff(now) > 0
+        });
+    }
+
     isAcademic(division) {
         return division != null && division.name === 'Academic'
     }
@@ -65,10 +89,10 @@ class SubmissionForm extends Component {
     }
 
     getSelectedDivision() {
-        if (this.state.values['division'] && store.getState().options.divisions) {
+        if (this.state.values['division'] && this.getDivisions()) {
             let divisionId = this.state.values['division'];
             let division = null;
-            store.getState().options.divisions.forEach((element) => { if (element.id.toString() === divisionId) { division = element; } } );
+            this.getDivisions().forEach((element) => { if (element.id.toString() === divisionId) { division = element; } } );
             return division;
         } else {
             return null;
@@ -77,7 +101,7 @@ class SubmissionForm extends Component {
 
     createField(fieldName) {
         if (fieldName === "division") {
-            let options = store.getState().options.divisions ? store.getState().options.divisions.map((d) => { return (<option value={d.id} key={d.id}>{d.name}</option>)}) : undefined;
+            let options = this.getDivisions() ? this.getDivisions().map((d) => { return (<option value={d.id} key={d.id}>{d.name}</option>)}) : undefined;
             return (
                 <Form.Group controlId="division" key="division-field">
                     <Form.Label className="sr-only">Division:</Form.Label>
@@ -194,7 +218,7 @@ class SubmissionForm extends Component {
     }
 
     getTrackOptions() {
-        if (this.state.values['division'] && store.getState().options.divisions) {
+        if (this.state.values['division'] && this.getDivisions()) {
             let divisionId = this.state.values['division'];
             return this.getTrackOptionsForDivisionId(divisionId);
         } else {
@@ -204,7 +228,7 @@ class SubmissionForm extends Component {
 
     getTrackOptionsForDivisionId(divisionId) {
         let division = null;
-        store.getState().options.divisions.forEach((element) => { if (element.id.toString() === divisionId) { division = element; } } );
+        this.getDivisions().forEach((element) => { if (element.id == divisionId) { division = element; } } );
         return division ? division.tracks : [];
     }
 
@@ -246,12 +270,21 @@ class SubmissionForm extends Component {
             }
         }
 
-        this.setState({
+        this.setState((state) => ({
             ...state,
             values: newValue,
             message: null,
             errors: errors
-        });
+        }));
+    }
+
+    selectDefaultTrackForDivision(divisionId) {
+        let options = this.getTrackOptionsForDivisionId(divisionId);
+        if (options.length === 1) {
+            return options[0].trackid;
+        } else {
+            return undefined;
+        }
     }
 
     validateValue(formName, formValue) {
