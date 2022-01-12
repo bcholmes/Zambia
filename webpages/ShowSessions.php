@@ -37,9 +37,9 @@ if ($csv === "csv") {
         $showlinks = false;
 
         header("Content-disposition: attachment; filename=sessions-".date(DATE_ISO8601).".csv");
-        header('Content-type: text/csv');
+        header('Content-type: text/csv; charset=utf-8');
 
-        $html = RenderPrecisToString($result, $showlinks, $href, $sessionSearchArray);
+        $html = RenderPrecisToString($result, $showlinks, $href, $sessionSearchArray, true);
         render_html_table_as_csv($html);
     }
 
