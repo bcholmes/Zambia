@@ -96,7 +96,7 @@ if (isset($report['csv_output']) && $report['csv_output'] == true) {
                 $filename = str_replace(".csv", "", $filename);
             }
             header("Content-disposition: attachment; filename={$filename}-".date(DATE_ISO8601).".csv");
-            header('Content-type: text/csv');
+            header('Content-type: text/csv; charset=utf-8');
         
             render_html_table_as_csv($html);
         }
