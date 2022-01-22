@@ -27,6 +27,8 @@ function RenderPrecisToString($result, $showlinks, $href, $sessionSearchArray, $
                     $params .= ("&type=" .urlencode($value));
                 } else if ($key === "trackidList") {
                     $params .= ("&track=" .urlencode($value));
+                } else if ($key === "searchTitle") {
+                    $params .= ("&searchtitle=" .urlencode($value));
                 } else {
                     $params .= ("&$key=" .urlencode($value));
                 }

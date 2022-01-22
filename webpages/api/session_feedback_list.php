@@ -23,7 +23,7 @@ function find_interest_for_current_user($db, $badgeid) {
 	if (mysqli_stmt_execute($stmt)) {
 		$result = mysqli_stmt_get_result($stmt);
         while ($row = mysqli_fetch_object($result)) {
-            $interested = $row->interested ? true : false;
+            $interested = $row->interested === 1 ? true : false;
         }
     } else {
         throw new DatabaseSqlException("Query could not be executed: $query");
@@ -32,7 +32,7 @@ function find_interest_for_current_user($db, $badgeid) {
     return $interested;
 }
 
-function find_session_for_feedback($db, $term) {
+function find_session_for_feedback($db, $badgeid, $term) {
     $clause = "";
     if ($term) {
         $term = $db->real_escape_string(mb_strtolower($term));
@@ -40,11 +40,12 @@ function find_session_for_feedback($db, $term) {
     }
 
     $query = <<<EOD
-	SELECT t.trackname, s.sessionid, s.title, s.progguiddesc, s.invitedguest
+	SELECT t.trackname, s.sessionid, s.title, s.progguiddesc, s.invitedguest, psi.attend, psi.attend_type, psi.rank, psi.willmoderate, psi.comments
 	  FROM Sessions s
       JOIN Tracks t USING (trackid)
       JOIN SessionStatuses ss USING (statusid)
       JOIN PubStatuses ps USING (pubstatusid)
+      LEFT OUTER JOIN ParticipantSessionInterest psi on psi.sessionid = s.sessionid and psi.badgeid = ?
 	 WHERE ss.may_be_scheduled = 1
 	   AND ps.pubstatusname = 'Public'
        AND s.divisionid in (select divisionid from Divisions where divisionname = 'Panels')
@@ -53,6 +54,7 @@ function find_session_for_feedback($db, $term) {
 EOD;
    
 	$stmt = mysqli_prepare($db, $query);
+    mysqli_stmt_bind_param($stmt, "s", $badgeid);
 	if (mysqli_stmt_execute($stmt)) {
 		$result = mysqli_stmt_get_result($stmt);
 		$categories = array();
@@ -68,10 +70,16 @@ EOD;
 
             $sessions = $current_category['sessions'];
 
+            $feedback = array("attend" => $row->attend,
+                "attendType" => $row->attend_type,
+                "interest" => $row->rank,
+                "moderate" => $row->willmoderate ? true : false,
+                "comments" => $row->comments);
             $sessions[] = array("sessionId" => $row->sessionid,
                 "title" => $row->title,
                 "description" => $row->progguiddesc,
-                "inviteOnly" => ($row->invitedguest ? true : false)
+                "inviteOnly" => ($row->invitedguest ? true : false),
+                "feedback" => $feedback
             );
 
             $current_category['sessions'] = $sessions;
@@ -97,7 +105,7 @@ try {
             $term = array_key_exists("q", $_REQUEST) ? $_REQUEST["q"] : null;
 
             header('Content-type: application/json; charset=utf-8');
-            $categories = find_session_for_feedback($db, $term);
+            $categories = find_session_for_feedback($db, $_SESSION['badgeid'], $term);
             $interest = find_interest_for_current_user($db, $_SESSION['badgeid']);
             $json_string = json_encode(array("categories" => $categories, "interest" => $interest));
             echo $json_string;

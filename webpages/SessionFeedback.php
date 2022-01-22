@@ -18,8 +18,10 @@ SELECT
 EOD;
     $results = mysqli_query_with_error_handling($query);
     if ($results) {
-        $resultXML = mysql_result_to_XML("participant_info", $result);
+        $resultXML = mysql_result_to_XML("participant_info", $results);
         $paramArray = array();
+
+        error_log("Query: $query");
 
         participant_header($title, false, 'Normal', true);
         RenderXSLT('SessionFeedback.xsl', $paramArray, $resultXML);
