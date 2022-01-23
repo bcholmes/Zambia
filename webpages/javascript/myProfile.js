@@ -68,6 +68,7 @@ function MyProfile() {
 		maxBioLen = $bioTextarea.data("maxLength");
 		this.validateBio();
 		$("select.mycontrol").on("change", boundAnyChange);
+		$("input.mycontrol[type='checkbox']").on("input", boundAnyChange);
 		$("input.mycontrol[type='text']").on("input", boundAnyChange);
 		$("input.mycontrol[type='password']").on("input", boundAnyChange);
 		$(":checkbox.mycontrol").on("change", boundAnyChange);

@@ -9,7 +9,8 @@ SELECT
 		CD.badgeid, CD.firstname, CD.lastname, CD.badgename, CD.phone, CD.email,
 			CD.postaddress1, CD.postaddress2, CD.postcity, CD.poststate, CD.postzip,
 			CD.postcountry, CD.regtype, P.pubsname, P.password, P.bestway, P.interested, P.bio,
-			P.share_email, P.use_photo, P.pronouns, P.approvedphotofilename
+			P.share_email, P.use_photo, P.pronouns, P.approvedphotofilename,
+			P.anonymous
 	FROM
 			CongoDump CD
 	   JOIN Participants P USING (badgeid)

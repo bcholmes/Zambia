@@ -90,6 +90,10 @@ function update_participant($badgeid) {
             exit();
         }
     }
+    if (isset($_POST['anonymous'])) {
+        $anonymous = stripslashes($_POST['anonymous']);
+        $updateClause .= "anonymous=\"" . ($anonymous ? "Y" : "N") . "\", ";
+    }
     if (isset($_POST['bio'])) {
         if ($may_edit_bio) {
             $updateClause .= "bio=\"" . mysqli_real_escape_string($linki, stripslashes($_POST['bio'])) . "\", ";

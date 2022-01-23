@@ -319,6 +319,21 @@
                                 </div>
                             </div>
                         </xsl:if>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-check mt-3">
+                                    <input class="form-check-input mycontrol" type="checkbox" value="" id="anonymous" name="anonymous">
+                                        <xsl:if test="/doc/query[@queryName='participant_info']/row/@anonymous = 'Y'">
+                                            <xsl:attribute name="checked">checked</xsl:attribute>
+                                        </xsl:if>
+                                    </input>
+                                    <label for="anonymous" class="form-check-label">
+                                        Do not publish my name in online or other publically-available sources.
+                                    </label>
+                                    <small class="form-text text-muted">Physical programs and schedules available to authenticated members will still show your name.</small>
+                                </div>
+                            </div>
+                        </div>
                     </fieldset>
                     <xsl:if test="/doc/query[@queryName='credentials']/row">
                         <fieldset>
