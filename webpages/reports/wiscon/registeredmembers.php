@@ -6,6 +6,7 @@ $report['output_filename'] = 'conflictnotreg.csv';
 $report['description'] = 'This report shows registered members and their links to records in the registration system.';
 $report['categories'] = array(
     'Registration Reports' => 380,
+    'WisCon Custom Reports' => 10,
 );
 $report['columns'] = array(
     array("width" => "7em"),
