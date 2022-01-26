@@ -140,7 +140,7 @@ class SubmissionForm extends Component {
             );
         } else if (fieldName === "pocketprogtext") {
             return (
-                <Form.Group controlId="pocketprogtext" key="progguiddesc-field">
+                <Form.Group controlId="pocketprogtext" key="pocketprogtext-field">
                     <Form.Label className="sr-only">Detailed Proposal (Required)</Form.Label>
                     <Form.Control as="textarea" rows={3} className={this.getErrorClass('pocketprogtext')} type="text" placeholder="Detailed Proposal (Required)" value={this.getFormValue('pocketprogtext')} onChange={(e) => this.setFormValue('pocketprogtext', e.target.value)} />
                     <Form.Text className="text-muted">Max 500 words</Form.Text>

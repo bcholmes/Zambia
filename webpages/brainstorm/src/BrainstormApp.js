@@ -8,6 +8,7 @@ import MainBody from './component/mainBody';
 import PageHeader from './component/header';
 
 import './scss/brainstorm.scss';
+import LoginModal from './component/loginModal';
 
 const BrainstormApp = () => (
     <Container>
@@ -26,6 +27,7 @@ const BrainstormApp = () => (
                 </p>
             </section>
         </div>
+        <LoginModal />
         <Footer />
     </Container>
 );

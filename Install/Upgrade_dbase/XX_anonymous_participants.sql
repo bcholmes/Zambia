@@ -1,1 +1,1 @@
-alter Participants add column anonymous char(1) not null default 'N';
+alter table Participants add column `anonymous` char(1) not null default 'N';

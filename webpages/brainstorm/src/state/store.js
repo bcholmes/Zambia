@@ -1,8 +1,9 @@
 import { createStore, combineReducers } from 'redux'
-import { ADD_AUTH_CREDENTIAL, LOGOUT } from './authActions';
+import { ADD_AUTH_CREDENTIAL, HIDE_LOGIN_MODAL, LOGOUT, SHOW_LOGIN_MODAL } from './authActions';
 import { SAVE_OPTIONS } from './optionsActions';
 
 const authInitialState = {
+    showModal: false,
     pending: true,
     jwt: undefined
 }
@@ -11,11 +12,23 @@ const auth = (state = authInitialState, action) => {
     switch (action.type) {
         case ADD_AUTH_CREDENTIAL: 
             return {
+                ...state,
                 pending: false,
                 jwt: action.payload.jwt
             }
+        case SHOW_LOGIN_MODAL: 
+            return {
+                ...state,
+                showModal: true
+            }
+        case HIDE_LOGIN_MODAL: 
+            return {
+                ...state,
+                showModal: false
+            }
         case LOGOUT: 
             return {
+                ...state,
                 pending: false,
                 jwt: undefined
             };
