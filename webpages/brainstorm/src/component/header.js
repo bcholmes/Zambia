@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import {connect} from 'react-redux';
 
 import Alert from 'react-bootstrap/Alert';
 import Nav from 'react-bootstrap/Nav';
@@ -10,36 +11,13 @@ import { logout, showLoginModal } from '../state/authActions';
 
 class PageHeader extends Component {
 
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            jwt: store.getState().auth.jwt,
-            login: {}
-        };
-    }
-
-    componentDidMount() {
-        this.unsubscribe = store.subscribe(() => {
-            this.setState((state) => ({
-                ...state,
-                jwt: store.getState().auth.jwt
-            }));
-        });
-    }
-
-    componentWillUnmount() {
-        if (this.unsubscribe) {
-            this.unsubscribe();
-        }
-    }
     render() {
         let loginMenu = this.isAuthenticated() 
             ? (<NavDropdown title={this.getName()} id="admin-nav-dropdown">
                 <NavDropdown.Item onClick={() => this.logout()}>Logout</NavDropdown.Item>
             </NavDropdown>) 
-            : (<Nav.Link onClick={() => this.showLoginModal()}>Login</Nav.Link>);
-        let loginMessage = (!this.isAuthenticated()) ? (<Alert variant="warning">Please <a className="alert-link" href="https://program.wiscon.net" onClick={(e) => { e.preventDefault(); this.showLoginModal();} }>log in</a> to submit session ideas.</Alert>) : undefined;
+            : (<Nav.Link onClick={() => this.presentModal()}>Login</Nav.Link>);
+        let loginMessage = (!this.isAuthenticated()) ? (<Alert variant="warning">Please <a className="alert-link" href="https://program.wiscon.net" onClick={(e) => { e.preventDefault(); this.presentModal();} }>log in</a> to submit session ideas.</Alert>) : undefined;
         return [
             <header className="mb-3" key="page-header-main">
                 <img className="w-100" src="/HeaderImage.php" alt="page header" />
@@ -59,13 +37,13 @@ class PageHeader extends Component {
         ];
     }
 
-    showLoginModal() {
+    presentModal() {
         store.dispatch(showLoginModal());
     }
 
     getName() {
         if (this.isAuthenticated()) {
-            let jwt = this.state.jwt;
+            let jwt = this.props.jwt;
             let parts = jwt.split('.');
             if (parts.length === 3) {
                 let payload = JSON.parse(atob(parts[1]));
@@ -79,7 +57,7 @@ class PageHeader extends Component {
     }
 
     isAuthenticated() {
-        return this.state.jwt;
+        return this.props && this.props.jwt;
     }
 
     logout() {
@@ -87,5 +65,8 @@ class PageHeader extends Component {
     }
 }
 
+function mapStateToProps(state) {
+    return { jwt: state.auth.jwt };
+}
 
-export default PageHeader;
+export default connect(mapStateToProps)(PageHeader);

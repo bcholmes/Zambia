@@ -41,7 +41,7 @@ class MainBody extends Component {
     loadInitialData() {
         axios.post('/api/brainstorm/load_brainstorm.php')
         .then(res => {
-            extractAndDispatchJwt(res);
+            extractAndDispatchJwt(res, true);
             store.dispatch(saveOptions(res.data))
             this.setState({
                 ...this.state,

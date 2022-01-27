@@ -210,7 +210,7 @@ class SubmissionForm extends Component {
 
                     </Card.Body>
                     <Card.Footer>
-                        <Button variant="primary" type="submit" disabled={!this.state.submitAllowed}>{spinner} <span>Submit</span></Button>
+                        <Button variant={this.state.submitAllowed ? "primary" : "secondary"} type="submit" disabled={!this.state.submitAllowed}>{spinner} <span>Submit</span></Button>
                     </Card.Footer>
                 </Card>
             </Form>

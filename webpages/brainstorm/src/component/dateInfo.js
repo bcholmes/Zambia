@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import {connect} from 'react-redux';
 
 import dayjs from "dayjs";
 import utc from 'dayjs/plugin/utc';
@@ -8,34 +9,10 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(advancedFormat);
 
-import store from '../state/store';
-
 class DateInfo extends Component {
 
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            divisions: store.getState().options.divisions || []
-        }
-    }
-
-    componentDidMount() {
-        this.unsubscribe = store.subscribe(() => {
-            this.setState({
-                divisions: store.getState().options.divisions || [],
-            });
-        });
-    }
-
-    componentWillUnmount() {
-        if (this.unsubscribe) {
-            this.unsubscribe();
-        }
-    }
-
     render() {
-        let items = this.state.divisions.map((d) => {return this.formatDivision(d)});
+        let items = this.props.divisions.map((d) => {return this.formatDivision(d)});
 
         return (
             <div className="card mb-3">
@@ -46,6 +23,7 @@ class DateInfo extends Component {
             </div>
         );
     }
+    
     formatDivision(division) {
         if (division.to_time) {
             let toDate = dayjs(division.to_time);
@@ -73,4 +51,8 @@ class DateInfo extends Component {
     }
 }
 
-export default DateInfo;
+function mapStateToProps(state) {
+    return { divisions: state.options.divisions || [] };
+}
+
+export default connect(mapStateToProps)(DateInfo);
