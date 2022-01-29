@@ -65,6 +65,55 @@ function send_multiple_records_with_same_email($email, $subjectLine) {
     send_email_with_plain_text($textBody, $emailBody, $subjectLine, [ $email => $email ], null, $cc);
 }
 
+function send_email_not_found_message($email, $subjectLine, $url) {
+    $conName = CON_NAME;
+    $link_lifetime = PASSWORD_RESET_LINK_TIMEOUT_DISPLAY;
+    $urlLink = sprintf('<a href="%s">%s</a>', $url, $url);
+    $emailBody = <<<EOD
+    <html><body>
+    <p>
+        Hello $email,
+    </p>
+    <p>
+        We received a request to reset your password for the programming/scheduling system for $conName.
+        If you did not make this request, you can ignore this email.
+    </p>
+    <p>
+        It looks like we do not have an account that corresponds with that email address. But &mdash; good 
+        news &mdash; you can use the following URL to create a new account:
+    </p>
+    <p>$urlLink</p>
+    <p>
+        The link is good for $link_lifetime from when you originally requested it. If it has expired just 
+        request another link.
+    </p>
+    <p>
+        Thanks!<br />
+        The System that Sends the Emails
+    </p></body></html>
+    EOD;
+
+    $textBody = <<<EOD
+        Hello $email,
+
+        We received a request to reset your password for the programming/scheduling system for $conName.
+        If you did not make this request, you can ignore this email.
+
+        It looks like we do not have an account that corresponds with that email address. But -- good 
+        news -- you can use the following URL to create a new account:
+
+        $url
+
+        The link is good for $link_lifetime from when you originally requested it. If it has expired just 
+        request another link.
+
+        Thanks!
+        The System that Sends the Emails
+    EOD;
+
+    send_email_with_plain_text($textBody, $emailBody, $subjectLine, [ $email => $email ]);
+}
+
 function send_reset_password_email($firstname, $lastname, $badgename, $email, $subjectLine, $url) {
     $conName = CON_NAME;
 
@@ -128,50 +177,97 @@ function send_reset_password_email($firstname, $lastname, $badgename, $email, $s
     send_email_with_plain_text($text_body, $emailBody, $subjectLine, [ $email => $username ]);
 }
 
-
-if (RESET_PASSWORD_SELF !== true) {
-    http_response_code(403); // forbidden
-    participant_header($title, true, 'Login', true);
-    echo "<p class='alert alert-danger mt-2'>You have reached this page in error.</p>";
-    participant_footer();
-    exit;
+function validate_input_params($title, $badgeid, $email, $recaptchaResponse) {
+    if (RESET_PASSWORD_SELF !== true) {
+        http_response_code(403); // forbidden
+        participant_header($title, true, 'Login', true);
+        echo "<p class='alert alert-danger mt-2'>You have reached this page in error.</p>";
+        participant_footer();
+        exit;
+    }
+    if (empty($recaptchaResponse)) {
+        participant_header($title, true, 'Login', true);
+        echo "<p class='alert alert-danger mt-2'>Error with reCAPTCHA.</p>";
+        participant_footer();
+        exit;
+    }
+    
+    if (!validate_recaptcha($recaptchaResponse)) {
+        participant_header($title, true, 'Login', true);
+        echo "<p class='alert alert-danger mt-2'>Error with reCAPTCHA.</p>";
+        participant_footer();
+        exit;
+    }
+    
+    if ((empty($badgeid) || empty($email)) && !is_email_login_supported()) {
+        $params = array("USER_ID_PROMPT" => get_user_id_prompt(), 
+            "RECAPTCHA_SITE_KEY" => RECAPTCHA_SITE_KEY, 
+            "EMAIL_LOGIN_SUPPORT" => is_email_login_supported());
+        $params["error_message"] = "Both ${params['USER_ID_PROMPT']} and email address are required.";
+        participant_header($title, true, 'Login', true);
+        RenderXSLT('ForgotPassword.xsl', $params);
+        participant_footer();
+        exit;
+    } else if (empty($email) && is_email_login_supported()) {
+        $params = array("USER_ID_PROMPT" => get_user_id_prompt(), 
+            "RECAPTCHA_SITE_KEY" => RECAPTCHA_SITE_KEY, 
+            "EMAIL_LOGIN_SUPPORT" => is_email_login_supported());
+        $params["error_message"] = "Bemail address is required.";
+        participant_header($title, true, 'Login', true);
+        RenderXSLT('ForgotPassword.xsl', $params);
+        participant_footer();
+        exit;
+    }
 }
+
+function insert_reset_item($badgeidSQL, $emailSQL, $ipaddressSQL, $token, $selector) {
+    // Token expiration
+    $expires = new DateTime('NOW');
+    $expires->add(new DateInterval(PASSWORD_RESET_LINK_TIMEOUT));
+    $expirationSQL = date_format($expires,'Y-m-d H:i:s');
+    $tokenSQL = hash('sha256', $token);
+    $query = <<<EOD
+    UPDATE ParticipantPasswordResetRequests
+        SET cancelled = 1
+        WHERE badgeidentered = '$badgeidSQL';
+    EOD;
+    if (!$result = mysqli_query_exit_on_error($query)) {
+        exit;
+    }
+    $query = <<<EOD
+    INSERT INTO ParticipantPasswordResetRequests
+        (badgeidentered, email, ipaddress, expirationdatetime, selector, token)
+        VALUES ('$badgeidSQL', '$emailSQL', '$ipaddressSQL', '$expirationSQL', '$selector', '$tokenSQL');
+    EOD;
+    if (!$result = mysqli_query_exit_on_error($query)) {
+        exit;
+    }
+}
+
+function insert_create_item($emailSQL, $ipaddressSQL, $token, $selector) {
+    // Token expiration
+    $expires = new DateTime('NOW');
+    $expires->add(new DateInterval(PASSWORD_RESET_LINK_TIMEOUT));
+    $expirationSQL = date_format($expires,'Y-m-d H:i:s');
+    $tokenSQL = hash('sha256', $token);
+    $query = <<<EOD
+    INSERT INTO ParticipantPasswordResetRequests
+        (badgeidentered, email, ipaddress, expirationdatetime, selector, token)
+        VALUES ('', '$emailSQL', '$ipaddressSQL', '$expirationSQL', '$selector', '$tokenSQL');
+    EOD;
+    if (!$result = mysqli_query_exit_on_error($query)) {
+        exit;
+    }
+}
+
+
+
 $recaptchaResponse = getString('g-recaptcha-response');
-if (empty($recaptchaResponse)) {
-    participant_header($title, true, 'Login', true);
-    echo "<p class='alert alert-danger mt-2'>Error with reCAPTCHA.</p>";
-    participant_footer();
-    exit;
-}
-
-if (!validate_recaptcha($recaptchaResponse)) {
-    participant_header($title, true, 'Login', true);
-    echo "<p class='alert alert-danger mt-2'>Error with reCAPTCHA.</p>";
-    participant_footer();
-    exit;
-}
-
-participant_header($title, true, 'Login', true);
 $badgeid = getString('badgeid');
 $email = getString('emailAddress');
-if ((empty($badgeid) || empty($email)) && !is_email_login_supported()) {
-    $params = array("USER_ID_PROMPT" => get_user_id_prompt(), 
-        "RECAPTCHA_SITE_KEY" => RECAPTCHA_SITE_KEY, 
-        "EMAIL_LOGIN_SUPPORT" => is_email_login_supported());
-    $params["error_message"] = "Both ${params['USER_ID_PROMPT']} and email address are required.";
-    RenderXSLT('ForgotPassword.xsl', $params);
-    participant_footer();
-    exit;
-} else if (empty($email) && is_email_login_supported()) {
-    $params = array("USER_ID_PROMPT" => get_user_id_prompt(), 
-        "RECAPTCHA_SITE_KEY" => RECAPTCHA_SITE_KEY, 
-        "EMAIL_LOGIN_SUPPORT" => is_email_login_supported());
-    $params["error_message"] = "Bemail address is required.";
-    RenderXSLT('ForgotPassword.xsl', $params);
-    participant_footer();
-    exit;
-}
 
+validate_input_params($title, $badgeid, $email, $recaptchaResponse);
+participant_header($title, true, 'Login', true);
 
 $conName = CON_NAME;
 $subjectLine = "Zambia Password Reset for $conName";
@@ -209,8 +305,20 @@ if (!$result = mysqli_query_exit_on_error($query)) {
 $userIP = $_SERVER['REMOTE_ADDR'];
 $ipaddressSQL = mysqli_real_escape_string($linki, $userIP);
 $selector = bin2hex(random_bytes(8));
+// Create tokens
+$token = random_bytes(32);
+
 $record_count = mysqli_num_rows($result);
-if ($record_count !== 1) {
+if (is_email_login_supported() && $record_count === 0) {
+    $url = sprintf('%sCreateNewAccountLink.php?%s', ROOT_URL, http_build_query([
+        'selector' => $selector,
+        'validator' => bin2hex($token)
+    ]));
+    
+    insert_create_item($emailSQL, $ipaddressSQL, $token, $selector);
+    send_email_not_found_message($email, $subjectLine, $url);
+
+} else if ($record_count !== 1) {
     // record a non-valid request to help track issues
     $query = <<<EOD
 INSERT INTO ParticipantPasswordResetRequests
@@ -228,42 +336,19 @@ EOD;
     RenderXSLT('ForgotPasswordResponse.xsl', $responseParams);
     participant_footer();
     exit;
+} else {
+    $url = sprintf('%sForgotPasswordLink.php?%s', ROOT_URL, http_build_query([
+        'selector' => $selector,
+        'validator' => bin2hex($token)
+    ]));
+
+    list($pubsname, $badgename, $firstname, $lastname, $badgeid) = mysqli_fetch_array($result);
+    $badgeidSQL = mysqli_real_escape_string($linki, $badgeid);
+    mysqli_free_result($result);
+
+    insert_reset_item($badgeidSQL, $emailSQL, $ipaddressSQL, $token, $selector);
+    send_reset_password_email($firstname, $lastname, $badgename, $email, $subjectLine, $url);
 }
-
-list($pubsname, $badgename, $firstname, $lastname, $badgeid) = mysqli_fetch_array($result);
-$badgeidSQL = mysqli_real_escape_string($linki, $badgeid);
-mysqli_free_result($result);
-// Create tokens
-$token = random_bytes(32);
-
-$url = sprintf('%sForgotPasswordLink.php?%s', ROOT_URL, http_build_query([
-    'selector' => $selector,
-    'validator' => bin2hex($token)
-]));
-
-// Token expiration
-$expires = new DateTime('NOW');
-$expires->add(new DateInterval(PASSWORD_RESET_LINK_TIMEOUT));
-$expirationSQL = date_format($expires,'Y-m-d H:i:s');
-$tokenSQL = hash('sha256', $token);
-$query = <<<EOD
-UPDATE ParticipantPasswordResetRequests
-    SET cancelled = 1
-    WHERE badgeidentered = '$badgeidSQL';
-EOD;
-if (!$result = mysqli_query_exit_on_error($query)) {
-    exit;
-}
-$query = <<<EOD
-INSERT INTO ParticipantPasswordResetRequests
-    (badgeidentered, email, ipaddress, expirationdatetime, selector, token)
-    VALUES ('$badgeidSQL', '$emailSQL', '$ipaddressSQL', '$expirationSQL', '$selector', '$tokenSQL');
-EOD;
-if (!$result = mysqli_query_exit_on_error($query)) {
-    exit;
-}
-
-send_reset_password_email($firstname, $lastname, $badgename, $email, $subjectLine, $url);
 
 // regular response is name as error response above
 RenderXSLT('ForgotPasswordResponse.xsl', $responseParams);
