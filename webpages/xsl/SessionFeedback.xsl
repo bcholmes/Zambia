@@ -19,7 +19,7 @@
 
         <div class="card">
             <div class="card-header">
-                <h2>Session Feedback</h2>
+                <h2>Session Interest Survey</h2>
             </div>
             <div class="card-body">
                   <div class="row">

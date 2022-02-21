@@ -58,7 +58,7 @@
           </xsl:if>
           <xsl:if test="/doc/query[@queryname='permission_set']/row[@permatomtag='SessionFeedback']">
             <li class="nav-item py-0">
-              <a class="nav-link py-1" href="SessionFeedback.php">Session Feedback</a>
+              <a class="nav-link py-1" href="SessionFeedback.php">Interest Survey</a>
             </li>
           </xsl:if>
           <xsl:if test="$my_suggestions">
