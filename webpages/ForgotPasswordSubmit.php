@@ -275,7 +275,7 @@ $fromAddress = PASSWORD_RESET_FROM_EMAIL;
 $responseParams = array("subject_line" => $subjectLine, "from_address" => $fromAddress);
 
 $badgeidSQL = mysqli_real_escape_string($linki, $badgeid);
-$emailSQL = mysqli_real_escape_string($linki, $email);
+$emailSQL = trim(mb_strtolower(mysqli_real_escape_string($linki, $email), 'UTF-8'));
 $query = <<<EOD
 SELECT P.pubsname, CD.badgename, CD.firstname, CD.lastname, P.badgeid
     FROM
@@ -294,7 +294,7 @@ SELECT P.pubsname, CD.badgename, CD.firstname, CD.lastname, P.badgeid
              Participants P
         JOIN CongoDump CD USING (badgeid)
     WHERE
-            CD.email = '$emailSQL';
+            LOWER(CD.email) = '$emailSQL';
 EOD;
 }
 

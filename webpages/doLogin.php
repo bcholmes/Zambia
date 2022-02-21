@@ -6,30 +6,29 @@ require_once('login_functions.php');
 $userIdPrompt = get_user_id_prompt();
 if (!isset($_SESSION['badgeid'])) {
     $title = "Submit Password";
-    $badgeid = getString('badgeid');
+    $email = mb_strtolower(trim(getString('badgeid')), "UTF-8");
     $password = getString('passwd');
-    $query_param_arr = array($badgeid);
+    $query_param_arr = array($email);
     $query = "SELECT password, data_retention, badgeid FROM Participants WHERE badgeid = ?;";
     $query_definition = 's';
     if (is_email_login_supported()) {
         $query = <<<EOD
 SELECT 
-       P.password, P.data_retention, P.badgeid 
+       P.password, P.data_retention, P.badgeid, C.badgename, P.pubsname 
   FROM 
        Participants P 
   JOIN CongoDump C USING (badgeid)
  WHERE 
-        P.badgeid = ?
-     OR 
-        C.email = ?;
+        lower(C.email) = ?;
 EOD;
-        $query_param_arr = array($badgeid, $badgeid);
-        $query_definition = 'ss';
+        $query_param_arr = array($email);
+        $query_definition = 's';
     }
     if (!$result = mysqli_query_with_prepare_and_exit_on_error($query, $query_definition, $query_param_arr)) {
         exit(); // Should have exited already
     }
     if (mysqli_num_rows($result) != 1) {
+        error_log("Number of records found for email address '$email' is: " . mysqli_num_rows($result));
         $headerErrorMessage = "Incorrect $userIdPrompt or password.";
         require('login.php');
         exit(0);
@@ -41,29 +40,14 @@ EOD;
     $dbpassword = $dbobject->password;
     $_SESSION['data_consent'] = $dbobject->data_retention;
     if (!password_verify($password, $dbpassword)) {
+        error_log("Password provided for email address '$email' is not valid");
         $headerErrorMessage = "Incorrect $userIdPrompt or password.";
         require('login.php');
         exit(0);
     }
-    $query = "SELECT badgename FROM CongoDump WHERE badgeid = ?;";
-    if (!$result = mysqli_query_with_prepare_and_exit_on_error($query, 's', $query_param_arr)) {
-        exit(); // Should have exited already
-    }
-    if (mysqli_num_rows($result) == 1) {
-        $dbobject = mysqli_fetch_object($result);
-        $badgename = $dbobject->badgename;
-        $_SESSION['badgename'] = $badgename;
-    }
-    mysqli_free_result($result);
-    $pubsname = "";
-    $query = "SELECT pubsname FROM Participants WHERE badgeid = ?;";
-    if (!$result = mysqli_query_with_prepare_and_exit_on_error($query, 's', $query_param_arr)) {
-        exit(); // Should have exited already
-    }
-    $dbobject = mysqli_fetch_object($result);
+    $_SESSION['badgename'] = $dbobject->badgename;
     $pubsname = $dbobject->pubsname;
-    mysqli_free_result($result);
-    if (!($pubsname == "")) {
+    if ($pubsname != "" && $pubsname != null) {
         $_SESSION['badgename'] = $pubsname;
     }
     $_SESSION['badgeid'] = $badgeid;

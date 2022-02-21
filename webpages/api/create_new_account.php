@@ -126,6 +126,24 @@ function split_first_and_last_names($name) {
     }
 }
 
+function update_reset_request($db, $selector) {
+    $query = <<<EOD
+    UPDATE ParticipantPasswordResetRequests
+      SET cancelled = 1
+        WHERE badgeidentered = ''
+        AND selector = ?;
+ EOD;
+
+    $stmt = mysqli_prepare($db, $query);
+    mysqli_stmt_bind_param($stmt, "s", $selector);
+
+    if ($stmt->execute()) {
+        mysqli_stmt_close($stmt);
+    } else {
+        throw new DatabaseSqlException("The Insert could not be processed: $query");
+    }
+}
+
 function create_new_participant($db, $badgeid, $pubsname, $email_address, $password) {
     $query = <<<EOD
     INSERT
@@ -194,6 +212,7 @@ try {
                 $db->begin_transaction();
                 try {
                     create_new_participant($db, $badgeid, $json['badgeName'], $email, $json['password']);
+                    update_reset_request($db, $control['selector']);
                     $db->commit();
                     send_email_to_support($email, $json['badgeName'], $badgeid);
                     http_response_code(201);

@@ -25,3 +25,12 @@ select id, 'ACADEMIC_BRAINSTORM', '2022-03-01 05:59:59'
 from current_con;
 
 alter table `Divisions` add column external_key varchar(255);
+
+insert into con_key_dates (con_id, external_key, to_time) 
+select id, 'GAMING_BRAINSTORM', '2022-03-01 05:59:59'
+from current_con;
+
+insert into con_key_dates (con_id, external_key, to_time) 
+select id, 'READINGS_BRAINSTORM', '2022-03-01 05:59:59'
+from current_con;
+

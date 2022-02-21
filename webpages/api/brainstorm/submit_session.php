@@ -209,8 +209,11 @@ EOD;
 function is_valid($db, $json) {
     if (!array_key_exists('title', $json) || $json['title'] === '') {
         return false;
-    } else if (!array_key_exists('progguiddesc', $json) || $json['progguiddesc'] === '' || mb_strlen($json['progguiddesc'], "utf-8") > 500) {
-        return false;
+    } else if (!array_key_exists('progguiddesc', $json) || $json['progguiddesc'] === '') {
+        $length = mb_strlen($json['progguiddesc'], "utf-8");
+        $words = preg_split('/\s+/', $json['progguiddesc'], -1, PREG_SPLIT_NO_EMPTY);
+        $wordCount = count($words);
+        return $length <= 500 || $wordCount <= 100;
     } else {
         return true;
     }
@@ -225,9 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && jwt_validate_token($auth, true)) {
     // validate input
     $db = connect_to_db();
     try {
-        error_log("is_valid");
         if (is_valid($db, $json)) {
-            error_log("post is_valid");
 
             // write to database
             write_session_to_database($db, set_brainstorm_default_values($db, $json), $auth);
