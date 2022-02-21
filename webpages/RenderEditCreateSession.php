@@ -37,7 +37,7 @@ function RenderEditCreateSession ($action, $session, $message1, $message2) {
         <!-- The pubno field is no longer used on the form, but the code expects it.-->
         <input type="hidden" name="pubno" value="<?php echo htmlspecialchars($session["pubno"],ENT_COMPAT);?>" />
         <div class="text-right mt-3">
-            <button class="btn btn-outline-secondary" type=reset value="reset">Reset</button>
+            <button class="btn btn-link session-history" type=button>History</button>
             <button class="btn btn-primary" type=submit value="save" onclick="mysubmit()">Save</button>
         </div>
         <div class="row">
@@ -233,18 +233,42 @@ function RenderEditCreateSession ($action, $session, $message1, $message2) {
             </div>
         </div>
         <div class="text-right mt-3">
-            <button class="btn btn-outline-secondary" type=reset value="reset">Reset</button>
+            <button class="btn btn-link session-history" type=button>History</button>
             <button class="btn btn-primary" type=submit value="save" onclick="mysubmit()">Save</button>
         </div>
         <input type="hidden" name="action" value="<?php echo ($action === "create") ? "create" : "edit"; ?>" />
     </form>
 
+    <!-- Modal -->
+    <div class="modal fade" id="historyModal" tabindex="-1" role="dialog" aria-labelledby="historyLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="historyLabel">Session History</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Here's how this session has changed/evolved over time:</p>
+                    <div class="history-content">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <script type="text/javascript" src="external/bootstrap-multiselect-1.1.7/bootstrap-multiselect.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/dayjs@1.8.21/dayjs.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
             $('.form-control-multiselect').multiselect();
         });
     </script>
+    <script type="text/javascript" src="javascript/zambiaExtension.js"></script>
+    <script type="text/javascript" src="javascript/zambiaExtensionEditSession.js"></script>
 <?php
     staff_footer();
 }
