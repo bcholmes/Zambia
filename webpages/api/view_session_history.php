@@ -50,6 +50,63 @@ EOD;
     }
 }
 
+function get_participant_edits($db, $sessionId) {
+    $query = <<<EOD
+    SELECT
+		POSH.badgeid,
+		COALESCE(POSH.moderator, 0) AS moderator,
+		POSH.createdbybadgeid,
+		POSH.createdts,
+		DATE_FORMAT(POSH.createdts, "%c/%e/%y %l:%i %p") AS createdtsformat,
+		POSH.inactivatedbybadgeid,
+		POSH.inactivatedts,
+		DATE_FORMAT(POSH.inactivatedts, "%c/%e/%y %l:%i %p") AS inactivatedtsformat,
+		PartOS.pubsname,
+		PartCR.pubsname AS crpubsname,
+		PartInact.pubsname AS inactpubsname
+	FROM
+				  ParticipantOnSessionHistory POSH
+			 JOIN Participants PartOS ON PartOS.badgeid = POSH.badgeid
+			 JOIN Participants PartCR ON PartCR.badgeid = POSH.createdbybadgeid
+		LEFT JOIN Participants PartInact ON PartInact.badgeid = POSH.inactivatedbybadgeid
+	WHERE
+		POSH.sessionid=?;
+EOD;
+
+    $stmt = mysqli_prepare($db, $query);
+    mysqli_stmt_bind_param($stmt, "i", $sessionId);
+    $history = [];
+	if (mysqli_stmt_execute($stmt)) {
+		$result = mysqli_stmt_get_result($stmt);
+        while ($row = mysqli_fetch_object($result)) {
+            $history[] = [ 
+                "badgeid" => $row->createdbybadgeid,
+                "name" => $row->crpubsname,
+                "description" => $row->editdescription,
+                "timestamp" => date_format(convert_database_date_to_date($row->createdts) , 'c'),
+                "codedescription" => "Participant added: " . $row->pubsname
+            ];
+
+            if ($row->inactivatedts != null && $row->inactpubsname != null) {
+                $history[] = [ 
+                    "badgeid" => $row->createdbybadgeid,
+                    "name" => $row->crpubsname,
+                    "description" => $row->editdescription,
+                    "timestamp" => date_format(convert_database_date_to_date($row->inactivatedts) , 'c'),
+                    "codedescription" => "Participant removed: " . $row->pubsname
+                ];
+            }
+        }
+        mysqli_stmt_close($stmt);
+        return $history;
+    } else {
+        throw new DatabaseSqlException("Query could not be executed: $query");
+    }
+}
+
+function sort_history_by_timestamp($a, $b) {
+    return strcmp($a['timestamp'], $b['timestamp']);
+}
 
 start_session_if_necessary();
 $db = connect_to_db(true);
@@ -59,9 +116,13 @@ try {
 
             $sessionId = $_REQUEST['id'];
             $history = get_session_edits($db, $sessionId);
+            $more_history = get_participant_edits($db, $sessionId);
+            $both = array_merge($history, $more_history);
+
+            usort($both, 'sort_history_by_timestamp');
 
             header('Content-type: application/json; charset=utf-8');
-            $json_string = json_encode(array("history" => $history));
+            $json_string = json_encode(array("history" => $both));
             echo $json_string;
 
         } else {

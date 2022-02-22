@@ -25,7 +25,7 @@ $(function() {
 
         render: (data) => {
             let $table = $('<table class="table" />');
-            let $thead = $('<thead><tr><td>Date</td><td>Who</td><td>Description</td><td>Status</td></tr></thead>')
+            let $thead = $('<thead><tr><th>Date</th><th>Who</th><th>Description</th><th>Status</th></tr></thead>')
             $table.append($thead);
             let $tbody = $('<tbody />');
             for (let i = 0; i < data.history.length; i++) {
