@@ -1,6 +1,8 @@
 <?php
 // Copyright (c) 2018-2019 Peter Olszowka. All rights reserved. See copyright document for more details.
 $report = [];
+$report['multi'] = 'true';
+$report['output_filename'] = 'participantnumpanel.csv';
 $report['name'] = 'Participant # Panel and Constraints';
 $report['description'] = 'How many panels does each person want to be on and the other constraints they indicated';
 $report['categories'] = array(
@@ -19,6 +21,7 @@ EOD;
 $report['queries']['participants'] =<<<'EOD'
 SELECT
 		P.badgeid, P.pubsname, PA.maxprog, PA.preventconflict, PA.otherconstraints,
+        CD.badgename, concat(CD.firstname,' ',CD.lastname) AS name,
         IF(instr(P.pubsname, CD.lastname) > 0, CD.lastname, substring_index(P.pubsname, ' ', -1)) AS pubsnameSort
 	FROM
 				  Participants P
@@ -47,22 +50,24 @@ $report['xsl'] =<<<'EOD'
     <xsl:template match="/">
         <xsl:choose>
             <xsl:when test="doc/query[@queryName='participants']/row and doc/query[@queryName='dayMaxProg']/row">
-                <table id="reportTable" class="report">
+                <table id="reportTable" class="table table-sm table-bordered">
                     <thead>
                         <tr>
-                            <th rowspan="2" class="report" style="white-space:nowrap;">Badge ID</th>
-                            <th rowspan="2" class="report">Name for Publications</th>
+                            <th rowspan="2" style="white-space:nowrap;">Badge ID</th>
+                            <th rowspan="2">Name for Publications</th>
                             <th rowspan="2"></th>
-                            <th colspan="{1 + count(doc/query[@queryName='days']/row)}" class="report">Maximum Number of Sessions</th>
-                            <th rowspan="2" class="report">Prevent Conflict with these Activities</th>
-                            <th rowspan="2" class="report">Participant's Other Scheduling Constraints</th>
+                            <th colspan="{1 + count(doc/query[@queryName='days']/row)}" >Maximum Number of Sessions</th>
+                            <th rowspan="2">Prevent Conflict with these Activities</th>
+                            <th rowspan="2">Participant's Other Scheduling Constraints</th>
                         </tr>
                         <tr>
                             <xsl:apply-templates select="doc/query[@queryName='days']/row" />
-                            <th class="report">Total</th>
+                            <th >Total</th>
                         </tr>
                     </thead>
-                    <xsl:apply-templates select="doc/query[@queryName='participants']/row" />
+                    <tbody>
+                        <xsl:apply-templates select="doc/query[@queryName='participants']/row" />
+                    </tbody>
                 </table>
             </xsl:when>
             <xsl:otherwise>
@@ -74,28 +79,35 @@ $report['xsl'] =<<<'EOD'
     <xsl:template match="doc/query[@queryName='participants']/row">
         <xsl:variable name="badgeid" select="@badgeid" />
         <tr>
-            <td class="report">
+            <td>
                 <xsl:call-template name="showBadgeid">
                     <xsl:with-param name="badgeid" select = "@badgeid" />
                 </xsl:call-template>
             </td>
-            <td class="report" style="white-space:nowrap;"><xsl:value-of select="@pubsname"/></td>
-            <td class="report"><xsl:value-of select="@pubsnameSort"/></td>
+            <td style="white-space:nowrap;">
+                <xsl:call-template name="showLinkedPubsnameWithBadgeid">
+                    <xsl:with-param name="badgeid" select = "@badgeid" />
+                    <xsl:with-param name="pubsname" select = "@pubsname" />
+                    <xsl:with-param name="badgename" select = "@badgename" />
+                    <xsl:with-param name="name" select = "@name" />
+                </xsl:call-template>
+            </td>
+            <td><xsl:value-of select="@pubsnameSort"/></td>
             <xsl:apply-templates select="/doc/query[@queryName='dayMaxProg']/row[@badgeid=$badgeid]"/>
-            <td class="report"><xsl:value-of select="@maxprog"/></td>
-            <td class="report"><xsl:value-of select="@preventconflict"/></td>
-            <td class="report"><xsl:value-of select="@otherconstraints"/></td>
+            <td><xsl:value-of select="@maxprog"/></td>
+            <td><xsl:value-of select="@preventconflict"/></td>
+            <td><xsl:value-of select="@otherconstraints"/></td>
         </tr>
     </xsl:template>
     
     <xsl:template match="doc/query[@queryName='days']/row">
-        <th class="report">
+        <th >
             <xsl:value-of select="@dayName" />
         </th>
     </xsl:template>
     
     <xsl:template match="doc/query[@queryName='dayMaxProg']/row">
-        <td class="report">
+        <td >
             <xsl:value-of select="@maxprog" />
         </td>
     </xsl:template>

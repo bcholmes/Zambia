@@ -19,7 +19,27 @@
         <xsl:param name="pubsname" />
         <a href="AdminParticipants.php?badgeid={$badgeid}" title="Administer participants"><xsl:value-of select="$pubsname" /> (<xsl:value-of select="$badgeid" />)</a>
     </xsl:template>
-    
+
+    <xsl:template name="showLinkedPubsnameWithBadgeid">
+        <xsl:param name="badgeid" />
+        <xsl:param name="pubsname" />
+        <xsl:param name="badgename" />
+        <xsl:param name="name" />
+        <a href="AdminParticipants.php?badgeid={$badgeid}" title="Administer participants">
+            <xsl:choose>
+                <xsl:when test="$pubsname!=''">
+                    <xsl:value-of select="$pubsname"/>
+                </xsl:when>
+                <xsl:when test="$badgename!=''">
+                    <xsl:value-of select="$badgename"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$name"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </a>
+    </xsl:template>
+
     <xsl:template name="showDuration">
         <xsl:param name="durationhrs" />
         <xsl:param name="durationmin" />

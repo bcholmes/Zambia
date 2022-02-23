@@ -1,6 +1,8 @@
 <?php
 // Copyright (c) 2018-2019 Peter Olszowka. All rights reserved. See copyright document for more details.
 $report = [];
+$report['multi'] = 'true';
+$report['output_filename'] = 'participantinterests.csv';
 $report['name'] = 'Participant Interests';
 $report['description'] = 'What is that participant interested in? (Program Participants who are attending)';
 $report['categories'] = array(
@@ -20,6 +22,7 @@ $report['queries'] = [];
 $report['queries']['participants'] =<<<'EOD'
 SELECT
 		P.badgeid, P.pubsname, PI.yespanels, PI.nopanels, PI.yespeople, PI.nopeople, PI.otherroles,
+        CD.badgename, concat(CD.firstname,' ',CD.lastname) AS name,
         IF(instr(P.pubsname, CD.lastname) > 0, CD.lastname, substring_index(P.pubsname, ' ', -1)) AS pubsnameSort
 	FROM
 	         Participants P
@@ -40,20 +43,22 @@ $report['xsl'] =<<<'EOD'
     <xsl:template match="/">
         <xsl:choose>
             <xsl:when test="doc/query[@queryName='participants']/row">
-                <table id="reportTable" class="report">
+                <table id="reportTable" class="table table-sm table-bordered">
                     <thead>
-                        <tr style="height:2.6rem">
-                            <th class="report" style="white-space: nowrap;">Badge ID</th>
-                            <th class="report" style="white-space: nowrap;">Name for Publications</th>
+                        <tr>
+                            <th style="white-space: nowrap;">Badge ID</th>
+                            <th style="white-space: nowrap;">Name for Publications</th>
                             <th></th>
-                            <th class="report">"Workshops or presentations I'd like to run"</th>
-                            <th class="report">"Panel types I am not interested in participating in"</th>
-                            <th class="report">"People with whom I'd like to be on a session"</th>
-                            <th class="report">"People with whom I'd rather not be on a session"</th>
-                            <th class="report">"Other" Role Details</th>
+                            <th>"Workshops or presentations I'd like to run"</th>
+                            <th>"Panel types I am not interested in participating in"</th>
+                            <th>"People with whom I'd like to be on a session"</th>
+                            <th>"People with whom I'd rather not be on a session"</th>
+                            <th>"Other" Role Details</th>
                         </tr>
                     </thead>
-                    <xsl:apply-templates select="doc/query[@queryName='participants']/row"/>
+                    <tbody>
+                        <xsl:apply-templates select="doc/query[@queryName='participants']/row"/>
+                    </tbody>
                 </table>
             </xsl:when>
             <xsl:otherwise>
@@ -65,18 +70,25 @@ $report['xsl'] =<<<'EOD'
     <xsl:template match="doc/query[@queryName='participants']/row">
         <xsl:variable name="bagdeid" select="@badgeid" />
         <tr>
-            <td class="report" style="white-space: nowrap;">
+            <td  style="white-space: nowrap;">
                 <xsl:call-template name="showBadgeid">
                     <xsl:with-param name="badgeid" select = "@badgeid" />
                 </xsl:call-template>
             </td>
-            <td class="report" style="white-space: nowrap;"><xsl:value-of select="@pubsname"/></td>
-            <td class="report"><xsl:value-of select="@pubsnameSort"/></td>
-            <td class="report"><xsl:value-of select="@yespanels"/></td>
-            <td class="report"><xsl:value-of select="@nopanels"/></td>
-            <td class="report"><xsl:value-of select="@yespeople"/></td>
-            <td class="report"><xsl:value-of select="@nopeople"/></td>
-            <td class="report"><xsl:value-of select="@otherroles"/></td>
+            <td style="white-space: nowrap;">
+                <xsl:call-template name="showLinkedPubsnameWithBadgeid">
+                    <xsl:with-param name="badgeid" select = "@badgeid" />
+                    <xsl:with-param name="pubsname" select = "@pubsname" />
+                    <xsl:with-param name="badgename" select = "@badgename" />
+                    <xsl:with-param name="name" select = "@name" />
+                </xsl:call-template>
+            </td>
+            <td><xsl:value-of select="@pubsnameSort"/></td>
+            <td><xsl:value-of select="@yespanels"/></td>
+            <td><xsl:value-of select="@nopanels"/></td>
+            <td><xsl:value-of select="@yespeople"/></td>
+            <td><xsl:value-of select="@nopeople"/></td>
+            <td><xsl:value-of select="@otherroles"/></td>
         </tr>
     </xsl:template>
 </xsl:stylesheet>
