@@ -2,6 +2,8 @@
 // Copyright (c) 2018-2019 Peter Olszowka. All rights reserved. See copyright document for more details.
 $report = [];
 $report['name'] = 'Published Authors';
+$report['multi'] = 'true';
+$report['output_filename'] = 'published_authors.csv';
 $report['description'] = 'Participants who indicated they were published authors.';
 $report['categories'] = array(
     'Participant Info Reports' => 105,
@@ -15,7 +17,8 @@ $report['columns'] = array(
 $report['queries'] = [];
 $report['queries']['participants'] =<<<'EOD'
 SELECT
-		CD.badgeid, CD.firstname, CD.lastname, CD.badgename, P.pubsname
+		CD.badgeid, CD.firstname, CD.lastname, CD.badgename, P.pubsname,
+        concat(CD.firstname,' ',CD.lastname) AS name
 	FROM
 			 CongoDump CD
 		JOIN Participants P USING (badgeid)
@@ -35,13 +38,13 @@ $report['xsl'] =<<<'EOD'
     <xsl:template match="/">
         <xsl:choose>
             <xsl:when test="doc/query[@queryName='participants']/row">
-                <table id="reportTable" class="report">
+                <table id="reportTable" class="table table-sm table-bordered">
                     <thead>
                         <tr>
-                            <th class="report" style="height:2.6rem">Badge Id</th>
-                            <th class="report">Pubs Name</th>
-                            <th class="report">Badge Name</th>
-                            <th class="report">Last Name, First Name</th>
+                            <th style="height:2.6rem">Badge Id</th>
+                            <th>Pubs Name</th>
+                            <th>Badge Name</th>
+                            <th>Last Name, First Name</th>
                         </tr>
                     </thead>
                     <xsl:apply-templates select="/doc/query[@queryName='participants']/row"/>
@@ -54,10 +57,17 @@ $report['xsl'] =<<<'EOD'
     </xsl:template>
     <xsl:template match="/doc/query[@queryName='participants']/row">
         <tr>
-            <td class="report"><xsl:call-template name="showBadgeid"><xsl:with-param name="badgeid" select="@badgeid"/></xsl:call-template></td>
-            <td class="report"><xsl:value-of select="@pubsname"/></td>
-            <td class="report"><xsl:value-of select="@badgename"/></td>
-            <td class="report"><xsl:value-of select="@lastname"/><xsl:text disable-output-escaping="yes">,&amp;nbsp;</xsl:text><xsl:value-of select="@firstname"/></td>
+            <td><xsl:call-template name="showBadgeid"><xsl:with-param name="badgeid" select="@badgeid"/></xsl:call-template></td>
+            <td>
+                <xsl:call-template name="showLinkedPubsname">
+                    <xsl:with-param name="badgeid" select = "@badgeid" />
+                    <xsl:with-param name="pubsname" select = "@pubsname" />
+                    <xsl:with-param name="badgename" select = "@badgename" />
+                    <xsl:with-param name="name" select = "@name" />
+                </xsl:call-template>
+            </td>
+            <td><xsl:value-of select="@badgename"/></td>
+            <td><xsl:value-of select="@lastname"/><xsl:text disable-output-escaping="yes">,&amp;nbsp;</xsl:text><xsl:value-of select="@firstname"/></td>
         </tr>
     </xsl:template>
 </xsl:stylesheet>

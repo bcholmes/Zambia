@@ -20,7 +20,7 @@
         <a href="AdminParticipants.php?badgeid={$badgeid}" title="Administer participants"><xsl:value-of select="$pubsname" /> (<xsl:value-of select="$badgeid" />)</a>
     </xsl:template>
 
-    <xsl:template name="showLinkedPubsnameWithBadgeid">
+    <xsl:template name="showLinkedPubsname">
         <xsl:param name="badgeid" />
         <xsl:param name="pubsname" />
         <xsl:param name="badgename" />
@@ -38,6 +38,9 @@
                 </xsl:otherwise>
             </xsl:choose>
         </a>
+        <xsl:if test="$pubsname != '' and $badgename != '' and $badgename != $pubsname">
+            (<xsl:value-of select="$badgename" />)
+        </xsl:if>
     </xsl:template>
 
     <xsl:template name="showDuration">

@@ -84,8 +84,8 @@ $report['xsl'] =<<<'EOD'
                     <xsl:with-param name="badgeid" select = "@badgeid" />
                 </xsl:call-template>
             </td>
-            <td style="white-space:nowrap;">
-                <xsl:call-template name="showLinkedPubsnameWithBadgeid">
+            <td>
+                <xsl:call-template name="showLinkedPubsname">
                     <xsl:with-param name="badgeid" select = "@badgeid" />
                     <xsl:with-param name="pubsname" select = "@pubsname" />
                     <xsl:with-param name="badgename" select = "@badgename" />

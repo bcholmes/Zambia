@@ -18,7 +18,9 @@ $report['columns'] = array(
 $report['queries'] = [];
 $report['queries']['participants'] =<<<'EOD'
 SELECT
-        P.badgeid, P.pubsname, CD.badgename, CD.firstname, CD.lastname, IF(instr(P.pubsname, CD.lastname) > 0, CD.lastname, substring_index(P.pubsname, ' ', -1)) AS pubsnameSort, P.bio , P.pronouns
+        P.badgeid, P.pubsname, CD.badgename, CD.firstname, CD.lastname, 
+        concat(CD.firstname,' ',CD.lastname) AS name,
+        IF(instr(P.pubsname, CD.lastname) > 0, CD.lastname, substring_index(P.pubsname, ' ', -1)) AS pubsnameSort, P.bio , P.pronouns
     FROM
              Participants P
         JOIN CongoDump CD USING (badgeid)
@@ -39,11 +41,11 @@ $report['xsl'] =<<<'EOD'
                 <table id="reportTable" class="report table table-sm">
                     <thead>
                         <tr style="height:2.6rem">
-                            <th class="report">Badge Id</th>
-                            <th class="report">Name for Publications</th>
+                            <th>Badge Id</th>
+                            <th>Name for Publications</th>
                             <th></th>
-                            <th class="report">Pronouns</th>
-                            <th class="report">Biography</th>
+                            <th>Pronouns</th>
+                            <th>Biography</th>
                         </tr>
                     </thead>
                     <xsl:apply-templates select="doc/query[@queryName='participants']/row" />
@@ -57,23 +59,18 @@ $report['xsl'] =<<<'EOD'
 
     <xsl:template match="doc/query[@queryName='participants']/row">
         <tr>
-            <td class="report"><xsl:call-template name="showBadgeid"><xsl:with-param name="badgeid" select="@badgeid"/></xsl:call-template></td>
-            <td class="report">
-                <xsl:choose>
-                    <xsl:when test="@pubsname != ''">
-                        <xsl:value-of select="@pubsname" />
-                    </xsl:when>
-                    <xsl:when test="@badgename != ''">
-                        <xsl:value-of select="@badgename" />
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:value-of select="@firstname" /><xsl:text> </xsl:text><xsl:value-of select="@lastname" />
-                    </xsl:otherwise>
-                </xsl:choose>
+            <td><xsl:call-template name="showBadgeid"><xsl:with-param name="badgeid" select="@badgeid"/></xsl:call-template></td>
+            <td>
+                <xsl:call-template name="showLinkedPubsname">
+                    <xsl:with-param name="badgeid" select = "@badgeid" />
+                    <xsl:with-param name="pubsname" select = "@pubsname" />
+                    <xsl:with-param name="badgename" select = "@badgename" />
+                    <xsl:with-param name="name" select = "@name" />
+                </xsl:call-template>
             </td>
-            <td class="report"><xsl:value-of select="@pubsnameSort" /></td>
-            <td class="report"><xsl:value-of select="@pronouns" /></td>
-            <td class="report"><xsl:value-of select="@bio" /></td>
+            <td><xsl:value-of select="@pubsnameSort" /></td>
+            <td><xsl:value-of select="@pronouns" /></td>
+            <td><xsl:value-of select="@bio" /></td>
         </tr>
     </xsl:template>
 </xsl:stylesheet>
