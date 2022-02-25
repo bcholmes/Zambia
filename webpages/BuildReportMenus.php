@@ -41,7 +41,7 @@ function process_all_files_in_directory($basePath, $subDirectoryName, &$allRepor
     }
 }
 
-function build_report_menus($path) {
+function build_report_menus($path, $alphabeticSort = false) {
     $allReports = array();
     process_all_files_in_directory($path, "", $allReports);
     $reportCategories = array();
@@ -89,13 +89,13 @@ function build_report_menus($path) {
         $description = addslashes($reportArray['description']);
         fwrite($staffReportsICIFilHand, "\$reportDescriptions['$reportName'] = \"{$description}\";\n");
     }
+    fwrite($staffReportsICIFilHand, "\$reportOrdering = " . ($alphabeticSort ? "'ALPHA'" : "'CATEGORY'") . ";\n");
     fclose($reportMenuFilHand);
     fclose($reportMenuBS4FilHand);
     fclose($staffReportsICIFilHand);
 
     return $allReports;
 }
-
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
@@ -118,6 +118,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 <div class="card-body">
                     <p class="text-danger">This Admin tool will overwrite your current list of reports and generate a new list.</p>
                     <p>Please be sure that you know what you're doing before you hit 'Continue'.</p>
+
+                    <div class="form-group">
+                        <label for="ordering">Order</label>
+                        <select class="form-control" id="ordering">
+                            <option value="ALPHA">Alphabetic</option>
+                            <option value="INTERNAL">Internally-specified Order</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="card-footer text-right">
                     <input type="hidden" name="areYouSure" value="1" />
@@ -127,6 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             </div>
         </form>
     </div>
+    <script type="text/javascript" src="./javascript/zambiaExtension.js"></script>
     <script type="text/javascript" src="./javascript/BuildReportMenus.js"></script>
         <?php
         staff_footer();
@@ -143,19 +152,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode($result);
     } else {
 
-        $path = './reports';
-        try {
-            $allReports = build_report_menus($path);
-            $reportCount = count($allReports);
+        $json_string = file_get_contents('php://input');
+        $json = json_decode($json_string, true);
+
+        if ($json && array_key_exists("sortOrder", $json)) {
+
+            $path = './reports';
+            try {
+                $allReports = build_report_menus($path, $json["sortOrder"] === 'ALPHA');
+                $reportCount = count($allReports);
+                header('Content-type: application/json');
+                echo "\n\n";
+                $result = array("severity" => "success", "text" => "Done. $reportCount report(s) processed.");
+                echo json_encode($result);
+            } catch (Exception $e) {
+                http_response_code(409);
+                header('Content-type: application/json');
+                echo "\n\n";
+                $result = array("severity" => "danger", "text" => "We've encountered an error. Check the file system permissions on your server?");
+                echo json_encode($result);
+            }
+        } else {
+            http_response_code(400);
             header('Content-type: application/json');
             echo "\n\n";
-            $result = array("severity" => "success", "text" => "Done. $reportCount report(s) processed.");
-            echo json_encode($result);
-        } catch (Exception $e) {
-            http_response_code(409);
-            header('Content-type: application/json');
-            echo "\n\n";
-            $result = array("severity" => "danger", "text" => "We've encountered an error.Check the file system permissions on your server?");
+            $result = array("severity" => "danger", "text" => "We've encountered an error. There's something wrong your request.");
             echo json_encode($result);
         }
     }

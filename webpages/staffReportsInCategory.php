@@ -4,6 +4,11 @@ global $message_error, $title;
 $title = "Reports in Category";
 require_once('StaffCommonCode.php');
 $CON_NAME = CON_NAME;
+
+function sort_by_report_name($r1, $r2) {
+    return strcmp($r1['name'], $r2['name']);
+}
+
 $reportcategoryid = getString("reportcategory");
 if ($reportcategoryid === null)
     $reportcategoryid = "";
@@ -30,19 +35,27 @@ staff_header($title, true);
         <div class=" col-md-9">
             <div class="list-group">
 <?php 
+$reportList = array();
 if ($reportcategoryid === "") {
     foreach ($reportNames as $reportFileName => $reportName) {
-        echo "<div class='list-group-item flex-column align-items-start'>\n<h5><a  href='generateReport.php?reportName=$reportFileName'>$reportName</a></h5>\n";
-        echo "<div>{$reportDescriptions[$reportFileName]}</div>";
-        echo "</div>";
+        $reportList[] = array("fileName" => $reportFileName, "name" => $reportName, "description" => $reportDescriptions[$reportFileName]);
     }
 } else {
     foreach ($reportCategories[$reportcategoryid] as $reportFileName) {
-        echo "<div class='list-group-item flex-column align-items-start'>\n<h5><a href='generateReport.php?reportName=$reportFileName'>$reportNames[$reportFileName]</a></h5>\n";
-        echo "<div>{$reportDescriptions[$reportFileName]}</div>";
-        echo "</div>";
+        $reportList[] = array("fileName" => $reportFileName, "name" => $reportNames[$reportFileName], "description" => $reportDescriptions[$reportFileName]);
     }
 }
+
+if (isset($reportOrdering) && $reportOrdering === 'ALPHA') {
+    usort($reportList, 'sort_by_report_name');
+}
+
+foreach ($reportList as $r => $record) {
+    echo "<div class='list-group-item flex-column align-items-start'>\n<h5><a  href='generateReport.php?reportName=" . $record["fileName"] ."'>" . $record["name"] . "</a></h5>\n";
+    echo "<div>{$record["description"]}</div>";
+    echo "</div>";
+}
+
 ?>
             </div>
         </div>
