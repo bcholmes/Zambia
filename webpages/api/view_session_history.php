@@ -15,6 +15,7 @@ function get_session_edits($db, $sessionId) {
 SELECT
 		SEH.badgeid,
 		SEH.name,
+        CD.badgename,
 		SEH.editdescription,
 		SEH.timestamp,
 		DATE_FORMAT(SEH.timestamp, "%c/%e/%y %l:%i %p") AS tsformat,
@@ -24,6 +25,7 @@ SELECT
 			 SessionEditHistory SEH
 		JOIN SessionEditCodes SEC USING (sessioneditcode)
 		JOIN SessionStatuses SS USING (statusid)
+        JOIN CongoDump CD USING (badgeid)
 	WHERE
 		SEH.sessionid=?;
 EOD;
@@ -34,14 +36,15 @@ EOD;
 	if (mysqli_stmt_execute($stmt)) {
 		$result = mysqli_stmt_get_result($stmt);
         while ($row = mysqli_fetch_object($result)) {
-            $history[] = [ 
+            $record = [ 
                 "badgeid" => $row->badgeid,
-                "name" => $row->name,
+                "name" => $row->badgename,
                 "description" => $row->editdescription,
                 "timestamp" => date_format(convert_database_date_to_date($row->timestamp) , 'c'),
                 "codedescription" => $row->codedescription,
                 "status" => $row->statusname
             ];
+            $history[] = $record;
         }
         mysqli_stmt_close($stmt);
         return $history;
@@ -62,14 +65,16 @@ function get_participant_edits($db, $sessionId) {
 		POSH.inactivatedts,
 		DATE_FORMAT(POSH.inactivatedts, "%c/%e/%y %l:%i %p") AS inactivatedtsformat,
 		PartOS.pubsname,
+        CD.badgename,
 		PartCR.pubsname AS crpubsname,
 		PartInact.pubsname AS inactpubsname
-	FROM
+    FROM
 				  ParticipantOnSessionHistory POSH
 			 JOIN Participants PartOS ON PartOS.badgeid = POSH.badgeid
+             JOIN CongoDump CD ON CD.badgeid = POSH.badgeid
 			 JOIN Participants PartCR ON PartCR.badgeid = POSH.createdbybadgeid
 		LEFT JOIN Participants PartInact ON PartInact.badgeid = POSH.inactivatedbybadgeid
-	WHERE
+    WHERE
 		POSH.sessionid=?;
 EOD;
 
@@ -84,16 +89,16 @@ EOD;
                 "name" => $row->crpubsname,
                 "description" => $row->editdescription,
                 "timestamp" => date_format(convert_database_date_to_date($row->createdts) , 'c'),
-                "codedescription" => "Participant added: " . $row->pubsname
+                "codedescription" => "Participant added: " . $row->badgename
             ];
 
             if ($row->inactivatedts != null && $row->inactpubsname != null) {
                 $history[] = [ 
-                    "badgeid" => $row->createdbybadgeid,
-                    "name" => $row->crpubsname,
+                    "badgeid" => $row->inactivatedbybadgeid,
+                    "name" => $row->inactpubsname,
                     "description" => $row->editdescription,
                     "timestamp" => date_format(convert_database_date_to_date($row->inactivatedts) , 'c'),
-                    "codedescription" => "Participant removed: " . $row->pubsname
+                    "codedescription" => "Participant removed: " . $row->badgename
                 ];
             }
         }
