@@ -1,7 +1,7 @@
 <?php
-// Copyright (c) 2018 Peter Olszowka. All rights reserved. See copyright document for more details.
+// Copyright (c) 2022 BC Holmes. All rights reserved. See copyright document for more details.
 $report = [];
-$report['name'] = 'Session Feedback Report';
+$report['name'] = 'Interest Survey Report';
 $report['multi'] = 'true';
 $report['output_filename'] = 'sessionfeedback.csv';
 $report['description'] = 'For each session, show number of members who expressed interest to either attend or be assigned to a session';

@@ -24,9 +24,9 @@ function render_query_result_as_csv($result) {
 function echo_if_zero_rows_and_exit($result) {
     global $title;
     if (mysqli_num_rows($result) == 0) {
-        staff_header($title);
+        staff_header($title, true);
         $message = "Report returned no records.";
-        echo "<p>" . $message . "\n";
+        echo "<p class=\"alert alert-info\">" . $message . "\n";
         staff_footer();
         mysqli_free_result($result);
         exit();
