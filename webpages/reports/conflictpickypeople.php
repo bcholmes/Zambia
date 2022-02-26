@@ -1,8 +1,10 @@
 <?php
 // Copyright (c) 2018 Peter Olszowka. All rights reserved. See copyright document for more details.
 $report = [];
-$report['name'] = 'Conflict Report - Picky people ';
-$report['description'] = 'Show who the picky people do not want to be on a panel with and who they are on panels with.';
+$report['name'] = 'Conflict Report - Don\' Schedule With';
+$report['multi'] = 'true';
+$report['output_filename'] = 'conflict_do_not_schedule_with.csv';
+$report['description'] = 'Show participants who have identified co-participant conflicts and who they are on panels with.';
 $report['categories'] = array(
     'Conflict Reports' => 430,
 );
@@ -49,24 +51,21 @@ $report['xsl'] =<<<'EOD'
     <xsl:template match="/">
         <xsl:choose>
             <xsl:when test="doc/query[@queryName='participants']/row">
-                <table class="report">
-                    <col style="width:6em;" />
-                    <col style="width:12em;" />
-                    <col />
-                    <col style="width:7em;" />
-                    <col style="width:6em;" />
-                    <col style="width:15em;" />
-                    <col />
-                    <tr>
-                        <th class="report">Badge ID</th>
-                        <th class="report">Name for publications</th>
-                        <th class="report">People to avoid</th>
-                        <th class="report">Track</th>
-                        <th class="report">Session ID</th>
-                        <th class="report">Title</th>
-                        <th class="report">Other participants</th>
-                    </tr>
-                    <xsl:apply-templates select="doc/query[@queryName='participants']/row"/>
+                <table id="reportTable" class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Badge ID</th>
+                            <th>Name for publications</th>
+                            <th>People to avoid</th>
+                            <th>Track</th>
+                            <th>Session ID</th>
+                            <th>Title</th>
+                            <th>Other participants</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <xsl:apply-templates select="doc/query[@queryName='participants']/row"/>
+                    </tbody>
                 </table>
             </xsl:when>
             <xsl:otherwise>
@@ -77,31 +76,31 @@ $report['xsl'] =<<<'EOD'
 
     <xsl:template match="doc/query[@queryName='participants']/row">
         <tr>
-            <td class="report">
+            <td>
                 <xsl:call-template name="showBadgeid">
                     <xsl:with-param name="badgeid" select = "@badgeid" />
                 </xsl:call-template>
             </td>
-            <td class="report">
+            <td>
                 <xsl:call-template name="showPubsname">
                     <xsl:with-param name="badgeid" select = "@badgeid" />
                     <xsl:with-param name="pubsname" select = "@pubsname" />
                 </xsl:call-template>
             </td>
-            <td class="report"><xsl:value-of select="@nopeople" /></td>
-            <td class="report"><xsl:value-of select="@trackname" /></td>
-            <td class="report">
+            <td><xsl:value-of select="@nopeople" /></td>
+            <td><xsl:value-of select="@trackname" /></td>
+            <td>
                 <xsl:call-template name="showSessionid">
                     <xsl:with-param name="sessionid" select = "@sessionid" />
                 </xsl:call-template>
             </td>
-            <td class="report">
+            <td>
                 <xsl:call-template name="showSessionTitle">
                     <xsl:with-param name="sessionid" select = "@sessionid" />
                     <xsl:with-param name="title" select = "@title" />
                 </xsl:call-template>
             </td>
-            <td class="report">
+            <td>
                 <xsl:variable name="badgeid" select="@badgeid" />
                 <xsl:variable name="sessionid" select="@sessionid" />
                 <xsl:apply-templates select="/doc/query[@queryName='otherParticipants']/row[@badgeid = $badgeid and @sessionid = $sessionid]" />      

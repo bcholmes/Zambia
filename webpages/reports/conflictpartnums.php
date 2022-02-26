@@ -2,6 +2,8 @@
 // Copyright (c) 2018-2019 Peter Olszowka. All rights reserved. See copyright document for more details.
 $report = [];
 $report['name'] = 'Conflict Report - Participant Number of Sessions';
+$report['multi'] = 'true';
+$report['output_filename'] = 'conflict_part_numb_sess.csv';
 $report['description'] = 'Compare number of sessions participants requested with the number of which they were assigned';
 $report['categories'] = array(
     'Conflict Reports' => 420,
@@ -86,24 +88,26 @@ $report['xsl'] =<<<EOD
     <xsl:template match="/">
         <xsl:choose>
             <xsl:when test="doc/query[@queryName='participants']/row">
-                <table id="reportTable" class="report">
+                <table id="reportTable" class="table table-sm table-bordered">
                     <thead>
                         <tr>
-                            <th rowspan="2" class="report">Badge ID</th>
-                            <th rowspan="2" class="report">Name for Publications</th>
+                            <th rowspan="2">Badge ID</th>
+                            <th rowspan="2">Name for Publications</th>
                             <th rowspan="2">X</th>
-                            <th rowspan="2" class="report">Name</th>
+                            <th rowspan="2">Name</th>
                             <th rowspan="2">Y</th>
 $headerRow1Days
-                            <th colspan="2" class="report">Total</th>
+                            <th colspan="2">Total</th>
                         </tr>
                         <tr>
 $headerRow2Days
-                            <th class="report">Avail.</th>
-                            <th class="report">Sched.</th>
+                            <th>Avail.</th>
+                            <th>Sched.</th>
                         </tr>
                     </thead>
-                    <xsl:apply-templates select="doc/query[@queryName='participants']/row"/>
+                    <tbody>
+                        <xsl:apply-templates select="doc/query[@queryName='participants']/row"/>
+                    </tbody>
                 </table>
             </xsl:when>
             <xsl:otherwise>
@@ -115,15 +119,15 @@ $headerRow2Days
     <xsl:template match="doc/query[@queryName='participants']/row">
         <xsl:variable name="badgeid" select="@badgeid" />
         <tr>
-            <td class="report">
+            <td>
                 <xsl:call-template name="showBadgeid">
                     <xsl:with-param name="badgeid" select="@badgeid" />
                 </xsl:call-template>
             </td>
-            <td class="report"><xsl:value-of select="@pubsname" /></td>
-            <td class="report"><xsl:value-of select="@pubsnameSort" /></td>
-            <td class="report"><xsl:value-of select="@name" /></td>
-            <td class="report"><xsl:value-of select="@nameSort" /></td>
+            <td><xsl:value-of select="@pubsname" /></td>
+            <td><xsl:value-of select="@pubsnameSort" /></td>
+            <td><xsl:value-of select="@name" /></td>
+            <td><xsl:value-of select="@nameSort" /></td>
             <xsl:for-each select="/doc/query[@queryName='days']/row">
                 <xsl:call-template name="showInfoForDay">
                     <xsl:with-param name="badgeid" select="\$badgeid" />
@@ -156,7 +160,7 @@ $headerRow2Days
                 <xsl:otherwise>0</xsl:otherwise>
             </xsl:choose>
         </xsl:variable>
-        <td class="report"><xsl:value-of select="\$availableInfo" /></td>
+        <td><xsl:value-of select="\$availableInfo" /></td>
         <td>
             <xsl:attribute name="class">
                 <xsl:choose>
@@ -187,7 +191,7 @@ $headerRow2Days
                 <xsl:otherwise>0</xsl:otherwise>
             </xsl:choose>
         </xsl:variable>
-        <td class="report"><xsl:value-of select="\$availableInfo" /></td>
+        <td><xsl:value-of select="\$availableInfo" /></td>
         <td>
             <xsl:attribute name="class">
                 <xsl:choose>

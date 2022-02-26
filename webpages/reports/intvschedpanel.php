@@ -50,8 +50,8 @@ SELECT
                                 JOIN Participants P USING(badgeid)
                             WHERE
                                 P.interested=1 
-                                AND PSI.rank is not NULL
-                                AND PSI.rank != 0
+                                AND ((PSI.rank is not NULL
+                                AND PSI.rank != 0) OR PSI.willmoderate = 1)
                                 AND S.statusid in (select statusid from SessionStatuses where may_be_scheduled = 1)
                 ) PI 
                 LEFT JOIN ParticipantOnSession POS USING(badgeid, sessionid)

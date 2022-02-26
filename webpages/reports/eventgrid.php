@@ -2,7 +2,9 @@
 // Copyright (c) 2018 Peter Olszowka. All rights reserved. See copyright document for more details.
 $report = [];
 $report['name'] = 'Published Event Grid';
-$report['description'] = 'Display published event schedule with rooms on horizontal axis and time on vertical. This excludes any item marked "Do Not Print". ';
+$report['multi'] = 'true';
+$report['output_filename'] = 'published_event_grid.csv';
+$report['description'] = 'Display published event schedule (not panels, gaming, etc.) with rooms on horizontal axis and time on vertical. This excludes any item marked "Do Not Print". ';
 $report['categories'] = array(
     'Programming Reports' => 220,
     'Grid Reports' => 220,
@@ -21,7 +23,7 @@ SELECT
 		            `Schedule` SCH
 		       JOIN Sessions S USING (sessionid)
                     WHERE
-                        S.divisionid = 3
+                        S.divisionid in (select divisionid from Divisions where divisionname like '%Event%')
                 )
     ORDER BY
         R.display_order;
@@ -39,8 +41,8 @@ SELECT DISTINCT DATE_FORMAT(ADDTIME("$ConStartDatim$",SCH.starttime),"%a %l:%i %
     	            Schedule SCH
     	       JOIN Sessions S USING (sessionid)
                     WHERE
-                        S.divisionid = 3
-                )
+                        S.divisionid in (select divisionid from Divisions where divisionname like '%Event%')
+                    )
     ORDER BY
         SCH.starttime;
 EOD;
@@ -57,8 +59,8 @@ SELECT SCH.starttime, SCH.sessionid, SCH.roomid, DATE_FORMAT(S.duration,"%H:%i")
     	            Schedule SCH
     	       JOIN Sessions S USING (sessionid)
                     WHERE
-                        S.divisionid = 3
-                )
+                        S.divisionid in (select divisionid from Divisions where divisionname like '%Event%')
+                    )
     ORDER BY
         SCH.starttime;
 EOD;
@@ -70,9 +72,9 @@ $report['xsl'] =<<<'EOD'
     <xsl:template match="/">
         <xsl:choose>
             <xsl:when test="doc/query[@queryName='rooms']/row and doc/query[@queryName='times']/row and doc/query[@queryName='sessions']/row">
-                <table class="report">
+                <table class="table table-sm table-bordered">
                     <tr>
-                        <th class="report" style="">Time</th>
+                        <th style="">Time</th>
                         <xsl:apply-templates select="doc/query[@queryName='rooms']/row" />
                     </tr>
                     <xsl:apply-templates select="doc/query[@queryName='times']/row" />
@@ -85,7 +87,7 @@ $report['xsl'] =<<<'EOD'
     </xsl:template>
 
     <xsl:template match="doc/query[@queryName='rooms']/row">
-        <th class="report">
+        <th>
             <xsl:call-template name="showRoomName">
                 <xsl:with-param name="roomid" select = "@roomid" />
                 <xsl:with-param name="roomname" select = "@roomname" />
@@ -96,11 +98,11 @@ $report['xsl'] =<<<'EOD'
     <xsl:template match="doc/query[@queryName='times']/row">
         <xsl:variable name="starttime" select="@starttime" />
         <tr>
-            <td class="report"><xsl:value-of select="@starttimeFMT" /></td>
+            <td><xsl:value-of select="@starttimeFMT" /></td>
             <xsl:for-each select="/doc/query[@queryName='rooms']/row">
                 <xsl:variable name="roomid" select="@roomid" />
                 <xsl:variable name="sessionid" select="/doc/query[@queryName='sessions']/row[@roomid=$roomid and @starttime=$starttime]/@sessionid" />
-                <td class="report">
+                <td>
                     <xsl:choose>
                         <xsl:when test="/doc/query[@queryName='sessions']/row[@roomid=$roomid and @starttime=$starttime]">
                             <xsl:for-each select="/doc/query[@queryName='sessions']/row[@roomid=$roomid and @starttime=$starttime]">
