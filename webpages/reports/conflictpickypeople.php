@@ -1,7 +1,7 @@
 <?php
 // Copyright (c) 2018 Peter Olszowka. All rights reserved. See copyright document for more details.
 $report = [];
-$report['name'] = 'Conflict Report - Don\' Schedule With';
+$report['name'] = 'Conflict Report - Do not Schedule With';
 $report['multi'] = 'true';
 $report['output_filename'] = 'conflict_do_not_schedule_with.csv';
 $report['description'] = 'Show participants who have identified co-participant conflicts and who they are on panels with.';

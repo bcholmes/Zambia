@@ -1,7 +1,7 @@
 <?php
 // Copyright (c) 2018 Peter Olszowka. All rights reserved. See copyright document for more details.
 $report = [];
-$report['name'] = 'Published Event Grid';
+$report['name'] = 'Published Programming Grid - Events Only';
 $report['multi'] = 'true';
 $report['output_filename'] = 'published_event_grid.csv';
 $report['description'] = 'Display published event schedule (not panels, gaming, etc.) with rooms on horizontal axis and time on vertical. This excludes any item marked "Do Not Print". ';
@@ -13,7 +13,8 @@ $report['queries'] = [];
 $report['queries']['rooms'] =<<<'EOD'
 SELECT
         R.roomname,
-        R.roomid
+        R.roomid,
+        R.display_order
     FROM
         Rooms R
     WHERE

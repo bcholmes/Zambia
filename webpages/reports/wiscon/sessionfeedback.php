@@ -12,7 +12,7 @@ $report['categories'] = array(
 $report['queries'] = [];
 $report['queries']['sessions'] =<<<'EOD'
 select sessionid, title, trackname, 
-    sum(attend1) as attend1, sum(attend2) as attend2, sum(attend3) as attend3, sum(attend4) as attend4, sum(attend5) as attend5, 
+    sum(attend1 * 1.2 + attend2 + attend3 * 0.5) as attendPos, sum(attend1) as attend1, sum(attend2) as attend2, sum(attend3) as attend3, sum(attend4) as attend4, sum(attend5) as attend5, 
     sum(attend_type1) as attend_type1, sum(attend_type2) as attend_type2, sum(attend_type3) as attend_type3, 
     sum(rank1) as rank1, sum(rank2) as rank2, sum(rank3) as rank3, sum(rank4) as rank4, sum(rank5) as rank5, 
     sum(willmoderate1) as willmoderate1
@@ -41,7 +41,8 @@ from
         LEFT JOIN ParticipantSessionInterest PSI USING (sessionid)
         LEFT JOIN Participants P ON PSI.badgeid = P.badgeid AND P.interested = 1
     WHERE
-        S.statusid IN (2,3,7)) FB
+        S.statusid IN (2,3,7)
+        AND S.divisionid in (select divisionid from Divisions where divisionname = 'Panels')) FB
 GROUP BY
     sessionid, title, trackname, display_order
 ORDER BY
@@ -61,10 +62,11 @@ $report['xsl'] =<<<'EOD'
                             <th rowspan="2">Track</th>
                             <th rowspan="2">Session ID</th>
                             <th rowspan="2">Title</th>
+                            <th rowspan="2">Rank</th>
                             <th colspan="5">Will attend</th>
                             <th colspan="3">How attend</th>
                             <th colspan="5">Assigned</th>
-                            <th rowspan="2">Moderate</th>
+                            <th rowspan="2">Will Mod</th>
                         </tr>
                         <tr>
                             <th>Very likely</th>
@@ -107,6 +109,7 @@ $report['xsl'] =<<<'EOD'
                     <xsl:with-param name="title" select="@title" />
                 </xsl:call-template>
             </td>
+            <td><xsl:value-of select="@attendPos" /></td>
             <td><xsl:value-of select="@attend1" /></td>
             <td><xsl:value-of select="@attend2" /></td>
             <td><xsl:value-of select="@attend3" /></td>

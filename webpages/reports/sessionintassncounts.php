@@ -2,6 +2,8 @@
 // Copyright (c) 2018 Peter Olszowka. All rights reserved. See copyright document for more details.
 $report = [];
 $report['name'] = 'Assigned, Interested and Not-scheduled Report';
+$report['multi'] = 'true';
+$report['output_filename'] = 'assigned_interested_and_not_scheduled.csv';
 $report['description'] = 'These are sessions that are in need of a home in the schedule';
 $report['categories'] = array(
     'Programming Reports' => 160,
@@ -24,6 +26,7 @@ SELECT
                             JOIN Participants P USING (badgeid)
                         WHERE
                             P.interested = 1
+                            AND ((PSI.rank != 0 and PSI.rank is not null and PSI.rank != 5) OR PSI.willmoderate = 'Y')
                         GROUP BY
 			    PSI.sessionid
                   ) AS SUBQA USING (sessionid)
@@ -53,23 +56,27 @@ $report['xsl'] =<<<'EOD'
     <xsl:template match="/">
         <xsl:choose>
             <xsl:when test="doc/query[@queryName='sessions']/row">
-                <table class="report">
-                    <tr>
-                        <th class="report">Session ID</th>
-                        <th class="report">Title</th>
-                        <th class="report">Track</th>
-                        <th class="report">Type</th>
-                        <th class="report">Status</th>
-                        <th class="report">
-                            <div>Num.</div>
-                            <div>Interested</div>
-                        </th>
-                        <th class="report">
-                            <div>Num.</div>
-                            <div>Assigned</div>
-                        </th>
-                    </tr>
-                    <xsl:apply-templates select="doc/query[@queryName='sessions']/row"/>
+                <table id="reportTable" class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Session ID</th>
+                            <th>Title</th>
+                            <th>Track</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>
+                                <div>Num.</div>
+                                <div>Interested</div>
+                            </th>
+                            <th>
+                                <div>Num.</div>
+                                <div>Assigned</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <xsl:apply-templates select="doc/query[@queryName='sessions']/row"/>
+                    </tbody>
                 </table>
             </xsl:when>
             <xsl:otherwise>
@@ -80,22 +87,22 @@ $report['xsl'] =<<<'EOD'
 
     <xsl:template match="doc/query[@queryName='sessions']/row">
         <tr>
-            <td class="report">
+            <td>
                 <xsl:call-template name="showSessionid">
                     <xsl:with-param name="sessionid" select="@sessionid" />
                 </xsl:call-template>
             </td>
-            <td class="report">
+            <td>
                 <xsl:call-template name="showSessionTitle">
                     <xsl:with-param name="sessionid" select="@sessionid" />
                     <xsl:with-param name="title" select="@title" />
                 </xsl:call-template>
             </td>
-            <td class="report"><xsl:value-of select="@trackname" /></td>
-            <td class="report"><xsl:value-of select="@typename" /></td>
-            <td class="report"><xsl:value-of select="@statusname" /></td>
-            <td class="report" align="right" ><xsl:value-of select="@numInt" /></td>
-            <td class="report" align="right" ><xsl:value-of select="@numAssgnd" /></td>
+            <td><xsl:value-of select="@trackname" /></td>
+            <td><xsl:value-of select="@typename" /></td>
+            <td><xsl:value-of select="@statusname" /></td>
+            <td align="right" ><xsl:value-of select="@numInt" /></td>
+            <td align="right" ><xsl:value-of select="@numAssgnd" /></td>
         </tr>
     </xsl:template>
 </xsl:stylesheet>

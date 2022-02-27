@@ -1,7 +1,7 @@
 <?php
 // Copyright (c) 2018 Peter Olszowka. All rights reserved. See copyright document for more details.
 $report = [];
-$report['name'] = 'Published Full Grid';
+$report['name'] = 'Published Programming Grid - Full';
 $report['multi'] = 'true';
 $report['output_filename'] = 'published_full_grid.csv';
 $report['description'] = 'Display published schedule with rooms on horizontal axis and time on vertical. This excludes any item marked "Do Not Print". ';
