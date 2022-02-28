@@ -92,6 +92,7 @@ SELECT
 	WHERE
 			POS.sessionid = $selsessionid
 		OR	POS.sessionid IS NULL
+        AND ((PSI.rank != 0 and PSI.rank is not NULL) OR PSI.willmoderate = 1)
 	ORDER BY
 		attending DESC,
 		moderator DESC,

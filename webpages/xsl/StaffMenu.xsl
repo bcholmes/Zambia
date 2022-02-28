@@ -126,6 +126,9 @@
                 </a>
                 <ul class="dropdown-menu">
                   <li>
+                    <a href="Autoscheduler.php">Auto-Scheduler</a>
+                  </li>
+                  <li>
                     <a href="MaintainRoomSched.php">Maintain Room Schedule</a>
                   </li>
                   <li>

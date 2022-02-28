@@ -12,15 +12,17 @@ $report['queries'] = [];
 $report['queries']['participants'] =<<<'EOD'
 SELECT
         P.badgeid, P.pubsname, COUNT(sessionid) AS interested,
-        CD.badgename, concat(CD.firstname,' ',CD.lastname) AS name 
+        CD.badgename, concat(CD.firstname,' ',CD.lastname) AS name,
+        PA.maxprog 
     FROM
                   Participants P
              JOIN CongoDump CD USING (badgeid)
         LEFT JOIN ParticipantSessionInterest PSI USING (badgeid)
+        LEFT OUTER JOIN ParticipantAvailability PA USING (badgeid)
     WHERE
         P.interested = 1 
         AND ((PSI.rank is not NULL
-        AND PSI.rank != 0) OR PSI.willmoderate = 1)
+        AND PSI.rank != 0 AND PSI.rank != 5) OR PSI.willmoderate = 1)
     GROUP BY
         P.badgeid, P.pubsname, CD.badgename, name
     ORDER BY
@@ -41,6 +43,7 @@ $report['xsl'] =<<<'EOD'
                             <th>Badge ID</th>
                             <th>Name for Publications</th>
                             <th>Interested Sessions Count</th>
+                            <th>Max Sessions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -65,7 +68,8 @@ $report['xsl'] =<<<'EOD'
                     <xsl:with-param name="name" select = "@name" />
                 </xsl:call-template>
             </td>
-            <td><xsl:value-of select="@interested" /></td>
+            <td class="text-center"><xsl:value-of select="@interested" /></td>
+            <td class="text-center"><xsl:value-of select="@maxprog" /></td>
         </tr>
     </xsl:template>
 </xsl:stylesheet>
