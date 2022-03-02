@@ -6,12 +6,43 @@ $title = "Time Slots";
 
 require_once('StaffCommonCode.php'); // Checks for staff permission among other things
 
+function sort_rooms_in_display_order($r1, $r2) {
+    return $r1->displayOrder - $r2->displayOrder;
+}
+
 class Room {
     public $roomId;
     public $roomName;
     public $area;
     public $isOnline;
     public $displayOrder;
+    public $columnNumber;
+    public $parentRoomId;
+    public $children;
+
+    function getColumnWidth() {
+        $width = 0;
+        if ($this->children) {
+            foreach ($this->children as $child) {
+                $width += $child->getColumnWidth();
+            }
+        }
+        return $width == 0 ? 1 : $width;
+    }
+
+    function getRowHeight() {
+        $height = 1;
+
+        if ($this->children) {
+            $max = 0;
+            foreach ($this->children as $child) {
+                $max = max($max, $child->getRowHeight());
+            }
+            $height += $max;
+        }
+
+        return $height;
+    }
 }
 
 class TimeSlot {
@@ -20,9 +51,10 @@ class TimeSlot {
     public $startTime;
     public $endTime;
     public $divisionName;
+    public $room;
 
     function getColumnWidth() {
-        return 1;
+        return $this->room ? $this->room->getColumnWidth() : 1;
     }
 
     function getStartIndex() {
@@ -40,7 +72,7 @@ class TimeSlot {
 
 function select_rooms() {
     $query = <<<EOD
-    SELECT r.roomname, r.roomid, r.is_online, r.area
+    SELECT r.roomname, r.roomid, r.is_online, r.area, r.display_order, r.parent_room
       FROM Rooms r
     WHERE r.is_scheduled = 1
       AND r.roomid in (select roomid from room_to_availability)
@@ -49,21 +81,70 @@ function select_rooms() {
     if (!$result = mysqli_query_exit_on_error($query)) {
         exit;
     } else {
+        $temp = array();
         $rooms = array();
-        $column = 0;
         while ($row = mysqli_fetch_array($result)) {
-            $rooms[] = array("name" => $row["roomname"], 
-                "column" => $column, 
-                "id" => $row["roomid"], 
-                "is_online" => $row["is_online"] == 'Y' ? true : false,
-                "area" => $row["area"]);
-            $column++;
+            $room = new Room();
+            $room->roomName = $row["roomname"];
+            $room->roomId = $row["roomid"];
+            $room->area = $row["area"];
+            $room->isOnline = $row["is_online"] == 'Y' ? true : false;
+            $room->displayOrder = $row["display_order"];
+            $room->parentRoomId = $row["parent_room"];
+            $room->children = array();
+            $temp[$room->roomId] = $room;
         }
+
+        foreach ($temp as $room) {
+            if ($room->parentRoomId) {
+                $parent = $temp[$room->parentRoomId];
+                $parent->children[] = $room;
+                usort($parent->children, "sort_rooms_in_display_order");
+            }
+            $temp[$room->roomId] = $room;
+        }
+
+        foreach ($temp as $room) {
+            if (!($room->parentRoomId) || $temp[$room->parentRoomId] == null) {
+                $rooms[] = $room;
+            }
+        }
+
+        usort($rooms, "sort_rooms_in_display_order");
+
+        assign_column_numbers_to_rooms($rooms, 0);
+
         return $rooms;
     }
 }
 
-function select_time_slots() {
+
+function collect_all_rooms(&$allRooms, $rooms) {
+    foreach ($rooms as $r) {
+        $allRooms[$r->roomId] = $r;
+
+        if ($r->children && count($r->children) > 0) {
+            collect_all_rooms($allRooms, $r->children);
+        }
+    }
+}
+
+function assign_column_numbers_to_rooms($rooms, $column) {
+
+    foreach ($rooms as $room) {
+        $room->columnNumber = $column;
+        if ($room->children && count($room->children) > 0) {
+            assign_column_numbers_to_rooms($room->children, $column);
+        }
+        $column += ($room->getColumnWidth());
+    }
+}
+
+function select_time_slots($rooms) {
+
+    $allRooms = array();
+    collect_all_rooms($allRooms, $rooms);
+
     $query = <<<EOD
     SELECT r.roomid, r2a.day, s.start_time, s.end_time, d.divisionid, d.divisionname
       FROM Rooms r,
@@ -85,6 +166,7 @@ function select_time_slots() {
         while ($row = mysqli_fetch_array($result)) {
             $slot = new TimeSlot();
             $slot->roomId = $row["roomid"];
+            $slot->room = $allRooms[$row["roomid"]];
             $slot->startTime = $row["start_time"];
             $slot->endTime = $row["end_time"];
             $slot->day = $row["day"];
@@ -135,11 +217,14 @@ function determine_con_start_date() {
     return $dateTime;
 }
 
-function find_slot_for_index_and_room($index, $room, $slots) {
+function find_slot_for_index_and_room($index, $column, $slots) {
     $result = null;
 
     foreach ($slots as $slot) {
-        if ($slot->roomId == $room["id"] && $slot->getStartIndex() <= $index && $slot->getEndIndex() > $index) {
+        if ($slot->room == null) {
+            // it's probably a room that has no panels
+        } else if ($slot->room->columnNumber <= $column && ($slot->room->columnNumber + $slot->room->getColumnWidth()) > $column
+                && $slot->getStartIndex() <= $index && $slot->getEndIndex() > $index) {
             $result = $slot;
             break;
         }
@@ -155,31 +240,60 @@ function time_to_row_index($time, $rowSize = 15) {
     return ($hours * 60 + $minutes) / $rowSize;
 }
 
+function render_table_header_rows(&$headerRows, $rooms, $rowNumber) {
+    $header = $headerRows[$rowNumber];
+    if ($rowNumber == 0) {
+        $header .= "<th rowSpan=\"" . count($headerRows) . "\">Time</th>";
+    }
+    foreach ($rooms as $value) {
+        $width = $value->getColumnWidth() > 1 ? "colspan=\"{$value->getColumnWidth()}\"" : "";
+        $height = count($headerRows) - $rowNumber - $value->getRowHeight() + 1;
+        $rowHeight = $height == 1 ? "" : "rowspan=\"$height\"";
+        $header .= "<th $rowHeight $width>" . $value->roomName 
+            . ($value->isOnline ? " <span class=\"small\"><br />(Online)</span>" : "") 
+            . ($value->area ? ("<span class=\"small\"><br />" . number_format($value->area) . " sq ft</span>") : "") 
+            . "</th>";
+
+        if ($value->children && count($value->children) > 0) {
+            render_table_header_rows($headerRows, $value->children, $rowNumber + 1);
+        }
+    }
+    $headerRows[$rowNumber] = $header;
+}
+
+function render_table_header($rooms) {
+    $maxRows = 1;
+    foreach ($rooms as $r) {
+        $maxRows = max($r->getRowHeight(), $maxRows);
+    }
+    $headerRows = array();
+    for ($i = 0; $i < $maxRows; $i++) {
+        $headerRows[] = "";
+    }
+    render_table_header_rows($headerRows, $rooms, 0);
+    foreach ($headerRows as $header) {
+        echo "<tr>" . $header . "</tr>";
+    }
+}
+
 function render_table($rooms, $slots) {
     echo <<<EOD
     <table class="table table-sm table-bordered">
     <thead>
-        <tr>
 EOD;
 
-    echo "<th>Time</th>";
-    foreach ($rooms as $value) {
-        echo "<th>" . $value['name'] 
-            . ($value["is_online"] ? " <span class=\"small\"><br />(Online)</span>" : "") 
-            . ($value["area"] ? ("<span class=\"small\"><br />" . number_format($value["area"]) . " sq ft</span>") : "") 
-            . "</th>";
-    }
+    $lastRoom = $rooms[count($rooms)-1];
+    $maxColumns = $lastRoom->columnNumber + $lastRoom->getColumnWidth() - 1;
+    render_table_header($rooms);
 
 echo <<<EOD
-        </tr>
     </thead>
     <tbody>
 EOD;
-
     $startDate = determine_con_start_date();
     for ($day = 0; $day < CON_NUM_DAYS; $day++) {
-        echo "<tr><th colspan=\"" . (count($rooms) + 1) . "\">" . $startDate->format('D, d M') . "</th></tr>";
-
+        echo "<tr><th colspan=\"" . ($maxColumns + 2) . "\">" . $startDate->format('D, d M') . "</th></tr>";
+        
         $timeSlotsForDay = filter_by_day($slots, $day);
         if (count($timeSlotsForDay)) {
             $fromIndex = find_earliest_start_index($timeSlotsForDay);
@@ -201,11 +315,11 @@ EOD;
                 }
                 echo "</th>";
 
-                foreach ($rooms as $room) {
-                    $slot = find_slot_for_index_and_room($row, $room, $timeSlotsForDay);
+                for ($column = 0; $column <= $maxColumns; $column++) {
+                    $slot = find_slot_for_index_and_room($row, $column, $timeSlotsForDay);
                     if ($slot) {
-                        if ($slot->getStartIndex() == $row) {
-                            echo "<td class=\"small\" rowspan=\"" . $slot->getRowHeight() . "\">" . $slot->divisionName . "</td>";
+                        if ($slot->getStartIndex() == $row && $slot->room->columnNumber == $column) {
+                            echo "<td class=\"small\" rowspan=\"" . $slot->getRowHeight() . "\" colspan=\"" . $slot->getColumnWidth() . "\">" . $slot->divisionName . "</td>";
                         }
                     } else {
                         echo "<td class=\"bg-light small\">&nbsp;</td>";
@@ -214,12 +328,10 @@ EOD;
                 echo "</tr>";
             }
         } else {
-            echo "<tr><td class=\"bg-light\" colspan=\"" . (count($rooms) + 1) . "\">None</td></tr>";
+            echo "<tr><td class=\"bg-light\" colspan=\"" . ($maxColumns + 2) . "\">None</td></tr>";
         }
-
         $startDate->add(new DateInterval('P1D'));
     }
-
 echo <<<EOD
     </tbody>
 </table>
@@ -229,7 +341,7 @@ EOD;
 
 
 $rooms = select_rooms();
-$slots = select_time_slots();
+$slots = select_time_slots($rooms);
 
 staff_header($title, true);
 ?>

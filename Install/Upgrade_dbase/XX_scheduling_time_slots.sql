@@ -164,6 +164,30 @@ select max(id), '21:00:00', '27:00:00', 11 from room_availability_schedule;
 
 
 
+insert into room_availability_schedule (name) values ('Readings morning/afternoon with Parties');
+
+insert into room_availability_slot (availability_schedule_id, start_time, end_time, divisionid)
+select max(id), '08:30:00', '09:45:00', 100 from room_availability_schedule;
+
+insert into room_availability_slot (availability_schedule_id, start_time, end_time, divisionid)
+select max(id), '10:00:00', '11:15:00', 100 from room_availability_schedule;
+
+-- Lunch
+
+insert into room_availability_slot (availability_schedule_id, start_time, end_time, divisionid)
+select max(id), '13:00:00', '14:15:00', 100 from room_availability_schedule;
+
+insert into room_availability_slot (availability_schedule_id, start_time, end_time, divisionid)
+select max(id), '14:30:00', '15:45:00', 100 from room_availability_schedule;
+
+insert into room_availability_slot (availability_schedule_id, start_time, end_time, divisionid)
+select max(id), '16:00:00', '17:15:00', 100 from room_availability_schedule;
+
+-- Dinner
+
+insert into room_availability_slot (availability_schedule_id, start_time, end_time, divisionid)
+select max(id), '21:00:00', '27:00:00', 11 from room_availability_schedule;
+
 
 
 insert into room_to_availability
@@ -314,6 +338,22 @@ where r.roomname = 'Ansible 2'
 and a.name = 'Standard morning-only slots';
 
 
+
+insert into room_to_availability
+(roomid, availability_id, day)
+select r.roomid, a.id, 2
+from Rooms r, room_availability_schedule a
+where r.roomname = 'Conference 2'
+and a.name = 'Readings morning/afternoon with Parties';
+
+insert into room_to_availability
+(roomid, availability_id, day)
+select r.roomid, a.id, 3
+from Rooms r, room_availability_schedule a
+where r.roomname = 'Conference 2'
+and a.name = 'Readings morning/afternoon with Parties';
+
+
 insert into room_to_availability
 (roomid, availability_id, day)
 select r.roomid, a.id, 1
@@ -426,6 +466,34 @@ select r.roomid, a.id, 4
 from Rooms r, room_availability_schedule a
 where r.roomname = 'University B'
 and a.name = 'Standard morning-only slots';
+
+insert into room_to_availability
+(roomid, availability_id, day)
+select r.roomid, a.id, 4
+from Rooms r, room_availability_schedule a
+where r.roomname = 'Assembly'
+and a.name = 'Standard morning-only slots';
+
+insert into room_to_availability
+(roomid, availability_id, day)
+select r.roomid, a.id, 4
+from Rooms r, room_availability_schedule a
+where r.roomname = 'Caucus'
+and a.name = 'Standard morning-only slots';
+
+insert into room_to_availability
+(roomid, availability_id, day)
+select r.roomid, a.id, 1
+from Rooms r, room_availability_schedule a
+where r.roomname = 'Capital/Wisconsin'
+and a.name = 'Friday event slots';
+
+insert into room_to_availability
+(roomid, availability_id, day)
+select r.roomid, a.id, 2
+from Rooms r, room_availability_schedule a
+where r.roomname = 'Capital/Wisconsin'
+and a.name = 'Saturday event slots';
 
 alter table Rooms add column is_online char(1) NOT NULL DEFAULT 'N';
 
