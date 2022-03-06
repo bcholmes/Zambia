@@ -15,7 +15,7 @@ select sessionid, title, trackname,
     sum(attend1 * 1.2 + attend2 + attend3 * 0.5) as attendPos, sum(attend1) as attend1, sum(attend2) as attend2, sum(attend3) as attend3, sum(attend4) as attend4, sum(attend5) as attend5, 
     sum(attend_type1) as attend_type1, sum(attend_type2) as attend_type2, sum(attend_type3) as attend_type3, 
     sum(rank1) as rank1, sum(rank2) as rank2, sum(rank3) as rank3, sum(rank4) as rank4, sum(rank5) as rank5, 
-    sum(willmoderate1) as willmoderate1
+    sum(willmoderate1) as willmoderate1, sum(panelist_online) as panelist_online
 from 
 (SELECT
         S.sessionid, S.title, T.trackname, T.display_order,
@@ -33,6 +33,7 @@ from
         case PSI.rank when 4 then 1 else 0 end as rank4, 
         case PSI.rank when 5 then 1 else 0 end as rank5, 
         case PSI.willmoderate when 1 then 1 else 0 end as willmoderate1, 
+        case when PSI.attend_type = 3 AND PSI.rank in (1, 2, 3) then 1 else 0 end as panelist_online,
         P.badgeid
     FROM
                   Sessions S 
@@ -66,6 +67,7 @@ $report['xsl'] =<<<'EOD'
                             <th colspan="5">Will attend</th>
                             <th colspan="3">How attend</th>
                             <th colspan="5">Assigned</th>
+                            <th rowspan="2">Online Only</th>
                             <th rowspan="2">Will Mod</th>
                         </tr>
                         <tr>
@@ -123,6 +125,7 @@ $report['xsl'] =<<<'EOD'
             <td><xsl:value-of select="@rank3" /></td>
             <td><xsl:value-of select="@rank4" /></td>
             <td><xsl:value-of select="@rank5" /></td>
+            <td><xsl:value-of select="@panelist_online" /></td>
             <td><xsl:value-of select="@willmoderate1" /></td>
         </tr>
     </xsl:template>

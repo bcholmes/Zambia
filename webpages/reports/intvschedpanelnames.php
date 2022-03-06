@@ -12,6 +12,8 @@ $report['queries'] = [];
 $report['queries']['participants'] =<<<'EOD'
 SELECT
         X.pubsname,
+        X.badgename,
+        X.name,
         X.badgeid,
         X.trackname, 
         X.sessionid,
@@ -27,6 +29,8 @@ SELECT
         SELECT
                 PI.badgeid,
                 PI.pubsname,
+                PI.badgename, 
+                PI.name,
                 PI.sessionid,
                 POS.sessionid AS assigned,
                 moderator,
@@ -41,6 +45,8 @@ SELECT
                                 S.sessionid,
                                 P.badgeid,
                                 P.pubsname,
+                                CD.badgename, 
+                                concat(CD.firstname,' ',CD.lastname) AS name,
                                 PSI.willmoderate,
                                 PSI.rank
                             FROM
@@ -48,6 +54,7 @@ SELECT
                                 JOIN Tracks T USING(trackid)
                                 JOIN ParticipantSessionInterest PSI USING(sessionid)
                                 JOIN Participants P USING(badgeid)
+                                JOIN CongoDump CD USING(badgeid)
                             WHERE
                                 P.interested=1 
                                 AND ((PSI.rank is not NULL
@@ -106,10 +113,12 @@ $report['xsl'] =<<<'EOD'
     <xsl:template match="doc/query[@queryName='participants']/row">
         <tr>
             <td>
-                <xsl:call-template name="showPubsname">
+                <xsl:call-template name="showLinkedPubsname">
                     <xsl:with-param name="badgeid" select = "@badgeid" />
                     <xsl:with-param name="pubsname" select = "@pubsname" />
-                </xsl:call-template>
+                    <xsl:with-param name="badgename" select = "@badgename" />
+                    <xsl:with-param name="name" select = "@name" />
+                </xsl:call-template>            
             </td>
             <td><xsl:value-of select="@trackname" /></td>
             <td>

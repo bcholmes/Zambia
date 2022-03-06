@@ -270,7 +270,7 @@ validate_input_params($title, $badgeid, $email, $recaptchaResponse);
 participant_header($title, true, 'Login', true);
 
 $conName = CON_NAME;
-$subjectLine = "Zambia Password Reset for $conName";
+$subjectLine = "$conName Password Reset";
 $fromAddress = PASSWORD_RESET_FROM_EMAIL;
 $responseParams = array("subject_line" => $subjectLine, "from_address" => $fromAddress);
 

@@ -1,9 +1,10 @@
 <?php
 // Copyright (c) 2008-2021 Peter Olszowka. All rights reserved. See copyright document for more details.
-global $message, $message_error, $message2, $title;
+global $message, $message_error, $message2, $title, $customTextArray;
 // $participant_array is defined by file including this.
 $title = "Participant View";
 require_once('PartCommonCode.php');
+
 participant_header($title, false, 'Normal', true);
 if ($message_error != "") {
     echo "<P class=\"alert alert-error\">$message_error</P>\n";
@@ -34,11 +35,13 @@ if (may_I('postcon')) { ?>
     racism in any form. Convention participants violating these rules may be sanctioned or expelled from the convention without 
     a refund at the discretion of the convention organizers.</p>
 
-    <p>Our anti-harassment policy can be found at: <a href="https://wiscon.net/policies/anti-harassment/code-of-conduct/">https://wiscon.net/policies/anti-harassment/code-of-conduct/</a>.</p>
+    <p>Our anti-harassment policy can be found at: <a class="alert-link" href="https://wiscon.net/policies/anti-harassment/code-of-conduct/">https://wiscon.net/policies/anti-harassment/code-of-conduct/</a>.</p>
 
-    <p>We are guided by our Statement of Principles, which can be found here: <a href="https://wiscon.net/policies/principles/">https://wiscon.net/policies/principles/</a>.</p>
+    <p>We are guided by our Statement of Principles, which can be found here: <a class="alert-link" href="https://wiscon.net/policies/principles/">https://wiscon.net/policies/principles/</a>.</p>
 </div>
-
+<?php
+    echo fetchCustomText('alerts');
+?>
 
 <div class="row">
     <div class="col-md-6">
