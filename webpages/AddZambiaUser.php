@@ -144,7 +144,7 @@ EOD;
 // Start here
 
 global $message, $message_error, $paramArray, $title, $linki;
-$title = "Add Zambia User";
+$title = "Add User";
 require_once('StaffCommonCode.php'); // Checks for staff permission among other things
 $message = "";
 $paramArray = array();

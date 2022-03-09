@@ -23,7 +23,7 @@ participant_header($title, false, 'Normal', true);
                         <p> Please indicate the maximum number of sessions you are willing to be on.
                             You may indicate a total for each day as well as an overall maximum for
                             the whole con.</p>
-                        <p><small>Please note that Zambia limits you to <?php echo PREF_TTL_SESNS_LMT; ?> or fewer
+                        <p><small>Please note that the system limits you to <?php echo PREF_TTL_SESNS_LMT; ?> or fewer
                             total sessions and <?php echo PREF_DLY_SESNS_LMT; ?> each day. There is no need for the numbers to add up. We'll
                             use this for guidance when assigning and scheduling sessions.</small></p>
                         <div class="form-group row">                            

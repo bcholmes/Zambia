@@ -497,4 +497,4 @@ and a.name = 'Saturday event slots';
 
 alter table Rooms add column is_online char(1) NOT NULL DEFAULT 'N';
 
-
+alter table Rooms add column parent_room INT; 

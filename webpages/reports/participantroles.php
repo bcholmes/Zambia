@@ -10,8 +10,7 @@ $report['categories'] = array(
 );
 $report['columns'] = array(
     array("width" => "6em"),
-    array("width" => "12em", "orderData" => 2),
-    array("visible" => false),
+    array("width" => "12em"),
     array("width" => "12em", "orderable" => false),
     array("orderable" => false)
 );
@@ -19,6 +18,7 @@ $report['queries'] = [];
 $report['queries']['participants'] =<<<'EOD'
 SELECT
         P.badgeid, P.pubsname, PI.otherroles,
+        CD.badgename, concat(CD.firstname,' ',CD.lastname) AS name,
         IF(instr(P.pubsname, CD.lastname) > 0, CD.lastname, substring_index(P.pubsname, ' ', -1)) AS pubsnameSort
     FROM
                   Participants P
@@ -52,7 +52,6 @@ $report['xsl'] =<<<'EOD'
                         <tr style="height:2.6rem">
                             <th>Badge ID</th>
                             <th>Name for Publications</th>
-                            <th></th>
                             <th>Roles</th>
                             <th>"Other" Role Details</th>
                         </tr>
@@ -76,8 +75,14 @@ $report['xsl'] =<<<'EOD'
                     <xsl:with-param name="badgeid" select = "@badgeid" />
                 </xsl:call-template>
             </td>
-            <td><xsl:value-of select="@pubsname"/></td>
-            <td><xsl:value-of select="@pubsnameSort"/></td>
+            <td>
+                <xsl:call-template name="showLinkedPubsname">
+                    <xsl:with-param name="badgeid" select = "@badgeid" />
+                    <xsl:with-param name="pubsname" select = "@pubsname" />
+                    <xsl:with-param name="badgename" select = "@badgename" />
+                    <xsl:with-param name="name" select = "@name" />
+                </xsl:call-template>
+            </td>
             <td>
                 <xsl:apply-templates select="/doc/query[@queryName='roles']/row[@badgeid=$badgeid]" />
             </td>

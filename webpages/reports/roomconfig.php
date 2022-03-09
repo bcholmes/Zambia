@@ -4,7 +4,7 @@ $report = [];
 $report['name'] = 'Room Configuration';
 $report['description'] = 'List all configurable information associated with rooms.';
 $report['categories'] = array(
-    'Zambia Administration Reports' => 890,
+    'Administration Reports' => 890,
     'Hotel Reports' => 890,
 );
 $report['queries'] = [];

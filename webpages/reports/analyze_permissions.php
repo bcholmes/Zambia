@@ -5,7 +5,7 @@ $report = [];
 $report['name'] = 'Analyze Permissions Report';
 $report['description'] = 'Show permission atoms for each permroleid';
 $report['categories'] = array(
-    'Zambia Administration Reports' => 180,
+    'Administration Reports' => 180,
 );
 $report['columns'] = array();
 $report['queries'] = [];

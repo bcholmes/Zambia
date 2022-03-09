@@ -4,10 +4,10 @@ $report = [];
 $report['name'] = 'Conflict Report - Unknown RegTypes';
 $report['multi'] = 'true';
 $report['output_filename'] = 'unknown_reg_type.csv';
-$report['description'] = 'Registration types that Zambia does not recognize';
+$report['description'] = 'Registration types that the system does not recognize';
 $report['categories'] = array(
     'Conflict Reports' => 490,
-    'Zambia Administration Reports' => 490,
+    'Administration Reports' => 490,
 );
 $report['queries'] = [];
 $report['queries']['regtypes'] =<<<'EOD'

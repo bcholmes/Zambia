@@ -60,7 +60,7 @@
             <dd>Session has participants assigned to it.</dd>
             <dt>Scheduled</dt>
             <dd>Session is in the schedule (don't set this by hand as
-            Zambia actually sets this for you when you schedule it in a room!)
+            The system actually sets this for you when you schedule it in a room!)
             The language needs to match what you want to see <b>published</b>.</dd>
         </dl>
     

@@ -8,7 +8,7 @@ function html_header($title, $bootstrap4 = false, $isDataTables = false, $report
 <html lang="en" <?php if ($fullPage) echo "class =\"full-page\""; ?> >
 <head>
     <meta charset="utf-8">
-    <title>Zambia &ndash; <?php echo $title ?></title>
+    <title><?php echo CON_NAME ?> &ndash; <?php echo $title ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <?php
     if (defined('CON_THEME_FAVICON') && CON_THEME_FAVICON !== "") {

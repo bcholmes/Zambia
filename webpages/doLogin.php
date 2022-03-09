@@ -71,7 +71,7 @@ if (may_I('Staff')) {
 } else {
     unset($_SESSION['badgeid']);
     $message_error = "There is a problem with your $userIdPrompt's permission configuration:  It doesn't have ";
-    $message_error .= "permission to access any welcome page.  Please contact Zambia staff.";
+    $message_error .= "permission to access any welcome page.  Please contact Con staff.";
     RenderError($message_error);
 }
 exit();

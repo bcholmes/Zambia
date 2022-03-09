@@ -6,7 +6,7 @@ $report['multi'] = 'true';
 $report['output_filename'] = 'staff_members.csv';
 $report['description'] = 'List Staff Members and their priviliges';
 $report['categories'] = array(
-    'Zambia Administration Reports' => 1010,
+    'Administration Reports' => 1010,
 );
 $report['columns'] = array(
     null,

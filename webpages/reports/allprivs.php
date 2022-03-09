@@ -4,7 +4,7 @@ $report = [];
 $report['name'] = 'All Privileges Report';
 $report['description'] = 'List all users and their permission roles';
 $report['categories'] = array(
-    'Zambia Administration Reports' => 170,
+    'Administration Reports' => 170,
 );
 $report['columns'] = array(
     null,

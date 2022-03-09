@@ -7,7 +7,7 @@ $report['output_filename'] = 'congoinfo.csv';
 $report['description'] = 'Shows all participant information retreived from the registration system';
 $report['categories'] = array(
     'Events Reports' => 500,
-    'Zambia Administration Reports' => 500,
+    'Administration Reports' => 500,
     'Participant Info Reports' => 500,
 );
 $report['columns'] = array(
