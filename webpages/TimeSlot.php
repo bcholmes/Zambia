@@ -5,45 +5,7 @@ global $title;
 $title = "Time Slots";
 
 require_once('StaffCommonCode.php'); // Checks for staff permission among other things
-
-function sort_rooms_in_display_order($r1, $r2) {
-    return $r1->displayOrder - $r2->displayOrder;
-}
-
-class Room {
-    public $roomId;
-    public $roomName;
-    public $area;
-    public $isOnline;
-    public $displayOrder;
-    public $columnNumber;
-    public $parentRoomId;
-    public $children;
-
-    function getColumnWidth() {
-        $width = 0;
-        if ($this->children) {
-            foreach ($this->children as $child) {
-                $width += $child->getColumnWidth();
-            }
-        }
-        return $width == 0 ? 1 : $width;
-    }
-
-    function getRowHeight() {
-        $height = 1;
-
-        if ($this->children) {
-            $max = 0;
-            foreach ($this->children as $child) {
-                $max = max($max, $child->getRowHeight());
-            }
-            $height += $max;
-        }
-
-        return $height;
-    }
-}
+require_once('time_slot_functions.php');
 
 class TimeSlot {
     public $day;
@@ -82,7 +44,6 @@ function select_rooms() {
         exit;
     } else {
         $temp = array();
-        $rooms = array();
         while ($row = mysqli_fetch_array($result)) {
             $room = new Room();
             $room->roomName = $row["roomname"];
@@ -95,55 +56,11 @@ function select_rooms() {
             $temp[$room->roomId] = $room;
         }
 
-        foreach ($temp as $room) {
-            if ($room->parentRoomId) {
-                $parent = $temp[$room->parentRoomId];
-                $parent->children[] = $room;
-                usort($parent->children, "sort_rooms_in_display_order");
-            }
-            $temp[$room->roomId] = $room;
-        }
-
-        foreach ($temp as $room) {
-            if (!($room->parentRoomId) || $temp[$room->parentRoomId] == null) {
-                $rooms[] = $room;
-            }
-        }
-
-        usort($rooms, "sort_rooms_in_display_order");
-
-        assign_column_numbers_to_rooms($rooms, 0);
-
-        return $rooms;
+        return $temp;
     }
 }
 
-
-function collect_all_rooms(&$allRooms, $rooms) {
-    foreach ($rooms as $r) {
-        $allRooms[$r->roomId] = $r;
-
-        if ($r->children && count($r->children) > 0) {
-            collect_all_rooms($allRooms, $r->children);
-        }
-    }
-}
-
-function assign_column_numbers_to_rooms($rooms, $column) {
-
-    foreach ($rooms as $room) {
-        $room->columnNumber = $column;
-        if ($room->children && count($room->children) > 0) {
-            assign_column_numbers_to_rooms($room->children, $column);
-        }
-        $column += ($room->getColumnWidth());
-    }
-}
-
-function select_time_slots($rooms) {
-
-    $allRooms = array();
-    collect_all_rooms($allRooms, $rooms);
+function select_time_slots($allRooms) {
 
     $query = <<<EOD
     SELECT r.roomid, r2a.day, s.start_time, s.end_time, d.divisionid, d.divisionname
@@ -162,7 +79,7 @@ function select_time_slots($rooms) {
     if (!$result = mysqli_query_exit_on_error($query)) {
         exit;
     } else {
-        $rooms = array();
+        $slots = array();
         while ($row = mysqli_fetch_array($result)) {
             $slot = new TimeSlot();
             $slot->roomId = $row["roomid"];
@@ -171,9 +88,9 @@ function select_time_slots($rooms) {
             $slot->endTime = $row["end_time"];
             $slot->day = $row["day"];
             $slot->divisionName = $row["divisionname"];
-            $rooms[] = $slot;
+            $slots[] = $slot;
         }
-        return $rooms;
+        return $slots;
     }
 }
 
@@ -231,13 +148,6 @@ function find_slot_for_index_and_room($index, $column, $slots) {
     }
 
     return $result;
-}
-
-
-function time_to_row_index($time, $rowSize = 15) {
-    $hours = intval(substr($time, 0, 2));
-    $minutes = intval(substr($time, 3, 2));
-    return ($hours * 60 + $minutes) / $rowSize;
 }
 
 function render_table_header_rows(&$headerRows, $rooms, $rowNumber) {
@@ -341,7 +251,9 @@ EOD;
 
 
 $rooms = select_rooms();
+$collatedRooms = Room::collateParentsAndAssignColumns($rooms);
 $slots = select_time_slots($rooms);
+
 
 staff_header($title, true);
 ?>
@@ -355,7 +267,7 @@ staff_header($title, true);
 
 <?php
 
-    echo render_table($rooms, $slots);
+    echo render_table($collatedRooms, $slots);
 
 ?>
     </div>
