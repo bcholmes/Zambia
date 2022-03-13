@@ -101,6 +101,7 @@
                             <a class="dropdown-item" href="Autoscheduler.php">Auto-Scheduler</a>
                             <a class="dropdown-item" href="MaintainRoomSched.php">Maintain Room Schedule</a>
                             <a class="dropdown-item" href="StaffMaintainSchedule.php">Grid Scheduler</a>
+                            <a class="dropdown-item" href="CurrentSchedule.php">Current Schedule</a>
                         </div>
                     </li>
                     <li class="nav-item py-0 mr-2">

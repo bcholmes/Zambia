@@ -8,16 +8,26 @@ require_once('StaffCommonCode.php'); // Checks for staff permission among other 
 require_once('time_slot_functions.php');
 require_once('schedule_table_renderer.php');
 
-class TimeSlot implements ScheduleCellData {
-    public $day;
+class ScheduleItem implements ScheduleCellData {
+    public $title;
     public $roomId;
     public $startTime;
-    public $endTime;
-    public $divisionName;
+    public $duration;
+    public $trackName;
     public $room;
+    public $sessionId;
 
+    function getDay() {
+        $index = time_to_row_index($this->startTime);
+        $day = floor($index / (24 * 4));
+        $hour = $index % (24 * 4);
+        if ($hour < (8 * 4)) {
+            $day -= 1;
+        }
+        return $day;
+    }
     function getData() {
-        return $this->divisionName;
+        return "<div><a href=\"/EditSession.php?id=" . $this->sessionId . "\">" . $this->title . "</a></div><div class=\"small\">" . $this->trackName . "</div>";
     }
 
     function getColumnWidth() {
@@ -25,11 +35,14 @@ class TimeSlot implements ScheduleCellData {
     }
 
     function getStartIndex() {
-        return time_to_row_index($this->startTime);
+        $daysIndex = $this->getDay() * (24 * 4);
+        return time_to_row_index($this->startTime) - $daysIndex;
     }
 
     function getEndIndex() {
-        return time_to_row_index($this->endTime);
+        $start = $this->getStartIndex();
+        $duration = time_to_row_index($this->duration);
+        return $start + $duration;
     }
 
     function getRowHeight() {
@@ -37,12 +50,12 @@ class TimeSlot implements ScheduleCellData {
     }
 }
 
-class TimeSlotDataProvider implements ScheduleCellDataProvider {
+class ScheduleItemDataProvider implements ScheduleCellDataProvider {
 
-    private $timeSlots;
+    private $items;
 
-    public function __construct($timeSlots) {
-        $this->timeSlots = $timeSlots;
+    public function __construct($items) {
+        $this->items = $items;
     }
 
     public function findFirstStartIndexForDay($day) {
@@ -89,9 +102,9 @@ class TimeSlotDataProvider implements ScheduleCellDataProvider {
     function filterByDay($day) {
         $result = array();
     
-        foreach ($this->timeSlots as $slot) {
-            if ($slot->day == $day) {
-                $result[] = $slot;
+        foreach ($this->items as $item) {
+            if ($item->getDay() == $day) {
+                $result[] = $item;
             }
         }
     
@@ -104,7 +117,7 @@ function select_rooms() {
     SELECT r.roomname, r.roomid, r.is_online, r.area, r.display_order, r.parent_room
       FROM Rooms r
     WHERE r.is_scheduled = 1
-      AND r.roomid in (select roomid from room_to_availability)
+      AND r.roomid in (select roomid from Schedule)
     ORDER BY display_order;
     EOD;
     if (!$result = mysqli_query_exit_on_error($query)) {
@@ -127,20 +140,13 @@ function select_rooms() {
     }
 }
 
-function select_time_slots($allRooms) {
+function select_schedule_items($allRooms) {
 
     $query = <<<EOD
-    SELECT r.roomid, r2a.day, s.start_time, s.end_time, d.divisionid, d.divisionname
-      FROM Rooms r,
-           room_to_availability r2a,
-           room_availability_schedule a,
-           room_availability_slot s,
-           Divisions d
-    WHERE r.is_scheduled = 1
-      AND r.roomid = r2a.roomid
-      AND r2a.availability_id = a.id
-      AND s.availability_schedule_id = a.id
-      AND d.divisionid = s.divisionid
+    SELECT sch.roomid, sess.title, sch.starttime, t.trackname, sess.duration, sess.sessionid
+      FROM Sessions sess
+      JOIN Schedule sch USING (sessionid)
+      JOIN Tracks t USING (trackid)
       ;
     EOD;
     if (!$result = mysqli_query_exit_on_error($query)) {
@@ -148,42 +154,42 @@ function select_time_slots($allRooms) {
     } else {
         $slots = array();
         while ($row = mysqli_fetch_array($result)) {
-            $slot = new TimeSlot();
+            $slot = new ScheduleItem();
             $slot->roomId = $row["roomid"];
             $slot->room = $allRooms[$row["roomid"]];
-            $slot->startTime = $row["start_time"];
-            $slot->endTime = $row["end_time"];
-            $slot->day = $row["day"];
-            $slot->divisionName = $row["divisionname"];
+            $slot->startTime = $row["starttime"];
+            $slot->duration = $row["duration"];
+            $slot->title = $row["title"];
+            $slot->sessionId = $row["sessionid"];
+            $slot->trackName = $row["trackname"];
             $slots[] = $slot;
         }
         return $slots;
     }
 }
 
-function render_table($rooms, $slots) {
-    $dataProvider = new TimeSlotDataProvider($slots);
+function render_table($rooms, $items) {
+    $dataProvider = new ScheduleItemDataProvider($items);
     $renderer = new ScheduleTableRenderer($rooms, $dataProvider);
-    $renderer->showRoomArea = true;
     $renderer->renderTable();
 }
 
 $rooms = select_rooms();
 $collatedRooms = Room::collateParentsAndAssignColumns($rooms);
-$slots = select_time_slots($rooms);
+$items = select_schedule_items($rooms);
 
 staff_header($title, true);
 ?>
 
 <div class="card">
     <div class="card-header">
-        <h4>Time Slots</h4>
+        <h4>Current Schedule</h4>
     </div>
     <div class="card-body">
-        <p>The auto-scheduler uses the following time slots to help allocated panels:</p>
+        <p>The following sessions have been scheduled:</p>
 
 <?php
-    render_table($collatedRooms, $slots);
+    render_table($collatedRooms, $items);
 ?>
     </div>
 </div>

@@ -134,6 +134,9 @@
                   <li>
                     <a href="StaffMaintainSchedule.php">Grid Scheduler</a>
                   </li>
+                  <li>
+                    <a href="CurrentSchedule.php">Current Schedule</a>
+                  </li>
                 </ul>
               </li>
               <li class="divider-vertical"/>

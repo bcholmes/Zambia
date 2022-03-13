@@ -5,6 +5,7 @@ if (!include ('../../../db_name.php')) {
 }
 
 require_once('../db_support_functions.php');
+require_once('../../name.php');
 require_once('../../time_slot_functions.php');
 
 define("ATTEND_IN_PERSON", 1);
@@ -22,9 +23,7 @@ define("MAX_NUMBER_OF_PANELISTS", 5);
 
 class PersonData {
     public $badgeId;
-    public $pubsName;
-    public $badgeName;
-    public $fullName;
+    public $name;
     public $schedulingPreferences;
     public $rankings;
     public $availability;
@@ -38,11 +37,13 @@ class PersonData {
     }
     function assignmentLuck() {
         $luck = 0;
+        $numberOfAssignments = 0;
         foreach ($this->assignments as $a) {
             $rank = $this->rankForSession($a->sessionId);
-            $luck -= ($rank) ? ($rank->rank * $rank->rank) : 0;
+            $luck += ($rank) ? ($rank->rank * $rank->rank) : 0;
+            $numberOfAssignments += ($rank) ? 1 : 0;
         }
-        return $luck;
+        return $luck / sqrt($this->schedulingPreferences->overallMax - $numberOfAssignments);
     }
 
     // TODO: consider already assigned items
@@ -267,7 +268,7 @@ class TimeSlot {
 function find_all_interested_participants($db) {
     $query = <<<EOD
      select P.badgeid, PA.maxprog as overall_max, 
-            P.pubsname, CD.badgename, concat(CD.firstname,' ',CD.lastname) AS name,
+            P.pubsname, CD.badgename, CD.firstname, CD.lastname,
             PAD.day, PAD.maxprog as day_max 
         FROM Participants P 
         JOIN CongoDump CD using (badgeid) 
@@ -287,8 +288,12 @@ function find_all_interested_participants($db) {
             if ($current == null || $current->badgeId != $badgeId) {
                 $current = new PersonData();
                 $current->badgeId = $badgeId;
-                $current->pubsName = $row->pubsname;
-                $current->badgeName = $row->badgename;
+                $name = new PersonName();
+                $name->pubsName = $row->pubsname;
+                $name->badgeName = $row->badgename;
+                $name->firstName = $row->firstname;
+                $name->lastName = $row->lastname;
+                $current->name = $name;
                 $current->schedulingPreferences = new SchedulingPreferences();
                 $current->rankings = array();
                 $current->availability = array();
@@ -528,11 +533,12 @@ function sort_by_highest_ranking($i1, $i2) {
     $rank1 = $i1["participant"]->rankForSession($sessionId);
     $rank2 = $i2["participant"]->rankForSession($sessionId);
 
-    if ($rank1->rank != $rank2->rank) {
+    // top rank is weighted pretty high
+    if ($rank1->rank != $rank2->rank && ($rank1->rank == 1 || $rank2->rank == 1)) {
         return $rank1->rank - $rank2->rank;
     } else {
-        $luck1 = $i1["participant"]->assignmentLuck();
-        $luck2 = $i2["participant"]->assignmentLuck();
+        $luck1 = -($i1["participant"]->assignmentLuck() / sqrt($rank1->rank));
+        $luck2 = -($i2["participant"]->assignmentLuck() / sqrt($rank2->rank));
 
         if ($luck1 != $luck2) {
             return $luck1 - $luck2;
@@ -683,7 +689,7 @@ try {
                 $record = array("sessionId" => $s->sessionId, "count" => count($s->potentialParticipants), "message" => $s->message, "type" => attend_type_as_text($s->type));
                 $assignments = array();
                 foreach ($s->assignedParticipants as $p) {
-                    $assignments[] = array("badgeid" => $p->participant->badgeId, "name" => $p->participant->badgeName);
+                    $assignments[] = array("badgeid" => $p->participant->badgeId, "name" => $p->participant->name->getBadgeName());
                 }
                 $record["assignments"] = $assignments;
 
@@ -695,7 +701,7 @@ try {
 
         $temp = array();
         foreach ($participants as $p) {
-            $record = array("participantId" => $p->badgeId, "count" => count($p->rankings), "name" => $p->badgeName, "maxPanels" => $p->schedulingPreferences->overallMax);
+            $record = array("participantId" => $p->badgeId, "count" => count($p->rankings), "name" => $p->name->getBadgeName(), "maxPanels" => $p->schedulingPreferences->overallMax);
             $rankings = array();
             foreach ($p->rankings as $r) {
                 $rankings[] = $r->sessionId;
