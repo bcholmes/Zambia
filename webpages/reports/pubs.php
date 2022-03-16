@@ -50,7 +50,7 @@ $report['xsl'] =<<<'EOD'
             <xsl:when test="doc/query[@queryName='sessions']/row">
                 <table id="reportTable" class="table table-sm table-bordered">
                     <thead>
-                        <tr class="table-primary">
+                        <tr>
                             <th>Session ID</th>
                             <th>Title</th>
                             <th>Track</th>

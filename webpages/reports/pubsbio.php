@@ -41,7 +41,7 @@ if (defined('USE_PRONOUNS') && USE_PRONOUNS) {
         <xsl:template match="/">
             <xsl:choose>
                 <xsl:when test="doc/query[@queryName='participants']/row">
-                    <table id="reportTable" class="report table table-sm">
+                    <table id="reportTable" class="table table-sm table-bordered">
                         <col style="width:6em;" />
                         <col style="width:12em;" />
                         <col style="width:8em;" />
