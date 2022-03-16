@@ -13,7 +13,7 @@ define("ATTEND_EITHER", 2);
 define("ATTEND_ONLINE", 3);
 
 // Find the X most popular panels...
-define("NUMBER_OF_SESSIONS", 100);
+define("NUMBER_OF_SESSIONS", 150);
 
 // How many panelists should we assign?
 define("MIN_NUMBER_OF_PANELISTS", 3);
@@ -180,6 +180,15 @@ class Session {
         }
         return $result;
     }
+
+    function compareByRank($s1, $s2) {
+        if ($s1->rank === $s2->rank) {
+            // pick something to make the sort deterministic
+            return strcmp($s1->sessionId, $s2->sessionId);
+        } else {
+            return $s2->rank - $s1->rank;
+        }
+    }
 }
 
 class TimeSlot {
@@ -216,7 +225,35 @@ class TimeSlot {
         }
     }
 
+    function absoluteStartTime() {
+        $index = $this->startTimeIndex();
+        $hour = floor($index / 4);
+        $minute = $index % 4 * 15;
+        return ($hour < 10 ? str_pad($hour, 2, "0", STR_PAD_LEFT) : "$hour") . ":" . str_pad($minute, 2, "0", STR_PAD_LEFT) . ":00";
+    }
+
+    // TODO: figure out how to generalize this
+    function roomSizeCategory() {
+        if ($this->room->roomName === 'Wisconsin') {
+            return 1; // Big
+        } else if ($this->room->roomName === 'Assembly' ||
+                $this->room->roomName === 'Capital A' ||
+                $this->room->roomName === 'Capital B') {
+            return 2; // Medium
+        } else {
+            return 3; // Small
+        }
+    }
+
+    static function compareByRoomSizeAndPreferredTime($ts1, $ts2) {
+        return TimeSlot::compare($ts1, $ts2, true);
+    }
+
+
     static function compareByPreferredTime($ts1, $ts2) {
+        return TimeSlot::compare($ts1, $ts2, false);
+    }
+    static function compare($ts1, $ts2, $useRoomSize) {
         $time1 = time_to_row_index($ts1->startTime);
         $time2 = time_to_row_index($ts2->startTime);
 
@@ -242,6 +279,8 @@ class TimeSlot {
             return 1;
         } else if ($time2 > 88) {
             return -1;
+        } else if ($useRoomSize && $ts1->roomSizeCategory() != $ts2->roomSizeCategory()) {
+            return $ts1->roomSizeCategory() - $ts2->roomSizeCategory();
         } else if ($time1 > 60 && $time2 > 60) {
             if ($time1 != $time2) {
                 return $time1 - $time2;
@@ -344,7 +383,7 @@ function find_all_rankings($db, $participants) {
            $ranking->willModerate = ($row->willmoderate == 1) ? true : false;
            $ranking->howAttend = $row->attend_type;
 
-           $participant = $participants[$badgeId];
+           $participant = array_key_exists($badgeId, $participants) ? $participants[$badgeId] : null;
            if ($participant) {
                $participant->rankings[$ranking->sessionId] = $ranking;
            } else {
@@ -489,6 +528,85 @@ function find_all_timeslots($db) {
          throw new DatabaseSqlException("Query could not be executed: $query");
      }
 }
+
+function persist_session_data($db, $session, $userBadgeId, $userName) {
+    mysqli_begin_transaction($db);
+    try {
+
+        $query = <<<EOD
+        INSERT INTO Schedule 
+                (sessionid, roomid, starttime)
+        VALUES (?, ?, ?);
+        EOD;
+
+        $stmt = mysqli_prepare($db, $query);
+        $time = $session->timeSlot->absoluteStartTime();
+        mysqli_stmt_bind_param($stmt, "iis", $session->sessionId, $session->timeSlot->room->roomId, $time);
+
+        if ($stmt->execute()) {
+            mysqli_stmt_close($stmt);
+        } else {
+            throw new DatabaseSqlException($query);
+        }     
+
+        $query = <<<EOD
+        UPDATE Sessions
+           SET statusid = 3
+         WHERE sessionid = ?
+        EOD;
+
+        $stmt = mysqli_prepare($db, $query);
+        mysqli_stmt_bind_param($stmt, "i", $session->sessionId);
+
+        if ($stmt->execute()) {
+            mysqli_stmt_close($stmt);
+        } else {
+            throw new DatabaseSqlException($query);
+        }     
+
+        $query = <<<EOD
+        INSERT INTO SessionEditHistory
+        (sessionid, badgeid, name, sessioneditcode, statusid)
+        VALUES
+        (?, ?, ?, 3, 3)
+        EOD;
+
+        $stmt = mysqli_prepare($db, $query);
+        mysqli_stmt_bind_param($stmt, "iss", $session->sessionId, $userBadgeId, $userName);
+
+        if ($stmt->execute()) {
+            mysqli_stmt_close($stmt);
+        } else {
+            throw new DatabaseSqlException($query);
+        }     
+
+        foreach ($session->assignedParticipants as $p) {
+            $query = <<<EOD
+            INSERT INTO ParticipantOnSessionHistory 
+                    (badgeid, sessionid, moderator, createdbybadgeid, createdts)
+            VALUES (?, ?, 0, ?, NOW());
+            EOD;
+
+            $stmt = mysqli_prepare($db, $query);
+            error_log("Badge id of participant is " . $p->participant->badgeId . "!");
+            error_log("Badge id of user is >" . $userBadgeId . "<!");
+            mysqli_stmt_bind_param($stmt, "sis", $p->participant->badgeId, $session->sessionId, $userBadgeId);
+
+            if ($stmt->execute()) {
+                mysqli_stmt_close($stmt);
+            } else {
+                throw new DatabaseSqlException($query . " : " . mysqli_error($db));
+            }
+        }
+
+        mysqli_commit($db);     
+    } catch (Exception $e) {
+        mysqli_rollback($db);
+        throw $e;
+    }
+}
+
+
 
 function collate_persons_into_sessions($sessions, $participants) {
     foreach ($sessions as $session) {
@@ -656,12 +774,42 @@ function assign_online_timeslots($sessions, $timeslots) {
     }
 }
 
+function assign_in_person_timeslots($sessions, $timeslots) {
+    $filteredSessions = array();
+    foreach ($sessions as $s) {
+        if (count($s->assignedParticipants) > 0 && $s->type == ATTEND_IN_PERSON) {
+            $filteredSessions[] = $s;
+        }
+    }
+
+    $filteredSlots = array();
+    foreach ($timeslots as $s) {
+        if (!$s->room->isOnline) {
+            $filteredSlots[] = $s;
+        }
+    }
+
+    usort($filteredSlots, array("TimeSlot", "compareByRoomSizeAndPreferredTime"));
+    usort($filteredSessions, array("Session", "compareByRank"));
+
+    foreach ($filteredSessions as $s) {
+        foreach ($filteredSlots as $ts) {
+            if ($ts->session == null && $s->allParticipantsAvailable($ts)) {
+                $ts->session = $s;
+                $s->timeSlot = $ts;
+                break;
+            }
+        }
+    }
+}
+
 
 function assign_timeslots($db, $sessions) {
     $timeSlots = find_all_timeslots($db);
     usort($timeSlots, array("TimeSlot", "compareByPreferredTime"));
 
     assign_online_timeslots($sessions, $timeSlots);
+    assign_in_person_timeslots($sessions, $timeSlots);
 
     return $timeSlots;
 }
@@ -696,6 +844,10 @@ try {
                 $timeSlot = array("Room" => $s->timeSlot->roomName, "day" => $s->timeSlot->day, "startTime" => $s->timeSlot->startTime, "endTime" => $s->timeSlot->endTime);
                 $record["timeSlot"] = $timeSlot;
                 $records[] = $record;
+
+                persist_session_data($db, $s, $_SESSION['badgeid'], $_SESSION['badgename']);
+            } else if ($s->timeSlot == null && count($s->assignedParticipants) > 0) {
+                error_log("There were " . count($s->assignedParticipants) . " assigned to session " . $s->sessionId);
             }
         }
 
