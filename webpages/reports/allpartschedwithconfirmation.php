@@ -1,9 +1,8 @@
 <?php
-// Copyright (c) 2018 Peter Olszowka. All rights reserved. See copyright document for more details.
 $report = [];
-$report['name'] = 'Full Program Participant Schedule ';
+$report['name'] = 'Participant Assignments with Confirmation Status';
 $report['multi'] = 'true';
-$report['output_filename'] = 'all_participants_by_time.csv';
+$report['output_filename'] = 'participant_assignment_confirmation_status.csv';
 $report['description'] = 'The schedule sorted by participant, then time limited to program participants';
 $report['categories'] = array(
     'Programming Reports' => 20,
@@ -30,7 +29,8 @@ $report['queries']['schedule'] =<<<'EOD'
 SELECT
         P.pubsname, P.badgeid, POS.moderator, S.duration, R.roomname, R.function, TR.trackname, 
         C.badgename, concat(C.firstname,' ',C.lastname) AS name,
-        S.sessionid, S.title, DATE_FORMAT(ADDTIME('$ConStartDatim$',SCH.starttime),'%a %l:%i %p') AS starttime
+        S.sessionid, S.title, DATE_FORMAT(ADDTIME('$ConStartDatim$',SCH.starttime),'%a %l:%i %p') AS starttime,
+        POS.confirmed, POS.notes
     FROM
              Participants P
         JOIN CongoDump C USING (badgeid)
@@ -55,14 +55,13 @@ $report['xsl'] =<<<'EOD'
                 <table class="table table-sm table-bordered">
                     <thead>
                         <tr>
-                            <th>Badgeid</th>
                             <th>Pubsname</th>
-                            <th>Track Name</th>
-                            <th>Session ID</th>
                             <th>Title</th>
                             <th>Moderator ?</th>
                             <th>Room Name</th>
                             <th>Start Time</th>
+                            <th>Confirm</th>
+                            <th>Notes</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -89,12 +88,7 @@ $report['xsl'] =<<<'EOD'
             <tr>
                 <xsl:choose>
                     <xsl:when test="position() = 1">
-                        <td rowspan="{last()}" style="border-top:2px solid black">
-                            <xsl:call-template name="showBadgeid">
-                                <xsl:with-param name="badgeid" select = "@badgeid" />
-                            </xsl:call-template>
-                        </td>
-                        <td rowspan="{last()}" style="border-top:2px solid black">
+                        <td rowspan="{last()}" style="border-top-width:2px">
                             <xsl:call-template name="showLinkedPubsname">
                                 <xsl:with-param name="badgeid" select = "@badgeid" />
                                 <xsl:with-param name="pubsname" select = "@pubsname" />
@@ -102,73 +96,87 @@ $report['xsl'] =<<<'EOD'
                                 <xsl:with-param name="name" select = "@name" />
                             </xsl:call-template>
                         </td>
-                        <td style="border-top:2px solid black">
-                            <xsl:value-of select="@trackname" />
-                        </td>
-                        <td style="border-top:2px solid black">
-                            <xsl:call-template name="showSessionid">
-                                <xsl:with-param name="sessionid" select = "@sessionid" />
-                            </xsl:call-template>
-                        </td>
-                        <td style="border-top:2px solid black">
+                        <td style="border-top-width:2px">
                             <xsl:call-template name="showSessionTitle">
                                 <xsl:with-param name="sessionid" select = "@sessionid" />
                                 <xsl:with-param name="title" select = "@title" />
                             </xsl:call-template>
                         </td>
-                        <td style="border-top:2px solid black">
+                        <td style="border-top-width:2px">
                             <xsl:if test="@moderator='1'">Yes</xsl:if>
                             <xsl:text disable-output-escaping="yes">&amp;nbsp;</xsl:text>
                         </td>
-                        <td style="border-top:2px solid black">
+                        <td style="border-top-width:2px">
                             <xsl:call-template name="showRoomName">
                                 <xsl:with-param name="roomid" select = "@roomid" />
                                 <xsl:with-param name="roomname" select = "@roomname" />
                             </xsl:call-template>
                         </td>
-                        <td style="border-top:2px solid black">
+                        <td style="border-top-width:2px">
                             <xsl:value-of select="@starttime" />
+                        </td>
+                        <td style="border-top-width:2px">
+                            <xsl:choose>
+                                <xsl:when test="@confirmed = 'ACCEPTED'">
+                                    <xsl:text>Accepted</xsl:text>
+                                </xsl:when>
+                                <xsl:when test="@confirmed = 'DECLINED'">
+                                    <xsl:text>Declined</xsl:text>
+                                </xsl:when>
+                                <xsl:when test="@confirmed = 'MAYBE'">
+                                    <xsl:text>Maybe</xsl:text>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:text>Unconfirmed</xsl:text>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </td>
+                        <td style="border-top-width:2px">
+                            <xsl:value-of select="@notes" />
                         </td>
                     </xsl:when>
                     <xsl:when test="position() = last()">
-                        <td style="border-bottom:2px solid black">
-                            <xsl:value-of select="@trackname" />
-                        </td>
-                        <td style="border-bottom:2px solid black">
-                            <xsl:call-template name="showSessionid">
-                                <xsl:with-param name="sessionid" select = "@sessionid" />
-                            </xsl:call-template>
-                        </td>
-                        <td style="border-bottom:2px solid black">
+                        <td style="border-bottom:2px">
                             <xsl:call-template name="showSessionTitle">
                                 <xsl:with-param name="sessionid" select = "@sessionid" />
                                 <xsl:with-param name="title" select = "@title" />
                             </xsl:call-template>
                         </td>
-                        <td style="border-bottom:2px solid black">
+                        <td style="border-bottom:2px">
                             <xsl:if test="@moderator='1'">Yes</xsl:if>
                             <xsl:text disable-output-escaping="yes">&amp;nbsp;</xsl:text>
                         </td>
-                        <td style="border-bottom:2px solid black">
+                        <td style="border-bottom:2px">
                             <xsl:call-template name="showRoomName">
                                 <xsl:with-param name="roomid" select = "@roomid" />
                                 <xsl:with-param name="roomname" select = "@roomname" />
                             </xsl:call-template>
                         </td>
-                        <td style="border-bottom:2px solid black">
+                        <td style="border-bottom:2px">
                             <xsl:value-of select="@starttime" />
+                        </td>
+                        <td style="border-top-width:2px">
+                            <xsl:choose>
+                                <xsl:when test="@confirmed = 'ACCEPTED'">
+                                    <xsl:text>Accepted</xsl:text>
+                                </xsl:when>
+                                <xsl:when test="@confirmed = 'DECLINED'">
+                                    <xsl:text>Declined</xsl:text>
+                                </xsl:when>
+                                <xsl:when test="@confirmed = 'MAYBE'">
+                                    <xsl:text>Maybe</xsl:text>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:text>Unconfirmed</xsl:text>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </td>
+                        <td style="border-top-width:2px">
+                            <xsl:value-of select="@notes" />
                         </td>
                     </xsl:when>
                     <xsl:otherwise>
                         <td>
-                            <xsl:value-of select="@trackname" />
-                        </td>
-                        <td>
-                            <xsl:call-template name="showSessionid">
-                                <xsl:with-param name="sessionid" select = "@sessionid" />
-                            </xsl:call-template>
-                        </td>
-                        <td>
                             <xsl:call-template name="showSessionTitle">
                                 <xsl:with-param name="sessionid" select = "@sessionid" />
                                 <xsl:with-param name="title" select = "@title" />
@@ -186,6 +194,25 @@ $report['xsl'] =<<<'EOD'
                         </td>
                         <td>
                             <xsl:value-of select="@starttime" />
+                        </td>
+                        <td>
+                            <xsl:choose>
+                                <xsl:when test="@confirmed = 'ACCEPTED'">
+                                    <xsl:text>Accepted</xsl:text>
+                                </xsl:when>
+                                <xsl:when test="@confirmed = 'DECLINED'">
+                                    <xsl:text>Declined</xsl:text>
+                                </xsl:when>
+                                <xsl:when test="@confirmed = 'MAYBE'">
+                                    <xsl:text>Maybe</xsl:text>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:text>Unconfirmed</xsl:text>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </td>
+                        <td>
+                            <xsl:value-of select="@notes" />
                         </td>
                     </xsl:otherwise>
                 </xsl:choose>

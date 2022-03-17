@@ -2,6 +2,8 @@
 // Copyright (c) 2018 Peter Olszowka. All rights reserved. See copyright document for more details.
 $report = [];
 $report['name'] = 'Full All Participant Schedule ';
+$report['multi'] = 'true';
+$report['output_filename'] = 'all_participants_by_time_2.csv';
 $report['description'] = 'The schedule sorted by participant, then time';
 $report['categories'] = array(
     'Programming Reports' => 22,
@@ -9,7 +11,7 @@ $report['categories'] = array(
 $report['queries'] = [];
 $report['queries']['participants'] =<<<'EOD'
 SELECT DISTINCT
-        P.badgeid
+        P.badgeid, P.pubsname, C.firstname, C.lastname
     FROM
              Participants P
         JOIN CongoDump C USING (badgeid)
@@ -23,6 +25,7 @@ EOD;
 $report['queries']['schedule'] =<<<'EOD'
 SELECT
         P.pubsname, P.badgeid, POS.moderator, S.duration, R.roomname, R.function, TR.trackname, 
+        C.badgename, concat(C.firstname,' ',C.lastname) AS name,
         S.sessionid, S.title, DATE_FORMAT(ADDTIME('$ConStartDatim$',SCH.starttime),'%a %l:%i %p') AS starttime
     FROM
              Participants P
@@ -45,24 +48,28 @@ $report['xsl'] =<<<'EOD'
     <xsl:template match="/">
         <xsl:choose>
             <xsl:when test="doc/query[@queryName='participants']/row">
-                <table class="report">
-                    <tr>
-                        <th class="report">Badgeid</th>
-                        <th class="report">Pubsname</th>
-                        <th class="report">Track Name</th>
-                        <th class="report">Session ID</th>
-                        <th class="report">Title</th>
-                        <th class="report">Moderator ?</th>
-                        <th class="report">Room Name</th>
-                        <th class="report">Start Time</th>
-                    </tr>
-                    <xsl:for-each select="/doc/query[@queryName='participants']/row">
-                        <xsl:variable name="badgeid"><xsl:value-of select="@badgeid" /></xsl:variable>
-                        <xsl:call-template name="usersSchedule">
-                            <xsl:with-param name="badgeid" select = "@badgeid" />
-                            <xsl:with-param name="rowdata" select = "/doc/query[@queryName='schedule']/row[@badgeid = $badgeid]" />
-                        </xsl:call-template>
-                    </xsl:for-each>
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Badgeid</th>
+                            <th>Pubsname</th>
+                            <th>Track Name</th>
+                            <th>Session ID</th>
+                            <th>Title</th>
+                            <th>Moderator ?</th>
+                            <th>Room Name</th>
+                            <th>Start Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <xsl:for-each select="/doc/query[@queryName='participants']/row">
+                            <xsl:variable name="badgeid"><xsl:value-of select="@badgeid" /></xsl:variable>
+                            <xsl:call-template name="usersSchedule">
+                                <xsl:with-param name="badgeid" select = "@badgeid" />
+                                <xsl:with-param name="rowdata" select = "/doc/query[@queryName='schedule']/row[@badgeid = $badgeid]" />
+                            </xsl:call-template>
+                        </xsl:for-each>
+                    </tbody>
                 </table>
             </xsl:when>
             <xsl:otherwise>
@@ -75,103 +82,105 @@ $report['xsl'] =<<<'EOD'
         <xsl:param name="badgeid" />
 	    <xsl:param name="rowdata" />
 	    <xsl:for-each select="$rowdata">
-            <tr class="report">
+            <tr>
                 <xsl:choose>
                     <xsl:when test="position() = 1">
-                        <td rowspan="{last()}" class="report" style="border-top:2px solid black">
+                        <td rowspan="{last()}" style="border-top:2px solid black">
                             <xsl:call-template name="showBadgeid">
                                 <xsl:with-param name="badgeid" select = "@badgeid" />
                             </xsl:call-template>
                         </td>
-                        <td rowspan="{last()}" class="report" style="border-top:2px solid black">
-                            <xsl:call-template name="showPubsname">
+                        <td rowspan="{last()}" style="border-top:2px solid black">
+                            <xsl:call-template name="showLinkedPubsname">
                                 <xsl:with-param name="badgeid" select = "@badgeid" />
                                 <xsl:with-param name="pubsname" select = "@pubsname" />
+                                <xsl:with-param name="badgename" select = "@badgename" />
+                                <xsl:with-param name="name" select = "@name" />
                             </xsl:call-template>
                         </td>
-                        <td class="report" style="border-top:2px solid black">
+                        <td style="border-top:2px solid black">
                             <xsl:value-of select="@trackname" />
                         </td>
-                        <td class="report" style="border-top:2px solid black">
+                        <td style="border-top:2px solid black">
                             <xsl:call-template name="showSessionid">
                                 <xsl:with-param name="sessionid" select = "@sessionid" />
                             </xsl:call-template>
                         </td>
-                        <td class="report" style="border-top:2px solid black">
+                        <td style="border-top:2px solid black">
                             <xsl:call-template name="showSessionTitle">
                                 <xsl:with-param name="sessionid" select = "@sessionid" />
                                 <xsl:with-param name="title" select = "@title" />
                             </xsl:call-template>
                         </td>
-                        <td class="report" style="border-top:2px solid black">
+                        <td style="border-top:2px solid black">
                             <xsl:if test="@moderator='1'">Yes</xsl:if>
                             <xsl:text disable-output-escaping="yes">&amp;nbsp;</xsl:text>
                         </td>
-                        <td class="report" style="border-top:2px solid black">
+                        <td style="border-top:2px solid black">
                             <xsl:call-template name="showRoomName">
                                 <xsl:with-param name="roomid" select = "@roomid" />
                                 <xsl:with-param name="roomname" select = "@roomname" />
                             </xsl:call-template>
                         </td>
-                        <td class="report" style="border-top:2px solid black">
+                        <td style="border-top:2px solid black">
                             <xsl:value-of select="@starttime" />
                         </td>
                     </xsl:when>
                     <xsl:when test="position() = last()">
-                        <td class="report" style="border-bottom:2px solid black">
+                        <td style="border-bottom:2px solid black">
                             <xsl:value-of select="@trackname" />
                         </td>
-                        <td class="report" style="border-bottom:2px solid black">
+                        <td style="border-bottom:2px solid black">
                             <xsl:call-template name="showSessionid">
                                 <xsl:with-param name="sessionid" select = "@sessionid" />
                             </xsl:call-template>
                         </td>
-                        <td class="report" style="border-bottom:2px solid black">
+                        <td style="border-bottom:2px solid black">
                             <xsl:call-template name="showSessionTitle">
                                 <xsl:with-param name="sessionid" select = "@sessionid" />
                                 <xsl:with-param name="title" select = "@title" />
                             </xsl:call-template>
                         </td>
-                        <td class="report" style="border-bottom:2px solid black">
+                        <td style="border-bottom:2px solid black">
                             <xsl:if test="@moderator='1'">Yes</xsl:if>
                             <xsl:text disable-output-escaping="yes">&amp;nbsp;</xsl:text>
                         </td>
-                        <td class="report" style="border-bottom:2px solid black">
+                        <td style="border-bottom:2px solid black">
                             <xsl:call-template name="showRoomName">
                                 <xsl:with-param name="roomid" select = "@roomid" />
                                 <xsl:with-param name="roomname" select = "@roomname" />
                             </xsl:call-template>
                         </td>
-                        <td class="report" style="border-bottom:2px solid black">
+                        <td style="border-bottom:2px solid black">
                             <xsl:value-of select="@starttime" />
                         </td>
                     </xsl:when>
                     <xsl:otherwise>
-                        <td class="report">
+                        <td>
                             <xsl:value-of select="@trackname" />
                         </td>
-                        <td class="report">
+                        <td>
                             <xsl:call-template name="showSessionid">
                                 <xsl:with-param name="sessionid" select = "@sessionid" />
                             </xsl:call-template>
                         </td>
-                        <td class="report">
+                        <td>
                             <xsl:call-template name="showSessionTitle">
                                 <xsl:with-param name="sessionid" select = "@sessionid" />
                                 <xsl:with-param name="title" select = "@title" />
                             </xsl:call-template>
                         </td>
-                        <td class="report">
+                        <td>
                             <xsl:if test="@moderator='1'">Yes</xsl:if>
                             <xsl:text disable-output-escaping="yes">&amp;nbsp;</xsl:text>
                         </td>
-                        <td class="report">
+                        <td>
                             <xsl:call-template name="showRoomName">
                                 <xsl:with-param name="roomid" select = "@roomid" />
                                 <xsl:with-param name="roomname" select = "@roomname" />
                             </xsl:call-template>
                         </td>
-                        <td class="report">
+                        <td>
                             <xsl:value-of select="@starttime" />
                         </td>
                     </xsl:otherwise>
