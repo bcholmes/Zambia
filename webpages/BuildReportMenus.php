@@ -14,7 +14,7 @@ function process_all_files_in_directory($basePath, $subDirectoryName, &$allRepor
         while (false !== ($reportFileName = readdir($dirHandle))) {
             if ($reportFileName == "." || $reportFileName == "..") {
                 // do nothing
-            } else if (is_dir("$path/$reportFileName")) {
+            } else if (is_dir("$path/$reportFileName") & ($reportFileName !== 'not_used_reports') ) {
                 try {
                     $nextDirectory = $subDirectoryName == "" ? $reportFileName : ($subDirectoryName . "/" . $reportFileName);
                     process_all_files_in_directory($basePath, $nextDirectory, $allReports);
@@ -32,7 +32,7 @@ function process_all_files_in_directory($basePath, $subDirectoryName, &$allRepor
                     $allReports[$key] = array('name' => $report['name'], 'description' => $report['description'], 'categories' => $report['categories']);
                     unset($report);
                 } else {
-                    error_log("cannot worh with : $path/$reportFileName");
+                    error_log("cannot work with : $path/$reportFileName");
                 }
             }
         }
@@ -56,9 +56,9 @@ function build_report_menus($path, $alphabeticSort = false) {
         }
     }
     ksort($reportCategories, SORT_NATURAL);
-    $reportMenuFilHand = fopen('ReportMenuInclude.php', 'wb');
-    $reportMenuBS4FilHand = fopen('ReportMenuBS4Include.php', 'wb');
-    $staffReportsICIFilHand = fopen('staffReportsInCategoryInclude.php', 'wb');
+    $reportMenuFilHand = fopen(REPORT_INCLUDE_DIRECTORY . 'ReportMenuInclude.php', 'wb');
+    $reportMenuBS4FilHand = fopen(REPORT_INCLUDE_DIRECTORY . 'ReportMenuBS4Include.php', 'wb');
+    $staffReportsICIFilHand = fopen(REPORT_INCLUDE_DIRECTORY . 'staffReportsInCategoryInclude.php', 'wb');
     if ($reportMenuFilHand === false || $reportMenuBS4FilHand === false || $staffReportsICIFilHand === false) {
         throw new Exception("One of the files we're trying to generate cannot be opened.");
     }
@@ -96,6 +96,7 @@ function build_report_menus($path, $alphabeticSort = false) {
 
     return $allReports;
 }
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
@@ -135,8 +136,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             </div>
         </form>
     </div>
-    <script type="text/javascript" src="./javascript/zambiaExtension.js"></script>
-    <script type="text/javascript" src="./javascript/BuildReportMenus.js"></script>
+    <script type="text/javascript" src="./js/planzExtension.js"></script>
+    <script type="text/javascript" src="./js/BuildReportMenus.js"></script>
         <?php
         staff_footer();
         exit();

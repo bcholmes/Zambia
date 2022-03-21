@@ -11,7 +11,7 @@ $report['categories'] = array(
 $report['queries'] = [];
 $report['queries']['participants'] =<<<'EOD'
 SELECT
-        P.badgeid, P.pubsname, P.bio, P.pronouns
+        P.badgeid, P.pubsname, P.bio, P.pronouns, P.anonymous
     FROM
             Participants P
         JOIN CongoDump CD USING (badgeid)
@@ -45,12 +45,14 @@ if (defined('USE_PRONOUNS') && USE_PRONOUNS) {
                         <col style="width:6em;" />
                         <col style="width:12em;" />
                         <col style="width:8em;" />
+                        <col style="width:6em;" />
                         <col />
                         <thead>
                             <tr>
                                 <th>Badge Id</th>
                                 <th>Name for Publications</th>
                                 <th>Pronouns</th>
+                                <th>Anon</th>
                                 <th>Biography</th>
                             </tr>
                         </thead>
@@ -70,6 +72,7 @@ if (defined('USE_PRONOUNS') && USE_PRONOUNS) {
                 <td><xsl:call-template name="showBadgeid"><xsl:with-param name="badgeid" select="@badgeid"/></xsl:call-template></td>
                 <td><xsl:value-of select="@pubsname" /></td>
                 <td><xsl:value-of select="@pronouns" /></td>
+                <td><xsl:if test="@anonymous = 'Y'">Yes</xsl:if></td>
                 <td><xsl:value-of select="@bio" /></td>
             </tr>
         </xsl:template>
