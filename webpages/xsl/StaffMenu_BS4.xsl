@@ -9,21 +9,38 @@
     <xsl:param name="reportMenuList" select="''"/>
     <xsl:param name="badgename" select="'Current User'"/>
     <xsl:param name="PARTICIPANT_PHOTOS" select="'0'"/>
+    <xsl:param name="AUTO_SCHEDULER" select="'0'"/>
+    <xsl:param name="emailAvailable" select="'0'"/>
+    <xsl:param name="isToolbarPresent" select="'0'"/>
     <!-- Set of <a> elements; contents of ReportMenuBS4Include.php -->
     <xsl:variable name="ConfigureReports"
         select="/doc/query[@queryname='permission_set']/row[@permatomtag='ConfigureReports']"/>
     <xsl:variable name="AdminPhases" select="/doc/query[@queryname='permission_set']/row[@permatomtag='AdminPhases']"/>
     <xsl:variable name="Administrator"
         select="/doc/query[@queryname='permission_set']/row[@permatomtag='Administrator']"/>
-   <xsl:variable name="EditAnyTable" select="/doc/query[@queryname='permission_set']/row[@permatomtag='ce_All' or
-        @permatomtag='ce_BioEditStatuses' or @permatomtag='ce_Credentials' or @permatomtag='ce_Divisions' or
+    <xsl:variable name="ExportSchedule" select="/doc/query[@queryname='permission_set']/row[@permatomtag='ExportSchedule']"/>
+    <xsl:variable name="EditAnyTable" select="/doc/query[@queryname='permission_set']/row[@permatomtag='ce_All' or
+        @permatomtag='ce_AgeRanges' or @permatomtag='ce_BioEditStatuses' or @permatomtag='ce_Credentials' or @permatomtag='ce_Divisions' or
         @permatomtag='ce_EmailCC' or @permatomtag='ce_EmailFrom' or @permatomtag='ce_EmailTo' or @permatomtag='ce_Features' or
-        @permatomtag='ce_KidsCategories' or @permatomtag='ce_LanguageStatuses' or @permatomtag='ce_PubStatuses' or
-        @permatomtag='ce_RegTypes' or @permatomtag='ce_Roles' or @permatomtag='ce_Rooms' or @permatomtag='ce_RoomSets' or
-        @permatomtag='ce_RoomHasSet' or @permatomtag='ce_Services' or @permatomtag='ce_SessionStatuses' or
+        @permatomtag='ce_Interests' or @permatomtag='ce_KidsCategories' or @permatomtag='ce_LanguageStatuses' or 
+        @permatomtag='ce_Locations' or @permatomtag='ce_PhotoDenialReasons' or @permatomtag='ce_Pronouns' or @permatomtag='ce_PubStatuses' or
+        @permatomtag='ce_RegTypes' or @permatomtag='ce_Roles' or @permatomtag='ce_RoomColors' or @permatomtag='ce_Rooms' or @permatomtag='ce_RoomSets' or
+        @permatomtag='ce_RoomHasSet' or @permatomtag='ce_Services' or @permatomtag='ce_ServiceTypes' or @permatomtag='ce_SessionStatuses' or
         @permatomtag='ce_Tags' or @permatomtag='ce_Times' or @permatomtag='ce_Tracks' or @permatomtag='ce_Types']"/>
     <xsl:template match="/">
-        <nav id="staffNav" class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
+        <nav id="staffNav">
+            <xsl:choose>
+                <xsl:when test="$isToolbarPresent = 1">
+                    <xsl:attribute name="class">
+                        navbar navbar-expand-lg navbar-dark bg-dark
+                    </xsl:attribute>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:attribute name="class">
+                        navbar navbar-expand-lg navbar-dark bg-dark mb-3
+                    </xsl:attribute>
+                </xsl:otherwise>
+            </xsl:choose>
             <a class="navbar-brand py-1" href="#">
                 <xsl:value-of select="$title"/>
             </a>
@@ -64,11 +81,11 @@
                             </xsl:if>
                             <a class="dropdown-item" href="InviteParticipants.php">Invite to a Session</a>
                             <a class="dropdown-item" href="StaffAssignParticipants.php">Assign to a Session</a>
-                            <xsl:if test="/doc/query[@queryname='permission_set']/row[@permatomtag='SendEmail']">
+                            <xsl:if test="$emailAvailable = '1' and /doc/query[@queryname='permission_set']/row[@permatomtag='SendEmail']">
                                 <a class="dropdown-item" href="StaffSendEmailCompose.php">Send email</a>
                             </xsl:if>
                             <xsl:if test="/doc/query[@queryname='permission_set']/row[@permatomtag='CreateUser']">
-                                <a class="dropdown-item" href="AddZambiaUser.php">Create User</a>
+                                <a class="dropdown-item" href="AddUser.php">Create User</a>
                             </xsl:if>
                         </div>
                     </li>
@@ -98,7 +115,9 @@
                             Scheduling
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarSchedulingDropdown">
-                            <a class="dropdown-item" href="Autoscheduler.php">Auto-Scheduler</a>
+                            <xsl:if test="$AUTO_SCHEDULER = '1'">
+                                <a class="dropdown-item" href="Autoscheduler.php">Auto-Scheduler</a>
+                            </xsl:if>
                             <a class="dropdown-item" href="MaintainRoomSched.php">Maintain Room Schedule</a>
                             <a class="dropdown-item" href="StaffMaintainSchedule.php">Grid Scheduler</a>
                             <a class="dropdown-item" href="CurrentSchedule.php">Current Schedule</a>
@@ -121,7 +140,8 @@
                     <input type="hidden" value="" name="sessionid"/>
                     <input type="hidden" value="ANY" name="divisionid"/>
                 </form>
-                <xsl:if test="$AdminPhases or $ConfigureReports or $Administrator">
+                <xsl:variable name="AdminMenu" select="$AdminPhases or $ConfigureReports or $Administrator or $EditAnyTable or $ExportSchedule" />
+                <xsl:if test="$AdminMenu">
                     <div class="navbar-nav">
                         <div class="nav-item dropdown mr-4 py-0">
                             <a class="nav-link dropdown-toggle py-1" href="#" id="navbarAdminDropdown" role="button"
@@ -138,9 +158,13 @@
                                 </xsl:if>
                                 <xsl:if test="$Administrator">
                                     <a class="dropdown-item" href="EditCustomText.php">Edit Custom Text</a>
+                                    <a class="dropdown-item" href="EditSurvey.php">Edit Survey</a>
                                 </xsl:if>
                                 <xsl:if test="$EditAnyTable">
                                     <a class="dropdown-item" href="ConfigTableEditor.php">Edit Configuration Tables</a>
+                                </xsl:if>
+                                <xsl:if test="$ExportSchedule">
+                                    <a class="dropdown-item" href="StaffCreateKonOpas.php">Update KonOpas and ConClar</a>
                                 </xsl:if>
                             </div>
                         </div>

@@ -17,7 +17,15 @@ function RenderEditCreateSession ($action, $session, $message1, $message2) {
     } else {
         exit();
     }
-    staff_header($title, true);
+    staff_header($title, true, false, false, false, true);
+?>
+    <nav class="navbar navbar-light bg-secondary mb-2">
+        <div>
+            <button class="btn btn-outline-light text-center mr-2 session-assignments" type="button"><i class="bi bi-people-fill h3"></i><br />Participants</button>
+            <button class="btn btn-outline-light text-center mr-2 session-history" type="button"><i class="bi bi-clock-history h3"></i><br />History</button>
+        </div>
+    </nav>
+<?php
     
     // still inside function RenderAddCreateSession
     if (strlen($message1) > 0) {
@@ -258,6 +266,33 @@ function RenderEditCreateSession ($action, $session, $message1, $message2) {
             </div>
         </div>
     </div>
+<?php
+    $sessionId = $session["sessionid"];
+?>
+    <!-- Modal -->
+    <div class="modal fade" id="assignmentModal" tabindex="-1" role="dialog" aria-labelledby="assignmentLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assignmentLabel">Assigned Participants</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>The following folks are assigned to this session:</p>
+                    <div class="assignment-content">
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+<?php
+                    echo "<a class=\"btn btn-primary\" href=\"/StaffAssignParticipants.php?selsess=$sessionId\">Modify</a>";
+?>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
     <script type="text/javascript" src="external/bootstrap-multiselect-1.1.7/bootstrap-multiselect.min.js"></script>
@@ -267,8 +302,8 @@ function RenderEditCreateSession ($action, $session, $message1, $message2) {
             $('.form-control-multiselect').multiselect();
         });
     </script>
-    <script type="text/javascript" src="javascript/zambiaExtension.js"></script>
-    <script type="text/javascript" src="javascript/zambiaExtensionEditSession.js"></script>
+    <script type="text/javascript" src="js/planzExtension.js"></script>
+    <script type="text/javascript" src="js/planzExtensionEditSession.js"></script>
 <?php
     staff_footer();
 }
