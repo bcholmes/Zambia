@@ -45,7 +45,6 @@ function RenderEditCreateSession ($action, $session, $message1, $message2) {
         <!-- The pubno field is no longer used on the form, but the code expects it.-->
         <input type="hidden" name="pubno" value="<?php echo htmlspecialchars($session["pubno"],ENT_COMPAT);?>" />
         <div class="text-right mt-3">
-            <button class="btn btn-link session-history" type=button>History</button>
             <button class="btn btn-primary" type=submit value="save" onclick="mysubmit()">Save</button>
         </div>
         <div class="row">
@@ -241,7 +240,6 @@ function RenderEditCreateSession ($action, $session, $message1, $message2) {
             </div>
         </div>
         <div class="text-right mt-3">
-            <button class="btn btn-link session-history" type=button>History</button>
             <button class="btn btn-primary" type=submit value="save" onclick="mysubmit()">Save</button>
         </div>
         <input type="hidden" name="action" value="<?php echo ($action === "create") ? "create" : "edit"; ?>" />
