@@ -99,7 +99,8 @@ define("PHOTO_FILE_TYPES", "jpg,png"); // comma separated list of allowed file t
 define("PHOTO_DIMENSIONS", "200,200,800,800,1048576"); // comma separated list min width/height, max width/height, file size
 define("PHOTO_DEFAULT_IMAGE", "default.png"); // placeholder image for participants without photo
 
-
+define("REPORT_INCLUDE_DIRECTORY", "./");  // outside of web server path, only served by PHP
+define("AUTO_SCHEDULER", FALSE); // enable the auto-scheduler feature
 
 define("REGISTRATION_URL", "");
 // The URL to the con's registration system.?>

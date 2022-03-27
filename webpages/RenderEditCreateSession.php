@@ -153,6 +153,10 @@ function RenderEditCreateSession ($action, $session, $message1, $message2) {
                     <?php populate_select_from_table("SessionStatuses", $session["status"], "", FALSE); ?>
                 </select>
             </div>
+            <div class="form-group col-md-2">
+                <label for="participantlabel">Participant Label:</label>
+                <input class="form-control" type="text" size="3" name="participantlabel" value="<?php echo htmlspecialchars($session["participantlabel"],ENT_COMPAT);?>" />
+            </div>
             <div class="form-group col-md-2 offset-md-1">
                 <label for="hashtag">Hashtag:</label>
                 <input type="text" class="form-control" size="20" name="hashtag" id="hashtag" value="<?php echo htmlspecialchars($session["hashtag"],ENT_COMPAT);?>" />
@@ -239,6 +243,18 @@ function RenderEditCreateSession ($action, $session, $message1, $message2) {
                     rows="3" cols="70" name="notesforprog" ><?php echo htmlspecialchars($session["notesforprog"],ENT_NOQUOTES);?></textarea>
             </div>
         </div>
+<?php
+    if (MEETING_LINK === TRUE) {
+?>
+        <div class="row mt-3">
+            <div class="form-group col-md-6">
+                <label for="meetinglink">Meeting Link:</label>
+                <input type="text" class="form-control" size="80" maxlength="510" name="mlink" id="mlink" value="<?php echo htmlspecialchars($session["mlink"],ENT_COMPAT);?>" />
+            </div>
+        </div>
+<?php
+    }
+?>
         <div class="text-right mt-3">
             <button class="btn btn-primary" type=submit value="save" onclick="mysubmit()">Save</button>
         </div>

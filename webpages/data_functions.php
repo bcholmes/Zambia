@@ -211,6 +211,11 @@ function get_session_from_post() {
     $session["status"] = getInt('status');
     $session["notesforprog"] = getString('notesforprog');
     $session["hashtag"] = getString('hashtag');
+    $session["participantlabel"] = getString('participantlabel');
+    if (MEETING_LINK === TRUE)
+        $session["mlink"] = getString('mlink');
+    else
+        $session["mlink"] = "";
 }
 
 // Function set_session_defaults()

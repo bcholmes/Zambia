@@ -525,12 +525,14 @@ UPDATE Sessions SET
         kidscatid="{$sessionf["kidscatid"]}",
         signupreq={$sessionf["signupreq"]},
         invitedguest={$sessionf["invitedguest"]},
+        participantlabel="{$sessionf["participantlabel"]}",
         roomsetid="{$sessionf["roomsetid"]}",
         notesforpart="{$sessionf["notesforpart"]}",
         servicenotes="{$sessionf["servnotes"]}",
         statusid="{$sessionf["status"]}",
         hashtag="{$sessionf["hashtag"]}",
-        notesforprog="{$sessionf["notesforprog"]}"
+        notesforprog="{$sessionf["notesforprog"]}",
+        meetinglink="{$sessionf["mlink"]}"
     WHERE
         sessionid = $id;
 EOD;
@@ -610,7 +612,8 @@ function insert_session() {
     $id = $sessionf["id"];
 
     $query=<<<EOD
-INSERT INTO Sessions SET
+INSERT INTO Sessions
+    SET
         trackid="{$sessionf["track"]}",
         typeid="{$sessionf["type"]}",
         divisionid="{$sessionf["divisionid"]}",
@@ -621,12 +624,14 @@ INSERT INTO Sessions SET
         secondtitle="{$sessionf["secondtitle"]}",
         pocketprogtext="{$sessionf["pocketprogtext"]}",
         progguiddesc="{$sessionf["progguiddesc"]}",
+        meetinglink="{$sessionf["mlink"]}",
         persppartinfo="{$sessionf["persppartinfo"]}",
         duration="{$sessionf["duration"]}",
         estatten={$sessionf["estatten"]},
         kidscatid="{$sessionf["kidscatid"]}",
         signupreq={$sessionf["signupreq"]},
         invitedguest={$sessionf["invitedguest"]},
+        participantlabel="{$sessionf["participantlabel"]}",
         roomsetid="{$sessionf["roomsetid"]}",
         notesforpart="{$sessionf["notesforpart"]}",
         servicenotes="{$sessionf["servnotes"]}",
@@ -687,6 +692,10 @@ function filter_session() {
     $session2["secondtitle"] = mysqli_real_escape_string($linki, $session["secondtitle"]);
     $session2["pocketprogtext"] = mysqli_real_escape_string($linki, $session["pocketprogtext"]);
     $session2["progguiddesc"] = mysqli_real_escape_string($linki, $session["progguiddesc"]);
+    if (MEETING_LINK === TRUE)
+        $session2["mlink"] = mysqli_real_escape_string($linki, $session["mlink"]);
+    else
+        $session2["mlink"] = "";
     $session2["persppartinfo"] = mysqli_real_escape_string($linki, $session["persppartinfo"]);
     if (DURATION_IN_MINUTES === TRUE) {
         $session2["duration"] = conv_min2hrsmin($session["duration"]);
@@ -697,6 +706,7 @@ function filter_session() {
     $session2["kidscatid"] = filter_var($session["kids"], FILTER_SANITIZE_NUMBER_INT);
     $session2["signupreq"] = empty($session["signup"]) ? "0" : "1";
     $session2["invitedguest"] = empty($session["invguest"]) ? "0" : "1";
+    $session2["participantlabel"] = mysqli_real_escape_string($linki, $session["participantlabel"]);
     $session2["roomsetid"] = filter_var($session["roomset"], FILTER_SANITIZE_NUMBER_INT);
     $session2["pocketprogtext"] = mysqli_real_escape_string($linki, $session["pocketprogtext"]);
     $session2["notesforpart"] = mysqli_real_escape_string($linki, $session["notesforpart"]);
@@ -741,7 +751,9 @@ SELECT
         sessionid, trackid, typeid, divisionid, pubstatusid, languagestatusid, pubsno,
         title, secondtitle, pocketprogtext, progguiddesc, persppartinfo, duration,
         estatten, kidscatid, signupreq, roomsetid, notesforpart, servicenotes,
-        statusid, notesforprog, warnings, invitedguest, hashtag, ts
+        statusid, notesforprog, warnings, invitedguest, hashtag, ts,
+        participantlabel,
+        meetinglink
     FROM
         Sessions
     WHERE
@@ -784,6 +796,8 @@ EOD;
     $session["status"] = $sessionarray["statusid"];
     $session["notesforprog"] = $sessionarray["notesforprog"];
     $session["invguest"] = $sessionarray["invitedguest"];
+    $session["participantlabel"] = $sessionarray["participantlabel"];
+    $session["mlink"] = $sessionarray["meetinglink"];
     $session["hashtag"] = $sessionarray["hashtag"];
     mysqli_free_result($result);
     $query = "SELECT featureid FROM SessionHasFeature WHERE sessionid = $sessionid;";
