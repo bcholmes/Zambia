@@ -6,7 +6,11 @@
 require_once('StaffCommonCode.php'); //reset connection to db and check if logged in
 require_once('email_functions.php');
 require_once('external/swiftmailer-5.4.8/lib/swift_required.php');
+require_once('name.php');
 global $title, $message, $link;
+if (!(isLoggedIn() && may_I("SendEmail"))) {
+    exit(0);
+}
 if (isset($_POST['sendto'])) { // page has been visited before
 // restore previous values to form
     $email = get_email_from_post();
@@ -22,6 +26,8 @@ if (empty($_POST['navigate']) || $_POST['navigate']!='send') {
 // render_send_email_engine($email,$message_warning);
 $title = "Staff Send Email";
 $timeLimitSuccess = set_time_limit(600);
+$bootstrap4 = true;
+staff_header($title, $bootstrap4);
 if (!$timeLimitSuccess) {
 	RenderError("Error extending time limit.");
 	exit(0);
@@ -49,22 +55,26 @@ while ($recipientinfo[$i]=mysqli_fetch_array($result,MYSQLI_ASSOC)) {
 }
 mysqli_free_result($result);
 $recipient_count = $i;
-$query = "SELECT emailfromaddress FROM EmailFrom where emailfromid = {$email['sendfrom']};";
+$query = "SELECT emailfromaddress, emailfromdescription FROM EmailFrom where emailfromid = {$email['sendfrom']};";
 $result = mysqli_query_exit_on_error($query);
 if (!$result) {
     exit(-1); // Though should have exited already anyway
 }
 $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
-$emailfrom = $row['emailfromaddress'];
+$emailfrom = [ $row['emailfromaddress'] => $row['emailfromdescription'] ];
 mysqli_free_result($result);
-$query="SELECT emailaddress FROM EmailCC where emailccid = {$email['sendcc']};";
-$result = mysqli_query_exit_on_error($query);
-if (!$result) {
-    exit(-1); // Though should have exited already anyway
+
+$emailcc = "";
+if ($email['sendcc']) {
+    $query="SELECT emailaddress FROM EmailCC where emailccid = {$email['sendcc']};";
+    $result = mysqli_query_exit_on_error($query);
+    if (!$result) {
+        exit(-1); // Though should have exited already anyway
+    }
+    $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
+    $emailcc = $row['emailaddress'];
+    mysqli_free_result($result);
 }
-$row = mysqli_fetch_array($result, MYSQLI_ASSOC);
-$emailcc = $row['emailaddress'];
-mysqli_free_result($result);
 $status = checkForShowSchedule($email['body']); // "0" don't show schedule; "1" show events schedule; "2" show full schedule; "3" error condition
 if ($status === "1" || $status === "2") {
     $scheduleInfoArray = generateSchedules($status, $recipientinfo);
@@ -74,8 +84,17 @@ for ($i=0; $i<$recipient_count; $i++) {
     //Create the message and set subject
     $message = (new Swift_Message($email['subject']));
 
-    $repl_list = array($recipientinfo[$i]['badgeid'], $recipientinfo[$i]['firstname'], $recipientinfo[$i]['lastname']);
-    $repl_list = array_merge($repl_list, array($recipientinfo[$i]['email'], $recipientinfo[$i]['pubsname'], $recipientinfo[$i]['badgename']));
+    $name = new PersonName();
+    $name->firstName = $recipientinfo[$i]['firstname'];
+    $name->lastName = $recipientinfo[$i]['lastname'];
+    $name->badgeName = $recipientinfo[$i]['badgename'];
+    $name->pubsName = $recipientinfo[$i]['pubsname'];
+    $repl_list = array($recipientinfo[$i]['badgeid'], 
+        $name->firstName, 
+        $name->lastName,
+        $recipientinfo[$i]['email'],
+        $name->getPubsName(),
+        $name->getBadgeName());
     $emailverify['body'] = str_replace($subst_list, $repl_list, $email['body']);
     if ($status === "1" || $status === "2") {
         if ($status === "1") {
@@ -98,24 +117,55 @@ for ($i=0; $i<$recipient_count; $i++) {
     //$message =& new Swift_Message($email['subject'],$emailverify['body']);
     echo ($recipientinfo[$i]['pubsname']." - ".$recipientinfo[$i]['email'].": ");
     try {
-        $message->addTo($recipientinfo[$i]['email']);
+        $message->setTo([$recipientinfo[$i]['email'] => $name->getBadgeName()]);
     } catch (Swift_SwiftException $e) {
         echo $e->getMessage()."<br>\n";
 	    $ok=FALSE;
     }
-    if ($emailcc != "") {
+    if ($emailcc != "" && $emailcc != null) {
         $message->addBcc($emailcc);
     }
-    try {
-        $mailer->send($message);
-    } catch (Swift_SwiftException $e) {
-        echo $e->getMessage() . "<br>\n";
-        $ok = FALSE;
+    if (SMTP_QUEUEONLY === TRUE) {
+        $sql = "INSERT INTO EmailQueue(emailto, emailfrom, emailcc, emailsubject, body, status) VALUES(?, ?, ?, ?, ?, ?);";
+        $param_arr = array($recipientinfo[$i]['email'] , $emailfrom, $emailcc, $email['subject'], $emailverify['body'], 0);
+        $types = "sssssi";
+        $rows = mysql_cmd_with_prepare($sql, $types, $param_arr);
+        if ($rows == 1)
+            echo "Queued<br>";
+        else
+            echo "Queue failed<br>";
+    } else {
+        try {
+            $code = 0;
+            $mailer->send($message);
+        }
+        catch (Swift_SwiftException $e) {
+            $code = $e->getCode();
+            if ($code < 500) {
+                echo $e->getMessage() . ", adding to queue<br>\n";
+            } else {
+                echo $e->getMessage() . ", not able to be retried.<br>\n";
+            }
+
+            $ok = FALSE;
+            if ($code < 500) {
+                $sql = "INSERT INTO EmailQueue(emailto, emailfrom, emailcc, emailsubject, body, status) VALUES(?, ?, ?, ?, ?, ?);";
+                $param_arr = array($recipientinfo[$i]['email'] , $emailfrom, $emailcc, $email['subject'], $emailverify['body'], $e->getCode());
+                $types = "sssssi";
+                $rows = mysql_cmd_with_prepare($sql, $types, $param_arr);
+            }
+        }
+        if ($ok == TRUE) {
+            echo "Sent<br>";
+        }
     }
-    if ($ok == TRUE) {
-        echo "Sent<br>";
-    }
+    $sql = "INSERT INTO EmailHistory(emailto, emailfrom, emailcc, emailsubject, status) VALUES(?, ?, ?, ?, ?);";
+    $param_arr = array($recipientinfo[$i]['email'] , $emailfrom, $emailcc, $email['subject'], $code);
+    $types = "ssssi";
+    $rows = mysql_cmd_with_prepare($sql, $types, $param_arr);
 }
 //$log =& Swift_LogContainer::getLog();
 //echo $log->dump(true);
+staff_footer();
+
 ?>
