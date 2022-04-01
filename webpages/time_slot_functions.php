@@ -73,6 +73,36 @@ class Room {
             $column += ($room->getColumnWidth());
         }
     }
+
+    static function selectAllRoomInSchedule($db) {
+        $query = <<<EOD
+        SELECT r.roomname, r.roomid, r.is_online, r.area, r.display_order, r.parent_room
+          FROM Rooms r
+        WHERE r.is_scheduled = 1
+          AND r.roomid in (select roomid from Schedule)
+        ORDER BY display_order;
+        EOD;
+        $stmt = mysqli_prepare($db, $query);
+        $temp = array();
+        if (mysqli_stmt_execute($stmt)) {
+            $result = mysqli_stmt_get_result($stmt);
+            while ($row = mysqli_fetch_object($result)) {
+                $room = new Room();
+                $room->roomName = $row->roomname;
+                $room->roomId = $row->roomid;
+                $room->area = $row->area;
+                $room->isOnline = $row->is_online == 'Y' ? true : false;
+                $room->displayOrder = $row->display_order;
+                $room->parentRoomId = $row->parent_room;
+                $room->children = array();
+                $temp[$room->roomId] = $room;
+            }
+            mysqli_stmt_close($stmt);
+            return $temp;
+        } else {
+            throw new Exception("Query could not be executed: $query");
+        }
+    }
 }
 
 function time_to_row_index($time, $rowSize = 15) {

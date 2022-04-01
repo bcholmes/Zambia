@@ -27,4 +27,14 @@ $(function() {
             }
         }
     };
+
+    $.planz.standardErrorFunction = (err) => {
+        if (err.status < 300) {
+            // this isn't an error. Why am I in the error function? Bad jQuery; no biscuit.
+        } else if (err.status == 401) {
+            $.planz.redirectToLogin();
+        } else {
+            $.planz.simpleAlert('danger', 'There was a problem contacting the server. Your changes might not have been saved. Try again later?');
+        }
+    }
 });

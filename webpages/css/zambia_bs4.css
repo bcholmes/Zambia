@@ -228,3 +228,9 @@ table.dataTable.table-sm thead th {
 table.dataTable.table-sm tbody th, table.dataTable.table-sm tbody td {
   padding: 0.3rem;
 }
+.bg-warning-lighter {
+  background-color: #FFF3CD;
+}
+.bg-warning-lighter a {
+  color: #533f03;
+}

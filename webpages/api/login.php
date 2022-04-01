@@ -18,7 +18,7 @@ function resolve_login($userid, $password) {
     try {
         $query = <<<EOD
  SELECT 
-        P.password, P.data_retention, P.badgeid, C.firstname, C.lastname, C.badgename, C.regtype 
+        P.password, P.data_retention, P.badgeid, C.firstname, C.lastname, C.badgename, C.regtype, P.pubsname 
    FROM 
         Participants P 
    JOIN CongoDump C USING (badgeid)

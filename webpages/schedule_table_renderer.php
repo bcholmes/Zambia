@@ -12,6 +12,7 @@ interface ScheduleCellData {
     public function getStartIndex();
     public function getRowHeight();
     public function getColumnWidth();
+    public function getAdditionalClasses();
     public function getData();
 }
 
@@ -48,7 +49,7 @@ class ScheduleTableRenderer {
                     . ($value->area ? ("<span class=\"small\"><br />" . number_format($value->area) . " sq ft</span>") : "") 
                     . "</th>";
             } else {
-                $header .= "<th $rowHeight $width>" . $value->roomName . "</th>";
+                $header .= "<th $rowHeight $width>" . $value->roomName . ($value->isOnline ? " <span class=\"small\"><br />(Online)</span>" : "") . "</th>";
             }
     
             if ($value->children && count($value->children) > 0) {
@@ -115,7 +116,8 @@ class ScheduleTableRenderer {
                         $slot = $this->dataProvider->getCellDataFor($row, $column, $day);
                         if ($slot) {
                             if ($slot->getStartIndex() == $row && $slot->room->columnNumber == $column) {
-                                echo "<td class=\"small\" rowspan=\"" . $slot->getRowHeight() . "\" colspan=\"" . $slot->getColumnWidth() . "\">" . $slot->getData() . "</td>";
+                                $classes = $slot->getAdditionalClasses() ? $slot->getAdditionalClasses() : "";
+                                echo "<td class=\"small $classes\" rowspan=\"" . $slot->getRowHeight() . "\" colspan=\"" . $slot->getColumnWidth() . "\">" . $slot->getData() . "</td>";
                             }
                         } else {
                             echo "<td class=\"bg-light small\">&nbsp;</td>";

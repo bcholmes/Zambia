@@ -1,14 +1,14 @@
 <?php
 // Copyright (c) 2022 BC Holmes. All rights reserved. See copyright document for more details.
 
-global $title;
-$title = "Time Slots";
+global $title, $linki;
+$title = "Participant Schedule";
 
-require_once('StaffCommonCode.php'); // Checks for staff permission among other things
+require_once('PartCommonCode.php');
 require_once('time_slot_functions.php');
 require_once('schedule_table_renderer.php');
 
-class ScheduleItem implements ScheduleCellData {
+class PreliminaryScheduleItem implements ScheduleCellData {
     public $title;
     public $roomId;
     public $startTime;
@@ -16,6 +16,8 @@ class ScheduleItem implements ScheduleCellData {
     public $trackName;
     public $room;
     public $sessionId;
+    public $participantCount;
+    public $isInterestAllowed;
 
     function getDay() {
         $index = time_to_row_index($this->startTime);
@@ -27,7 +29,9 @@ class ScheduleItem implements ScheduleCellData {
         return $day;
     }
     function getData() {
-        return "<div><a href=\"/EditSession.php?id=" . $this->sessionId . "\">" . $this->title . "</a></div><div class=\"small\">" . $this->trackName . "</div>";
+        $needed = $this->isAdditionalParticipantNeeded();
+        return "<div><a class=\"details-option\" href=\"#\" data-session-id=\"$this->sessionId\" data-additional-needed=\"$needed\"><b>" 
+            . $this->title . "</b></a></div><div class=\"small\">" . $this->trackName . "</div>";
     }
 
     function getColumnWidth() {
@@ -50,7 +54,11 @@ class ScheduleItem implements ScheduleCellData {
     }
 
     public function getAdditionalClasses() {
-        return "";
+        return $this->isAdditionalParticipantNeeded() ? "bg-warning-lighter" : "";
+    }
+
+    public function isAdditionalParticipantNeeded() {
+        return ($this->isInterestAllowed && $this->participantCount < 4);
     }
 }
 
@@ -116,49 +124,24 @@ class ScheduleItemDataProvider implements ScheduleCellDataProvider {
     }    
 }
 
-function select_rooms() {
-    $query = <<<EOD
-    SELECT r.roomname, r.roomid, r.is_online, r.area, r.display_order, r.parent_room
-      FROM Rooms r
-    WHERE r.is_scheduled = 1
-      AND r.roomid in (select roomid from Schedule)
-    ORDER BY display_order;
-    EOD;
-    if (!$result = mysqli_query_exit_on_error($query)) {
-        exit;
-    } else {
-        $temp = array();
-        while ($row = mysqli_fetch_array($result)) {
-            $room = new Room();
-            $room->roomName = $row["roomname"];
-            $room->roomId = $row["roomid"];
-            $room->area = $row["area"];
-            $room->isOnline = $row["is_online"] == 'Y' ? true : false;
-            $room->displayOrder = $row["display_order"];
-            $room->parentRoomId = $row["parent_room"];
-            $room->children = array();
-            $temp[$room->roomId] = $room;
-        }
-
-        return $temp;
-    }
-}
-
 function select_schedule_items($allRooms) {
 
     $query = <<<EOD
-    SELECT sch.roomid, sess.title, sch.starttime, t.trackname, sess.duration, sess.sessionid
+    SELECT sch.roomid, sess.title, sch.starttime, t.trackname, sess.duration, sess.sessionid, D.is_part_session_interest_allowed, count(POS.badgeid) as participantcount
       FROM Sessions sess
       JOIN Schedule sch USING (sessionid)
       JOIN Tracks t USING (trackid)
-      ;
+      JOIN ParticipantOnSession POS USING (sessionid)
+      JOIN Divisions D ON (D.divisionid = sess.divisionid)
+     WHERE sess.pubstatusid = 2
+      group by sch.roomid, sess.title, sch.starttime, t.trackname, sess.duration, sess.sessionid, D.is_part_session_interest_allowed;
     EOD;
     if (!$result = mysqli_query_exit_on_error($query)) {
         exit;
     } else {
         $slots = array();
         while ($row = mysqli_fetch_array($result)) {
-            $slot = new ScheduleItem();
+            $slot = new PreliminaryScheduleItem();
             $slot->roomId = $row["roomid"];
             $slot->room = $allRooms[$row["roomid"]];
             $slot->startTime = $row["starttime"];
@@ -166,6 +149,8 @@ function select_schedule_items($allRooms) {
             $slot->title = $row["title"];
             $slot->sessionId = $row["sessionid"];
             $slot->trackName = $row["trackname"];
+            $slot->participantCount = $row["participantcount"];
+            $slot->isInterestAllowed = $row["is_part_session_interest_allowed"] ? true : false;
             $slots[] = $slot;
         }
         return $slots;
@@ -178,16 +163,20 @@ function render_table($rooms, $items) {
     $renderer->renderTable();
 }
 
-$rooms = select_rooms();
+$rooms = Room::selectAllRoomInSchedule($linki);
 $collatedRooms = Room::collateParentsAndAssignColumns($rooms);
 $items = select_schedule_items($rooms);
 
-staff_header($title, true);
+participant_header($title, false, 'Normal', true);
+
+echo fetchCustomText("alerts");
 ?>
+
+<div class="alert alert-warning">Some sessions could use more participants. Please consider signing up! Those sessions have been highlighted in yellow, below.</div>
 
 <div class="card">
     <div class="card-header">
-        <h4>Current Schedule</h4>
+        <h4>Preliminary Schedule</h4>
     </div>
     <div class="card-body">
         <p>The following sessions have been scheduled:</p>
@@ -198,6 +187,28 @@ staff_header($title, true);
     </div>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsLabel">Session Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="details-content">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="js/planzExtension.js"></script>
+<script type="text/javascript" src="js/planzExtensionParticipantSchedule.js"></script>
+
 <?php
-    staff_footer();
+    participant_footer();
 ?>
