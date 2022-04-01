@@ -14,7 +14,7 @@
 				<xsl:apply-templates select="doc/query[@queryName='sessions']/row" />
 			</xsl:when>
 			<xsl:otherwise>
-				<div class="alert alert-error">No schedule sessions found.</div>
+				<p class="text-info">You are not currently scheduled on any sessions.</p>
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
@@ -27,8 +27,6 @@
 					<span><xsl:value-of select="@roomname" /></span>
 					<xsl:text> &#8226; </xsl:text>
 					<span><xsl:value-of select="@trackname" /></span>
-					<xsl:text> &#8226; </xsl:text>
-					<span><xsl:value-of select="@typename" /></span>
 					<xsl:text> &#8226; </xsl:text>
 					<span><xsl:value-of select="@starttime" /><xsl:text>&#8211;</xsl:text><xsl:value-of select="@endtime" /></span>
 				</b>

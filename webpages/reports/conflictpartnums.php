@@ -6,7 +6,8 @@ $report['multi'] = 'true';
 $report['output_filename'] = 'conflict_part_numb_sess.csv';
 $report['description'] = 'Compare number of sessions participants requested with the number of which they were assigned';
 $report['categories'] = array(
-    'Conflict Reports' => 420,
+    'Conflict Reports' => 80,
+    'Registration Reports' => 1,
 );
 $report['columns'] = array(
     null,
@@ -28,7 +29,9 @@ $report['columns'] = array(
 $report['queries'] = [];
 $report['queries']['availability'] =<<<'EOD'
 SELECT
-        PAD.badgeid, PAD.day, PAD.maxprog
+        PAD.badgeid,
+        PAD.day,
+        PAD.maxprog
     FROM
              ParticipantAvailabilityDays PAD
         JOIN Participants P USING(badgeid)
@@ -37,7 +40,10 @@ SELECT
 EOD;
 $report['queries']['participants'] =<<<'EOD'
 SELECT
-        P.badgeid, P.pubsname, CONCAT(CD.firstname,' ',CD.lastname) AS name, CONCAT(CD.lastname, CD.firstname) AS nameSort,
+        P.badgeid,
+        P.pubsname,
+        CONCAT(CD.firstname,' ',CD.lastname) AS name,
+        CONCAT(CD.lastname, CD.firstname) AS nameSort,
         IF(instr(P.pubsname, CD.lastname) > 0, CD.lastname, substring_index(P.pubsname, ' ', -1)) AS pubsnameSort,
         PA.maxprog
     FROM
@@ -56,7 +62,9 @@ SELECT
 EOD;
 $report['queries']['schedules'] =<<<'EOD'
 SELECT
-        P.badgeid, 1 + (hour(SCH.starttime) DIV 24) AS day, COUNT(*) AS sessionCount
+        P.badgeid,
+        1 + (hour(SCH.starttime) DIV 24) AS day,
+        COUNT(*) AS sessionCount
     FROM
              Participants P
         JOIN ParticipantOnSession POS USING (badgeid)
@@ -91,7 +99,7 @@ $report['xsl'] =<<<EOD
                 <table id="reportTable" class="table table-sm table-bordered">
                     <thead>
                         <tr>
-                            <th rowspan="2">Badge ID</th>
+                            <th rowspan="2">Person ID</th>
                             <th rowspan="2">Name for Publications</th>
                             <th rowspan="2">X</th>
                             <th rowspan="2">Name</th>
@@ -165,7 +173,7 @@ $headerRow2Days
             <xsl:attribute name="class">
                 <xsl:choose>
                     <xsl:when test="\$scheduledCount > \$availableCount">report highlight1</xsl:when>
-                    <xsl:otherwise>report</xsl:otherwise>
+                    <xsl:otherwise>report highlight2</xsl:otherwise>
                 </xsl:choose>
             </xsl:attribute>
             <xsl:value-of select="\$scheduledCount" />
@@ -196,7 +204,7 @@ $headerRow2Days
             <xsl:attribute name="class">
                 <xsl:choose>
                     <xsl:when test="\$scheduledCount > \$availableCount">report highlight1</xsl:when>
-                    <xsl:otherwise>report</xsl:otherwise>
+                    <xsl:otherwise>report highlight2</xsl:otherwise>
                 </xsl:choose>
             </xsl:attribute>
             <xsl:value-of select="\$scheduledCount" />

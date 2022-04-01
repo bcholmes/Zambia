@@ -10,7 +10,8 @@ $report['categories'] = array(
 $report['queries'] = [];
 $report['queries']['participants'] =<<<'EOD'
 SELECT DISTINCT
-        P.badgeid
+        P.badgeid,
+        P.sortedpubsname
     FROM
              Participants P
         JOIN CongoDump CD USING (badgeid)
@@ -19,16 +20,16 @@ SELECT DISTINCT
     WHERE
         S.statusid IN (1, 2, 3, 6, 7) ## Brainstorm, Vetted, Scheduled, Edit Me, Assigned
     ORDER BY
-        IF(INSTR(P.pubsname, CD.lastname) > 0, CD.lastname, SUBSTRING_INDEX(P.pubsname, ' ', -1)),
-        CD.firstname;
+        P.sortedpubsname;
 EOD;
 $report['queries']['sessions'] =<<<'EOD'
 SELECT
-        P.badgeid, P.pubsname, S.sessionid, S.title, POS.moderator
+        P.badgeid, CD.badgenumber, P.pubsname, S.sessionid, S.title, POS.moderator
     FROM
              Participants P
         JOIN ParticipantOnSession POS USING (badgeid)
         JOIN Sessions S USING (sessionid)
+        JOIN CongoDump CD USING (badgeid)
     WHERE
         S.statusid IN (1, 2, 3, 6, 7) ## Brainstorm, Vetted, Scheduled, Edit Me, Assigned
     ORDER BY
@@ -44,7 +45,8 @@ $report['xsl'] =<<<'EOD'
             <xsl:when test="doc/query[@queryName='participants']/row">
                 <table class="report">
                     <tr>
-                        <th class="report">Badgeid</th>
+                        <th class="report">Person ID</th>
+                        <th class="report">BadgeNumber</th>
                         <th class="report">Pubsname</th>
                         <th class="report">Session ID</th>
                         <th class="report">Title</th>
@@ -55,14 +57,14 @@ $report['xsl'] =<<<'EOD'
             </xsl:when>
             <xsl:otherwise>
                 <div class="alert alert-danger">No results found.</div>
-            </xsl:otherwise>                    
+            </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
     
     <xsl:template match="doc/query[@queryName='participants']/row">
         <xsl:variable name="badgeid" select="@badgeid" />
         <xsl:variable name="rowCount" select="count(/doc/query[@queryName='sessions']/row[@badgeid=$badgeid])" />
-	    <xsl:for-each select="/doc/query[@queryName='sessions']/row[@badgeid=$badgeid]">
+        <xsl:for-each select="/doc/query[@queryName='sessions']/row[@badgeid=$badgeid]">
             <tr class="report">
                 <xsl:choose>
                     <xsl:when test="position() = 1">
@@ -70,6 +72,9 @@ $report['xsl'] =<<<'EOD'
                             <xsl:call-template name="showBadgeid">
                                 <xsl:with-param name="badgeid" select = "@badgeid" />
                             </xsl:call-template>
+                        </td>
+                        <td rowspan="{$rowCount}" class="report" style="border-top:2px solid black">
+                            <xsl:value-of select="@badgenumber" />
                         </td>
                         <td rowspan="{$rowCount}" class="report" style="border-top:2px solid black">
                             <xsl:call-template name="showPubsname">

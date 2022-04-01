@@ -12,11 +12,11 @@ $report['group_concat_expand'] = false;
 $report['queries'] = [];
 $report['queries']['master'] =<<<'EOD'
 SELECT
-           P.badgeid, 
-           P.pubsname, 
-           IF ((moderator=1), 'Yes', ' ') AS 'Moderator',
-           S.sessionid,
-           S.title
+        P.badgeid,
+        P.pubsname,
+        IF ((moderator=1), 'Yes', ' ') AS 'Moderator',
+        S.sessionid,
+        S.title
     FROM
             Sessions S
        JOIN ParticipantOnSession POS USING (sessionid) 

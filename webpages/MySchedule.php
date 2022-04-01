@@ -89,11 +89,8 @@ if (!$regmessage) {
 }
 participant_header($title, false, 'Normal', true);
 echo "<div class=\"container\">";
-echo "<div class=\"alert alert-primary mt-2\"><p>Below is the list of all the panels for which you are scheduled. If you need any changes";
-echo " to this schedule please contact <a class=\"alert-link\" href=\"mailto:$PROGRAM_EMAIL\">Programming</a>.</p>\n";
-echo fetchCustomText("all_panelists_1");
-echo fetchCustomText("all_panelists_2");
-echo "<p>Thank you &mdash; <a class=\"alert-link\" href=\"mailto:$PROGRAM_EMAIL\"> Programming </a></div>\n";
+
+echo fetchCustomText("alerts");
 
 if (!$registered) {
 

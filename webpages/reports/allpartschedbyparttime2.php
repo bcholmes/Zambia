@@ -3,7 +3,7 @@
 $report = [];
 $report['name'] = 'Full All Participant Schedule ';
 $report['multi'] = 'true';
-$report['output_filename'] = 'all_participants_by_time_2.csv';
+$report['output_filename'] = 'full_all_part_sched.csv';
 $report['description'] = 'The schedule sorted by participant, then time';
 $report['categories'] = array(
     'Programming Reports' => 22,
@@ -11,34 +11,40 @@ $report['categories'] = array(
 $report['queries'] = [];
 $report['queries']['participants'] =<<<'EOD'
 SELECT DISTINCT
-        P.badgeid, P.pubsname, C.firstname, C.lastname
+        P.badgeid,
+        P.sortedpubsname
     FROM
              Participants P
-        JOIN CongoDump C USING (badgeid)
+        JOIN CongoDump CD USING (badgeid)
         JOIN ParticipantOnSession POS USING (badgeid)
         JOIN Sessions S USING (sessionid)
         JOIN Schedule SCH USING (sessionid)
     ORDER BY
-        IF(instr(P.pubsname,C.lastname)>0,C.lastname,substring_index(P.pubsname,' ',-1)),
-        C.firstname;
+        P.sortedpubsname;
 EOD;
 $report['queries']['schedule'] =<<<'EOD'
 SELECT
-        P.pubsname, P.badgeid, POS.moderator, S.duration, R.roomname, R.function, TR.trackname, 
-        C.badgename, concat(C.firstname,' ',C.lastname) AS name,
-        S.sessionid, S.title, DATE_FORMAT(ADDTIME('$ConStartDatim$',SCH.starttime),'%a %l:%i %p') AS starttime
+        P.pubsname,
+        P.badgeid,
+        POS.moderator,
+        S.duration,
+        R.roomname,
+        R.function,
+        TR.trackname,
+        S.sessionid,
+        S.title,
+        DATE_FORMAT(ADDTIME('$ConStartDatim$',SCH.starttime),'%a %l:%i %p') AS starttime
     FROM
              Participants P
-        JOIN CongoDump C USING (badgeid)
+        JOIN CongoDump CD USING (badgeid)
         JOIN ParticipantOnSession POS USING (badgeid)
         JOIN Sessions S USING (sessionid)
         JOIN Schedule SCH USING (sessionid)
         JOIN Rooms R USING (roomid)
         JOIN Tracks TR USING (trackid)
     ORDER BY
-        IF(instr(P.pubsname,C.lastname)>0,C.lastname,substring_index(P.pubsname,' ',-1)),
-        C.firstname,
-	SCH.starttime;
+        P.sortedpubsname,
+        SCH.starttime;
 EOD;
 $report['xsl'] =<<<'EOD'
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -48,7 +54,7 @@ $report['xsl'] =<<<'EOD'
     <xsl:template match="/">
         <xsl:choose>
             <xsl:when test="doc/query[@queryName='participants']/row">
-                <table class="table table-sm table-bordered">
+                <table id="reportTable" class="table table-sm table-bordered">
                     <thead>
                         <tr>
                             <th>Badgeid</th>
@@ -74,14 +80,14 @@ $report['xsl'] =<<<'EOD'
             </xsl:when>
             <xsl:otherwise>
                 <div class="alert alert-danger">No results found.</div>
-            </xsl:otherwise>                    
+            </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
     
     <xsl:template name="usersSchedule">
         <xsl:param name="badgeid" />
-	    <xsl:param name="rowdata" />
-	    <xsl:for-each select="$rowdata">
+        <xsl:param name="rowdata" />
+        <xsl:for-each select="$rowdata">
             <tr>
                 <xsl:choose>
                     <xsl:when test="position() = 1">
@@ -91,11 +97,9 @@ $report['xsl'] =<<<'EOD'
                             </xsl:call-template>
                         </td>
                         <td rowspan="{last()}" style="border-top:2px solid black">
-                            <xsl:call-template name="showLinkedPubsname">
+                            <xsl:call-template name="showPubsname">
                                 <xsl:with-param name="badgeid" select = "@badgeid" />
                                 <xsl:with-param name="pubsname" select = "@pubsname" />
-                                <xsl:with-param name="badgename" select = "@badgename" />
-                                <xsl:with-param name="name" select = "@name" />
                             </xsl:call-template>
                         </td>
                         <td style="border-top:2px solid black">
