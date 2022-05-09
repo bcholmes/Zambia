@@ -8,7 +8,7 @@ function get_name($dbobject) {
     return $name->getBadgeName();
 }
 
-function get_participant_assignments($db, $sessionId) {
+function get_participant_assignments($db, $sessionId, $showAnonymousNames = true) {
     $query = <<<EOD
     SELECT
         POS.badgeid,
@@ -33,10 +33,11 @@ EOD;
         $result = mysqli_stmt_get_result($stmt);
         while ($row = mysqli_fetch_object($result)) {
             $name = PersonName::from($row);
+            $anonymous = $row->anonymous === 'Y' ? true : false;
             $assignments[] = [ 
                 "badgeid" => $row->badgeid,
                 "moderator" => $row->moderator ? true : false,
-                "name" => $name->getPubsName()
+                "name" => ((!$anonymous || $showAnonymousNames) ? $name->getPubsName() : "Anonymous")
             ];
         }
         mysqli_stmt_close($stmt);

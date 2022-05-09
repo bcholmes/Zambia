@@ -2,13 +2,29 @@
 // Copyright (c) 2022 BC Holmes. All rights reserved. See copyright document for more details.
 
 global $title, $linki;
-$title = "Participant Schedule";
+$title = "Public Schedule";
 
 require_once('PartCommonCode.php');
 require_once('time_slot_functions.php');
 require_once('schedule_table_renderer.php');
 
-class PreliminaryScheduleItem implements ScheduleCellData {
+function is_public_schedule_visible($db) {
+    $query = <<<EOD
+    SELECT current FROM Phases where phasename = 'Show public reports';
+    EOD;
+    if (!$resultSet = mysqli_query_exit_on_error($query)) {
+        exit;
+    } else {
+        $result = false;
+        while ($row = mysqli_fetch_array($resultSet)) {
+            $result = $row['current'] ? true : false;
+        }
+        return $result;
+    }
+}
+
+
+class PublicScheduleItem implements ScheduleCellData {
     public $title;
     public $roomId;
     public $startTime;
@@ -16,7 +32,6 @@ class PreliminaryScheduleItem implements ScheduleCellData {
     public $trackName;
     public $room;
     public $sessionId;
-    public $participantCount;
     public $isInterestAllowed;
 
     function getDay() {
@@ -29,8 +44,7 @@ class PreliminaryScheduleItem implements ScheduleCellData {
         return $day;
     }
     function getData() {
-        $needed = $this->isAdditionalParticipantNeeded();
-        return "<div><a class=\"details-option\" href=\"#\" data-session-id=\"$this->sessionId\" data-additional-needed=\"$needed\"><b>" 
+        return "<div><a class=\"details-option\" href=\"#\" data-session-id=\"$this->sessionId\"><b>" 
             . $this->title . "</b></a></div><div class=\"small\">" . $this->trackName . "</div>";
     }
 
@@ -54,11 +68,7 @@ class PreliminaryScheduleItem implements ScheduleCellData {
     }
 
     public function getAdditionalClasses() {
-        return $this->isAdditionalParticipantNeeded() ? "bg-warning-lighter" : "";
-    }
-
-    public function isAdditionalParticipantNeeded() {
-        return ($this->isInterestAllowed && $this->participantCount < 4);
+        return "";
     }
 }
 
@@ -127,11 +137,10 @@ class ScheduleItemDataProvider implements ScheduleCellDataProvider {
 function select_schedule_items($allRooms) {
 
     $query = <<<EOD
-    SELECT sch.roomid, sess.title, sch.starttime, t.trackname, sess.duration, sess.sessionid, D.is_part_session_interest_allowed, count(POS.badgeid) as participantcount
+    SELECT sch.roomid, sess.title, sch.starttime, t.trackname, sess.duration, sess.sessionid, D.is_part_session_interest_allowed
       FROM Sessions sess
       JOIN Schedule sch USING (sessionid)
       JOIN Tracks t USING (trackid)
-      JOIN ParticipantOnSession POS USING (sessionid)
       JOIN Divisions D ON (D.divisionid = sess.divisionid)
      WHERE sess.pubstatusid = 2
       group by sch.roomid, sess.title, sch.starttime, t.trackname, sess.duration, sess.sessionid, D.is_part_session_interest_allowed;
@@ -141,7 +150,7 @@ function select_schedule_items($allRooms) {
     } else {
         $slots = array();
         while ($row = mysqli_fetch_array($result)) {
-            $slot = new PreliminaryScheduleItem();
+            $slot = new PublicScheduleItem();
             $slot->roomId = $row["roomid"];
             $slot->room = $allRooms[$row["roomid"]];
             $slot->startTime = $row["starttime"];
@@ -149,7 +158,6 @@ function select_schedule_items($allRooms) {
             $slot->title = $row["title"];
             $slot->sessionId = $row["sessionid"];
             $slot->trackName = $row["trackname"];
-            $slot->participantCount = $row["participantcount"];
             $slot->isInterestAllowed = $row["is_part_session_interest_allowed"] ? true : false;
             $slots[] = $slot;
         }
@@ -167,13 +175,12 @@ $rooms = Room::selectAllRoomInSchedule($linki);
 $collatedRooms = Room::collateParentsAndAssignColumns($rooms);
 $items = select_schedule_items($rooms);
 
-participant_header($title, false, 'Normal', true);
+participant_header($title, true, 'Normal', true);
 
-echo fetchCustomText("alerts");
+if (is_public_schedule_visible($linki)) {
+
+    echo fetchCustomText("alerts");
 ?>
-
-<div class="alert alert-warning">Some sessions could use more participants. Those sessions have been highlighted in yellow, 
-    below. Want to help out? Please let us know by emailing <a href="mailto:panels@wiscon.net" class="alert-link">panels@wiscon.net!</a></div>
 
 <div class="card">
     <div class="card-header">
@@ -211,5 +218,6 @@ echo fetchCustomText("alerts");
 <script type="text/javascript" src="js/planzExtensionParticipantSchedule.js"></script>
 
 <?php
+    }
     participant_footer();
 ?>

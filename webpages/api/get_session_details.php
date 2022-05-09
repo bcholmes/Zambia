@@ -45,18 +45,36 @@ EOD;
     }
 }
 
+function is_public_schedule_visible($db) {
+    $query = <<<EOD
+    SELECT current FROM Phases where phasename = 'Show public reports';
+EOD;
+    $stmt = mysqli_prepare($db, $query);
+    if (mysqli_stmt_execute($stmt)) {
+        $resultSet = mysqli_stmt_get_result($stmt);
+        $result = false;
+        while ($row = mysqli_fetch_object($resultSet)) {
+            $result = $row->current;
+        }
+        error_log("result is $result");
+        mysqli_stmt_close($stmt);
+        return $result;
+    } else {
+        throw new DatabaseSqlException("Query could not be executed: $query");
+    }
+}
 
 start_session_if_necessary();
 $db = connect_to_db();
 try {
-    if ($_SERVER['REQUEST_METHOD'] === 'GET' && isLoggedIn()) {
+    if ($_SERVER['REQUEST_METHOD'] === 'GET' && (isLoggedIn() || is_public_schedule_visible($db))) {
 
         if (array_key_exists("sessionId", $_REQUEST)) {
             $sessionId = $_REQUEST["sessionId"];
 
             $session = get_session_details($db, $sessionId);
             if ($session != null) {
-                $session['assignments'] = get_participant_assignments($db, $sessionId);
+                $session['assignments'] = get_participant_assignments($db, $sessionId, isLoggedIn());
 
                 header('Content-type: application/json; charset=utf-8');
                 $json_string = json_encode($session);
