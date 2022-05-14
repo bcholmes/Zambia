@@ -92,4 +92,23 @@ $(function() {
         let additionalNeeded = $a.attr("data-additional-needed");
         $.planz.participantSchedule.getDetails(sessionId, additionalNeeded);
     });
+
+    $("#grid-view-button").click(() => {
+        $("#grid-view").show();
+        $("#grid-view-button").removeClass("btn-outline-secondary");
+        $("#grid-view-button").addClass("btn-secondary");
+        $("#list-view-button").removeClass("btn-secondary");
+        $("#list-view-button").addClass("btn-outline-secondary");
+        $("#list-view").hide();
+    });
+
+    $("#list-view-button").click(() => {
+        $("#list-view").show();
+        $("#list-view-button").removeClass("btn-outline-secondary");
+        $("#list-view-button").addClass("btn-secondary");
+        $("#grid-view-button").removeClass("btn-secondary");
+        $("#grid-view-button").addClass("btn-outline-secondary");
+        $("#grid-view").hide();
+    });
+
 });

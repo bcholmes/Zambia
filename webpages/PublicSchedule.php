@@ -4,6 +4,7 @@
 global $title, $linki;
 $title = "Public Schedule";
 
+require_once('name.php');
 require_once('PartCommonCode.php');
 require_once('time_slot_functions.php');
 require_once('schedule_table_renderer.php');
@@ -23,16 +24,23 @@ function is_public_schedule_visible($db) {
     }
 }
 
+class ParticipantAssignment {
+    public $name;
+    public $moderator;
+}
 
 class PublicScheduleItem implements ScheduleCellData {
+    public $publicationNumber;
     public $title;
     public $roomId;
     public $startTime;
+    public $formattedStartTime;
+    public $formattedEndTime;
     public $duration;
     public $trackName;
     public $room;
     public $sessionId;
-    public $isInterestAllowed;
+    public $assignments;
 
     function getDay() {
         $index = time_to_row_index($this->startTime);
@@ -45,6 +53,7 @@ class PublicScheduleItem implements ScheduleCellData {
     }
     function getData() {
         return "<div><a class=\"details-option\" href=\"#\" data-session-id=\"$this->sessionId\"><b>" 
+            . ($this->publicationNumber ? ($this->publicationNumber . ". ") : "") 
             . $this->title . "</b></a></div><div class=\"small\">" . $this->trackName . "</div>";
     }
 
@@ -135,34 +144,84 @@ class ScheduleItemDataProvider implements ScheduleCellDataProvider {
 }
 
 function select_schedule_items($allRooms) {
+    $CON_START_DATIM = CON_START_DATIM;
 
     $query = <<<EOD
-    SELECT sch.roomid, sess.title, sch.starttime, t.trackname, sess.duration, sess.sessionid, D.is_part_session_interest_allowed
+    SELECT sch.roomid, sess.title, sch.starttime, t.trackname, sess.duration, sess.sessionid, sess.pubsno,
+        sess.progguiddesc,
+        DATE_FORMAT(ADDTIME('$CON_START_DATIM', sch.starttime),'%a %l:%i %p') AS formattedstarttime,
+        DATE_FORMAT(ADDTIME('$CON_START_DATIM', ADDTIME(sch.starttime, sess.duration)),'%l:%i %p') AS formattedendtime
       FROM Sessions sess
       JOIN Schedule sch USING (sessionid)
       JOIN Tracks t USING (trackid)
+      JOIN Rooms r ON (sch.roomid = r.roomid)
       JOIN Divisions D ON (D.divisionid = sess.divisionid)
      WHERE sess.pubstatusid = 2
-      group by sch.roomid, sess.title, sch.starttime, t.trackname, sess.duration, sess.sessionid, D.is_part_session_interest_allowed;
+     ORDER BY sch.starttime, r.display_order
     EOD;
-    if (!$result = mysqli_query_exit_on_error($query)) {
+
+    $slots = array();
+    $slotsById = array();
+
+    if (!$resultSet = mysqli_query_exit_on_error($query)) {
         exit;
     } else {
-        $slots = array();
-        while ($row = mysqli_fetch_array($result)) {
+        while ($row = mysqli_fetch_array($resultSet)) {
             $slot = new PublicScheduleItem();
+            $slot->publicationNumber = $row['pubsno'];
             $slot->roomId = $row["roomid"];
             $slot->room = $allRooms[$row["roomid"]];
             $slot->startTime = $row["starttime"];
+            $slot->formattedStartTime = $row["formattedstarttime"];
+            $slot->formattedEndTime = $row["formattedendtime"];
             $slot->duration = $row["duration"];
             $slot->title = $row["title"];
             $slot->sessionId = $row["sessionid"];
             $slot->trackName = $row["trackname"];
-            $slot->isInterestAllowed = $row["is_part_session_interest_allowed"] ? true : false;
+            $slot->description = $row["progguiddesc"];
+            $slot->assignments = array();
             $slots[] = $slot;
+            $slotsById[$slot->sessionId] = $slot;
         }
-        return $slots;
     }
+    $query = <<<EOD
+    SELECT
+        POS.sessionid,
+        POS.badgeid,
+        COALESCE(POS.moderator, 0) AS moderator,
+        P.pubsname,
+        CD.badgename,
+        CD.firstname,
+        CD.lastname,
+        P.anonymous
+    FROM
+                    ParticipantOnSession POS
+                JOIN Participants P ON P.badgeid = POS.badgeid
+                JOIN CongoDump CD ON CD.badgeid = POS.badgeid
+    WHERE
+        POS.sessionid in (select S.sessionid FROM Sessions S JOIN Schedule SCH USING (sessionid));
+EOD;
+
+    if (!$resultSet = mysqli_query_exit_on_error($query)) {
+        exit;
+    } else {
+        while ($row = mysqli_fetch_object($resultSet)) {
+            $sessionId = $row->sessionid;
+            if (array_key_exists($sessionId, $slotsById)) {
+                $slot = $slotsById[$sessionId];
+
+                $anonymous = $row->anonymous === 'Y' ? true : false;
+                $name = PersonName::from($row);
+                $assignment = new ParticipantAssignment();
+                $assignment->moderator = $row->moderator ? true : false;
+                $assignment->name = (!$anonymous) ? $name->getPubsName() : "Anonymous";
+
+                $slot->assignments[] = $assignment;
+            }
+
+        }
+    }
+    return $slots;
 }
 
 function render_table($rooms, $items) {
@@ -170,6 +229,38 @@ function render_table($rooms, $items) {
     $renderer = new ScheduleTableRenderer($rooms, $dataProvider);
     $renderer->renderTable();
 }
+
+function render_list($items) {
+
+    foreach ($items as $item) {
+?>
+        <div class="mb-5">
+			<h5 class="mb-0"><?php echo ($item->publicationNumber ? ($item->publicationNumber . ". ") : "") . $item->title ?></h5>
+			<div>
+				<b>
+					<span><?php echo $item->room->roomName ?></span>
+					&#8226;
+					<span><?php echo $item->trackName ?></span>
+					&#8226;
+					<span><?php echo $item->formattedStartTime ?>&#8211;<?php echo $item->formattedEndTime ?></span>
+				</b>
+			</div>
+			<div class="my-2"><?php echo $item->description ?></div>
+            <div>
+<?php
+        foreach ($item->assignments as $i => $a) {
+            if ($a->moderator) echo "<b>Mod: </b>";
+?>
+				<span><?php echo $a->name; if ($i+1 < count($item->assignments)) echo ", "; ?></span>
+<?php
+        }
+?>
+            </div>
+        </div>
+<?php
+    }
+}
+
 
 $rooms = Room::selectAllRoomInSchedule($linki);
 $collatedRooms = Room::collateParentsAndAssignColumns($rooms);
@@ -182,16 +273,28 @@ if (is_public_schedule_visible($linki)) {
     echo fetchCustomText("alerts");
 ?>
 
-<div class="card">
+<div class="card mt-3">
     <div class="card-header">
-        <h4>Preliminary Schedule</h4>
+        <div class="d-flex justify-content-between">
+            <h4>Public Schedule</h4>
+            <div class="btn-group" role="group" aria-label="Basic example">
+                <button type="button" class="btn btn-secondary" id="grid-view-button"><i class="bi bi-columns"></i></button>
+                <button type="button" class="btn btn-outline-secondary" id="list-view-button"><i class="bi bi-list"></i></button>
+            </div>
+        </div>
     </div>
     <div class="card-body">
         <p>The following sessions have been scheduled:</p>
-
+        <div id="grid-view">
 <?php
     render_table($collatedRooms, $items);
 ?>
+        </div>
+        <div id="list-view" style="display: none">
+<?php
+    render_list($items);
+?>
+        </div>
     </div>
 </div>
 
@@ -217,6 +320,14 @@ if (is_public_schedule_visible($linki)) {
 <script type="text/javascript" src="js/planzExtension.js"></script>
 <script type="text/javascript" src="js/planzExtensionParticipantSchedule.js"></script>
 
+<?php
+    } else {
+?>
+    <div class="card mt-3">
+        <div class="card-body">
+            <p>The schedule is not currently available.</p>
+        </div>
+    </div>
 <?php
     }
     participant_footer();

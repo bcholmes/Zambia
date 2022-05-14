@@ -79,7 +79,7 @@ class Room {
         SELECT r.roomname, r.roomid, r.is_online, r.area, r.display_order, r.parent_room
           FROM Rooms r
         WHERE r.is_scheduled = 1
-          AND r.roomid in (select roomid from Schedule)
+          AND r.roomid in (select sch.roomid from Schedule sch join Sessions s using (sessionid) where s.pubstatusid = 2)
         ORDER BY display_order;
         EOD;
         $stmt = mysqli_prepare($db, $query);

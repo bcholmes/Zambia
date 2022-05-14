@@ -42,6 +42,8 @@ SELECT
     WHERE 
         S.pubstatusid = 2
     GROUP BY
+        SCH.starttime, 
+        R.roomid,
         SCH.sessionid
     ORDER BY 
         SCH.starttime, 
