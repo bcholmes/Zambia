@@ -14,6 +14,17 @@
                     </div>
                 </div>
             </div>
+            <div class="list-group-item flex-column align-items-start">
+                <div class="row">
+                    <div class="col-md-10">
+                        <h4>Schedule Enumeration Tool</h4>
+                        <div>Assigns incremental numbers to all scheduled sessions.</div>
+                    </div>
+                    <div class="col-md-2 text-right">
+                        <a href="SessionEnumerationTool.php" class="btn btn-primary w-75">Select</a>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </xsl:template>

@@ -9,6 +9,7 @@ require_once('time_slot_functions.php');
 require_once('schedule_table_renderer.php');
 
 class ScheduleItem implements ScheduleCellData {
+    public $publicationNumber;
     public $title;
     public $roomId;
     public $startTime;
@@ -27,7 +28,9 @@ class ScheduleItem implements ScheduleCellData {
         return $day;
     }
     function getData() {
-        return "<div><a href=\"/EditSession.php?id=" . $this->sessionId . "\">" . $this->title . "</a></div><div class=\"small\">" . $this->trackName . "</div>";
+        return "<div><a href=\"/EditSession.php?id=" . $this->sessionId . "\">" 
+            . ($this->publicationNumber ? ($this->publicationNumber . ". ") : "") 
+            . $this->title . "</a></div><div class=\"small\">" . $this->trackName . "</div>";
     }
 
     function getColumnWidth() {
@@ -147,7 +150,7 @@ function select_rooms() {
 function select_schedule_items($allRooms) {
 
     $query = <<<EOD
-    SELECT sch.roomid, sess.title, sch.starttime, t.trackname, sess.duration, sess.sessionid
+    SELECT sch.roomid, sess.title, sch.starttime, t.trackname, sess.duration, sess.sessionid, sess.pubsno
       FROM Sessions sess
       JOIN Schedule sch USING (sessionid)
       JOIN Tracks t USING (trackid)
@@ -159,6 +162,7 @@ function select_schedule_items($allRooms) {
         $slots = array();
         while ($row = mysqli_fetch_array($result)) {
             $slot = new ScheduleItem();
+            $slot->publicationNumber = $row['pubsno'];
             $slot->roomId = $row["roomid"];
             $slot->room = $allRooms[$row["roomid"]];
             $slot->startTime = $row["starttime"];

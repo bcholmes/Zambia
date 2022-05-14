@@ -81,7 +81,7 @@ class Room {
         WHERE r.is_scheduled = 1
           AND r.roomid in (select sch.roomid from Schedule sch join Sessions s using (sessionid) where s.pubstatusid = 2)
         ORDER BY display_order;
-        EOD;
+EOD;
         $stmt = mysqli_prepare($db, $query);
         $temp = array();
         if (mysqli_stmt_execute($stmt)) {
