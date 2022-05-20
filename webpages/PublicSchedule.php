@@ -8,6 +8,7 @@ require_once('name.php');
 require_once('PartCommonCode.php');
 require_once('time_slot_functions.php');
 require_once('schedule_table_renderer.php');
+require_once('api/format_functions.php');
 
 function is_public_schedule_visible($db) {
     $query = <<<EOD
@@ -148,9 +149,9 @@ function select_schedule_items($allRooms) {
 
     $query = <<<EOD
     SELECT sch.roomid, sess.title, sch.starttime, t.trackname, sess.duration, sess.sessionid, sess.pubsno,
-        sess.progguiddesc,
-        DATE_FORMAT(ADDTIME('$CON_START_DATIM', sch.starttime),'%a %l:%i %p') AS formattedstarttime,
-        DATE_FORMAT(ADDTIME('$CON_START_DATIM', ADDTIME(sch.starttime, sess.duration)),'%l:%i %p') AS formattedendtime
+        sess.progguiddesc, sess.hashtag,
+        DATE_FORMAT(ADDTIME('$CON_START_DATIM', sch.starttime),'%Y-%m-%d %H:%i:%S') AS fullstarttime,
+        DATE_FORMAT(ADDTIME('$CON_START_DATIM', ADDTIME(sch.starttime, sess.duration)),'%Y-%m-%d %H:%i:%S') AS fullendtime
       FROM Sessions sess
       JOIN Schedule sch USING (sessionid)
       JOIN Tracks t USING (trackid)
@@ -172,13 +173,14 @@ function select_schedule_items($allRooms) {
             $slot->roomId = $row["roomid"];
             $slot->room = $allRooms[$row["roomid"]];
             $slot->startTime = $row["starttime"];
-            $slot->formattedStartTime = $row["formattedstarttime"];
-            $slot->formattedEndTime = $row["formattedendtime"];
+            $slot->formattedStartTime = convert_database_date_to_date($row["fullstarttime"]);
+            $slot->formattedEndTime = convert_database_date_to_date($row["fullendtime"]);
             $slot->duration = $row["duration"];
             $slot->title = $row["title"];
             $slot->sessionId = $row["sessionid"];
             $slot->trackName = $row["trackname"];
             $slot->description = $row["progguiddesc"];
+            $slot->hashtag = $row["hashtag"];
             $slot->assignments = array();
             $slots[] = $slot;
             $slotsById[$slot->sessionId] = $slot;
@@ -242,10 +244,11 @@ function render_list($items) {
 					&#8226;
 					<span><?php echo $item->trackName ?></span>
 					&#8226;
-					<span><?php echo $item->formattedStartTime ?>&#8211;<?php echo $item->formattedEndTime ?></span>
+					<span><time datetime="<?php echo date_format($item->formattedStartTime, 'c') ?>"><?php echo date_format($item->formattedStartTime, 'D g:i A') ?></time>&#8211;<time datetime="<?php echo date_format($item->formattedStartTime, 'c') ?>"><?php echo date_format($item->formattedEndTime, 'g:i A T') ?></time></span>
 				</b>
 			</div>
-			<div class="my-2"><?php echo $item->description ?></div>
+			<div class="my-1"><?php echo $item->description ?></div>
+			<div class="my-2"><?php echo $item->hashtag ?></div>
             <div>
 <?php
         foreach ($item->assignments as $i => $a) {
@@ -277,9 +280,9 @@ if (is_public_schedule_visible($linki)) {
     <div class="card-header">
         <div class="d-flex justify-content-between">
             <h4>Public Schedule</h4>
-            <div class="btn-group" role="group" aria-label="Basic example">
-                <button type="button" class="btn btn-secondary" id="grid-view-button"><i class="bi bi-columns"></i></button>
-                <button type="button" class="btn btn-outline-secondary" id="list-view-button"><i class="bi bi-list"></i></button>
+            <div class="btn-group" role="group" aria-label="View Types">
+                <button type="button" class="btn btn-secondary" id="grid-view-button"><i class="bi bi-columns"></i><span class="sr-only">Show Grid View</span></button>
+                <button type="button" class="btn btn-outline-secondary" id="list-view-button"><i class="bi bi-list"></i><span class="sr-only">Show List View</span></button>
             </div>
         </div>
     </div>

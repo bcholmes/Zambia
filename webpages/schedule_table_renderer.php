@@ -37,7 +37,7 @@ class ScheduleTableRenderer {
     private function buildTableHeaderRows(&$headerRows, $rooms, $rowNumber) {
         $header = $headerRows[$rowNumber];
         if ($rowNumber == 0) {
-            $header .= "<th rowSpan=\"" . count($headerRows) . "\">Time</th>";
+            $header .= "<th rowSpan=\"" . count($headerRows) . "\">Time (" . date_format(new DateTime(), 'T') . ")</th>";
         }
         foreach ($rooms as $value) {
             $width = $value->getColumnWidth() > 1 ? "colspan=\"{$value->getColumnWidth()}\"" : "";

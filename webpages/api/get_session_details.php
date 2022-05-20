@@ -13,7 +13,8 @@ require_once("./participant_functions.php");
 
 function get_session_details($db, $sessionId) {
     $query = <<<EOD
-    SELECT R.roomname, sess.title, sch.starttime, t.trackname, sess.duration, sess.progguiddesc, sess.participantlabel
+    SELECT R.roomname, sess.title, sch.starttime, t.trackname, sess.duration, sess.progguiddesc, sess.participantlabel,
+        sess.hashtag, sess.pubsno
     FROM Sessions sess
     JOIN Schedule sch USING (sessionid)
     JOIN Rooms R ON (R.roomid = sch.roomid)
@@ -33,6 +34,8 @@ EOD;
                 "title" => $row->title,
                 "trackName" => $row->trackname,
                 "participantLabel" => $row->participantlabel,
+                "hashtag" => $row->hashtag,
+                "publicationNumber" => $row->pubsno,
                 "room" => [
                     "name" => $row->roomname
                 ]

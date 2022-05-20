@@ -28,14 +28,13 @@ $(function() {
                 $div.append($alert);
             }
             if (data.title) {
+                let title = data.title;
+                if (data.publicationNumber) {
+                    title = data.publicationNumber + ". " + title;
+                }
                 let $head = $('<h6 />');
-                $head.html(data.title);
+                $head.html(title);
                 $div.append($head);
-            }
-            if (data.description) {
-                let $description = $('<div />');
-                $description.html(data.description);
-                $div.append($description);
             }
             let subtitle = "";
             if (data.room && data.room.name) {
@@ -51,6 +50,17 @@ $(function() {
             let $subtitleDiv = $('<div />');
             $subtitleDiv.html(subtitle);
             $div.append($subtitleDiv);            
+
+            if (data.description) {
+                let $description = $('<div class="mb-1"/>');
+                $description.html(data.description);
+                $div.append($description);
+            }
+            if (data.hashtag) {
+                let $hashtag = $('<div class="mb-2"/>');
+                $hashtag.html(data.hashtag);
+                $div.append($hashtag);
+            }
             $.planz.participantSchedule.renderAssignments(data, $div);
             $('.details-content').empty();
             $('.details-content').append($div);

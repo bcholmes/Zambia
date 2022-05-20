@@ -25,6 +25,17 @@
                     </div>
                 </div>
             </div>
+            <div class="list-group-item flex-column align-items-start">
+                <div class="row">
+                    <div class="col-md-10">
+                        <h4>Export WisSched JSON file</h4>
+                        <div>Create a version of the JSON file that WisSched uses as its initial data.</div>
+                    </div>
+                    <div class="col-md-2 text-right">
+                        <a href="mobile/MobileJsonExport.php" class="btn btn-primary w-75" target="_blank" rel="noreferrer">Select</a>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </xsl:template>
